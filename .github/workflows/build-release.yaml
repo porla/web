@@ -16,6 +16,7 @@ jobs:
       - uses: actions/checkout@v4
       - uses: oven-sh/setup-bun@v2
 
+      - run: bun i
       - run: bun run build
       - run: pushd dist && zip -9 -r ../webui.zip * && popd && ls -la
 
