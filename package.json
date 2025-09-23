@@ -6,6 +6,7 @@
   "scripts": {
     "dev": "vite",
     "build": "tsc && vite build",
+    "package": "tsc && vite build && pushd dist && zip -9 -r ../webui.zip * && popd",
     "preview": "vite preview"
   },
   "dependencies": {

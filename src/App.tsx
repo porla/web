@@ -1,6 +1,6 @@
 import { Flex, Grid, GridItem, HStack, IconButton, Image, Link, Spacer, Stack, Text, useColorMode } from '@chakra-ui/react';
 import { useEffect, useState } from 'react';
-import { MdDarkMode, MdExtension, MdLightMode, MdOutlineCameraAlt } from 'react-icons/md';
+import { MdDarkMode, MdExtension, MdLightMode, MdOutlineCameraAlt, MdSettings } from 'react-icons/md';
 import { SiDiscord } from 'react-icons/si';
 import { Navigate, NavLink, Outlet } from 'react-router-dom';
 
@@ -78,6 +78,14 @@ function AuthApp() {
                 variant={"link"}
                 as={NavLink}
                 to="/plugins"
+              />
+
+              <IconButton
+                aria-label="Settings"
+                icon={<MdSettings />}
+                variant={"link"}
+                as={NavLink}
+                to="/settings"
               />
             </Flex>
           </Flex>
