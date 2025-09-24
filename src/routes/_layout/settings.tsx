@@ -15,8 +15,11 @@ type SessionsListItem = {
 }
 
 function RouteComponent() {
+  const presetsList = useRPC<any>("presets.list");
+
   const sessionsAdd = useInvoker("sessions.add");
   const sessionsList = useRPC<SessionsList>("sessions.list");
+
   const { mutate } = useSWRConfig();
 
   return (
@@ -25,11 +28,18 @@ function RouteComponent() {
         <div>Settings</div>
       </div>
 
-      <div className="grid grid-cols-[300px_1fr] h-full">
+      <div className="grid grid-cols-[300px_1fr] h-dvh">
         <div className="bg-gray-800 p-3">
           <ul className="space-y-5">
             <li>Plugins</li>
-            <li>Presets</li>
+            <li>
+              Presets
+              <ul>
+                {Object.keys(presetsList.data || {}).map(p => (
+                  <li>{p}</li>
+                ))}
+              </ul>
+            </li>
             <li>
               <div className="flex justify-between">
                 <span>Sessions</span>
@@ -45,13 +55,13 @@ function RouteComponent() {
               </div>
               <ul>
                 {sessionsList.data?.sessions.map(s => (
-                  <li><Link to="/settings/sessions/$id" params={{ id: s.name }}>{s.name}</Link></li>
+                  <li key={s.name}><Link to="/settings/sessions/$id" params={{ id: s.name }}>{s.name}</Link></li>
                 ))}
               </ul>
             </li>
           </ul>
         </div>
-        <div>
+        <div className="overflow-y-auto">
           <Outlet />
         </div>
       </div>

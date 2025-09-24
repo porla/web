@@ -46,8 +46,8 @@ function App() {
   }
 
   return (
-    <div className="text-white h-full grid grid-cols-[300px_1fr]">
-      <div className="bg-gray-700 border-r border-r-gray-500 h-full flex flex-col shadow-md">
+    <div className="text-white h-dvh grid grid-cols-[300px_1fr]">
+      <div className="bg-gray-700 border-r border-r-gray-500 h-dvh flex flex-col shadow-md">
         <div className="m-2 space-x-2">
           <Isotyope className="w-8" />
           {versions.data?.boost.version}
