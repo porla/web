@@ -1,8 +1,42 @@
 import useSWR from "swr";
 import { prefixPath } from "./base";
 
-const fetcher = function <T>(params: any) {
-  return async (method: string, ...args: any[]) => {
+
+export type PresetsList = {
+  presets: PresetsListItem[];
+}
+
+export type PresetsListItem = {
+  id: number;
+  name: string;
+}
+
+export type SessionsList = {
+  sessions: SessionsListItem[];
+}
+
+export type SessionsListItem = {
+  id: number;
+  name: string;
+}
+
+export type Preset = {
+  id: number;
+  name: string;
+  category: string | null;
+  download_limit: number | null;
+  max_connections: number | null;
+  max_uploads: number | null;
+  metadata: unknown | null;
+  session: string | null;
+  save_path: string | null;
+  storage_mode: "allocate" | "sparse" | null;
+  tags: string[];
+  upload_limit: number | null;
+}
+
+const fetcher = function <T>(method: string, params: any) {
+  return async () => {
     return await jsonrpc<T>(method, params);
   };
 }
@@ -59,5 +93,5 @@ export function useInvoker<T>(method: string) {
 }
 
 export function useRPC<T>(method: string, params?: any, config?: any) {
-  return useSWR(method, fetcher<T>(params), config);
+  return useSWR(params ? [method, params] : method, fetcher<T>(method, params), config);
 }

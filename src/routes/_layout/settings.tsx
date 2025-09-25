@@ -1,24 +1,16 @@
 import { createFileRoute, Link, Outlet } from '@tanstack/react-router'
-import { useInvoker, useRPC } from '../../jsonrpc';
+import { useInvoker, useRPC, type PresetsList, type SessionsList } from '../../jsonrpc';
 import { useSWRConfig } from 'swr';
 
 export const Route = createFileRoute('/_layout/settings')({
   component: RouteComponent,
 })
 
-type SessionsList = {
-  sessions: SessionsListItem[];
-}
-
-type SessionsListItem = {
-  name: string;
-}
-
 function RouteComponent() {
-  const presetsList = useRPC<any>("presets.list");
+  const presetsList = useRPC<PresetsList>("presets.list");
+  const sessionsList = useRPC<SessionsList>("sessions.list");
 
   const sessionsAdd = useInvoker("sessions.add");
-  const sessionsList = useRPC<SessionsList>("sessions.list");
 
   const { mutate } = useSWRConfig();
 
@@ -35,8 +27,12 @@ function RouteComponent() {
             <li>
               Presets
               <ul>
-                {Object.keys(presetsList.data || {}).map(p => (
-                  <li>{p}</li>
+                {presetsList.isLoading && (
+                  <>loading presets</>
+                )}
+
+                {presetsList.data?.presets.map(p => (
+                  <li key={p.id}><Link to="/settings/presets/$id" params={{ id: p.id }}>{p.name}</Link></li>
                 ))}
               </ul>
             </li>
@@ -54,6 +50,10 @@ function RouteComponent() {
                 </button>
               </div>
               <ul>
+                {sessionsList.isLoading && (
+                  <>loading sessions</>
+                )}
+
                 {sessionsList.data?.sessions.map(s => (
                   <li key={s.name}><Link to="/settings/sessions/$id" params={{ id: s.name }}>{s.name}</Link></li>
                 ))}
