@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useInvoker, useRPC } from "../../jsonrpc";
+import { useInvoker, useRPC } from "@/jsonrpc";
 import { useForm } from "@tanstack/react-form";
 import { useCallback, useMemo } from "react";
 
