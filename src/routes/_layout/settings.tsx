@@ -33,28 +33,27 @@ function RouteComponent() {
 
             {sessionsList.data?.sessions.map(s => (
               <li key={s.id}>
-                <Link to="/settings/sessions/$id" params={{ id: s.id }}>
+                <Link to="/settings/sessions/$id" params={{ id: s.id }} activeProps={{ className: "menu-active" }}>
                   <span className="size-3 bg-red-400 rounded"></span>
                   {s.name}
                 </Link>
               </li>
             ))}
-          </ul>
 
-          <ul className="space-y-5">
-            <li>Plugins</li>
-            <li>
-              Presets
-              <ul>
-                {presetsList.isLoading && (
-                  <>loading presets</>
-                )}
+            <li className="menu-title">Presets</li>
 
-                {presetsList.data?.presets.map(p => (
-                  <li key={p.id}><Link to="/settings/presets/$id" params={{ id: p.id }}>{p.name}</Link></li>
-                ))}
-              </ul>
-            </li>
+            {presetsList.isLoading && (
+              <li className="p-5 flex items-center">
+                <span className="loading loading-spinner loading-sm"></span>
+              </li>
+            )}
+
+
+            {presetsList.data?.presets.map(p => (
+              <li key={p.id}><Link to="/settings/presets/$id" params={{ id: p.id }}>{p.name}</Link></li>
+            ))}
+
+            <li className="menu-title">Plugins</li>
           </ul>
         </div>
         <div className="overflow-y-auto">
