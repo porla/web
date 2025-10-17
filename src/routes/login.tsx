@@ -29,63 +29,65 @@ function RouteComponent() {
   });
 
   return (
-    <div className="w-md mx-auto border bg-gray-600 rounded mt-5 p-5 text-white">
-      <form
-        onSubmit={(e) => {
-          e.preventDefault()
-          e.stopPropagation()
-          form.handleSubmit()
-        }}
-        className="flex flex-col space-y-3"
-      >
-        <form.Field
-          name="username"
-          children={(field) => {
-            return (
-              <div className="flex">
-                <label>Username</label>
+    <div className="pt-10">
+      <div className="w-96 shadow-sm mx-auto card bg-base-200 p-5">
+        <form
+          onSubmit={(e) => {
+            e.preventDefault()
+            e.stopPropagation()
+            form.handleSubmit()
+          }}
+          className="flex flex-col space-y-3"
+        >
+          <h1>Login</h1>
+          <form.Field
+            name="username"
+            children={(field) => {
+              return (
                 <input
-                  className="border p-2"
                   type="text"
+                  placeholder="Username"
+                  className="input w-full"
+                  required
                   id={field.name}
                   name={field.name}
                   value={field.state.value}
                   onBlur={field.handleBlur}
                   onChange={(e) => field.handleChange(e.target.value)}
                 />
-              </div>
-            )
-          }}
-        />
+              )
+            }}
+          />
 
-        <form.Field
-          name="password"
-          children={(field) => {
-            return (
-              <div className="flex">
-                <label>Password</label>
+          <form.Field
+            name="password"
+            children={(field) => {
+              return (
                 <input
                   type="password"
+                  placeholder="Password"
+                  className="input w-full"
+                  required
                   id={field.name}
                   name={field.name}
                   value={field.state.value}
                   onBlur={field.handleBlur}
                   onChange={(e) => field.handleChange(e.target.value)}
                 />
-              </div>
-            )
-          }}
-        />
+              )
+            }}
+          />
 
-        <form.Subscribe
-          selector={(state) => [state.canSubmit, state.isSubmitting]}
-          children={([canSubmit, isSubmitting]) => (
-            <button type="submit" disabled={!canSubmit}>
-              {isSubmitting ? '...' : 'Submit'}
-            </button>
-          )}
-        />
-      </form>
-    </div >
+          <form.Subscribe
+            selector={(state) => [state.canSubmit, state.isSubmitting]}
+            children={([canSubmit, isSubmitting]) => (
+              <button type="submit" className="btn btn-primary" disabled={!canSubmit}>
+                {isSubmitting ? '...' : 'Submit'}
+              </button>
+            )}
+          />
+        </form>
+      </div>
+    </div>
   )
 }

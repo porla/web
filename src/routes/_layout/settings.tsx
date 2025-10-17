@@ -21,7 +21,26 @@ function RouteComponent() {
       </div>
 
       <div className="grid grid-cols-[300px_1fr] h-dvh">
-        <div className="bg-gray-800 p-3">
+        <div className="bg-gray-800">
+          <ul className="menu w-full">
+            <li className="menu-title">Sessions</li>
+
+            {sessionsList.isLoading && (
+              <li className="p-5 flex items-center">
+                <span className="loading loading-spinner loading-sm"></span>
+              </li>
+            )}
+
+            {sessionsList.data?.sessions.map(s => (
+              <li key={s.id}>
+                <Link to="/settings/sessions/$id" params={{ id: s.id }}>
+                  <span className="size-3 bg-red-400 rounded"></span>
+                  {s.name}
+                </Link>
+              </li>
+            ))}
+          </ul>
+
           <ul className="space-y-5">
             <li>Plugins</li>
             <li>
@@ -33,29 +52,6 @@ function RouteComponent() {
 
                 {presetsList.data?.presets.map(p => (
                   <li key={p.id}><Link to="/settings/presets/$id" params={{ id: p.id }}>{p.name}</Link></li>
-                ))}
-              </ul>
-            </li>
-            <li>
-              <div className="flex justify-between">
-                <span>Sessions</span>
-                <button
-                  className="text-sm cursor-pointer"
-                  onClick={async () => {
-                    await sessionsAdd({ name: "sess-" + new Date().getSeconds() });
-                    mutate("sessions.list");
-                  }}
-                >
-                  Add
-                </button>
-              </div>
-              <ul>
-                {sessionsList.isLoading && (
-                  <>loading sessions</>
-                )}
-
-                {sessionsList.data?.sessions.map(s => (
-                  <li key={s.name}><Link to="/settings/sessions/$id" params={{ id: s.name }}>{s.name}</Link></li>
                 ))}
               </ul>
             </li>

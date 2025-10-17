@@ -5,6 +5,9 @@ import { useCallback, useMemo } from "react";
 
 export const Route = createFileRoute("/_layout/settings/sessions/$id")({
   component: RouteComponent,
+  params: {
+    parse: (p) => { return { id: Number(p.id) } }
+  }
 });
 
 type SessionsSettingsList = {
@@ -20,9 +23,7 @@ type SessionSettings = {
 
 function RouteComponent() {
   const { id } = Route.useParams();
-  const settings = useRPC<SessionsSettingsList>("sessions.settings.list", {
-    name: id,
-  });
+  const settings = useRPC<SessionsSettingsList>("sessions.settings.list", { id });
 
   if (settings.isLoading) {
     return <>Loading settings</>;
@@ -37,7 +38,7 @@ function RouteComponent() {
   }
 
   return (
-    <SessionSettingsForm session_name={id} settings={settings.data.settings} />
+    <SessionSettingsForm session_name={"dd"} settings={settings.data.settings} />
   );
 }
 
