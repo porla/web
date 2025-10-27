@@ -1,9 +1,17 @@
 import useSWR from "swr";
 import { prefixPath } from "./base";
 
+export type PluginsList = {
+  plugins: PluginsListItem[];
+}
 
 export type PresetsList = {
   presets: PresetsListItem[];
+}
+
+export type PluginsListItem = {
+  id: number;
+  name: string;
 }
 
 export type PresetsListItem = {
@@ -16,6 +24,11 @@ export type SessionsList = {
 }
 
 export type SessionsListItem = {
+  id: number;
+  name: string;
+}
+
+export type Plugin = {
   id: number;
   name: string;
 }
