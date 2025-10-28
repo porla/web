@@ -1,80 +1,80 @@
 import useSWR from "swr";
 import { prefixPath } from "@/base";
 
-export type ErrC = {
-
-};
+export type ErrC = {};
 
 export type TorrentsList = {
   torrents: TorrentsListItem[];
 };
 
+export type InfoHash = [string | null, string | null] | string;
+
 export type TorrentsListItem = {
+  $userdata: {
+    category: string | null;
+    metadata: Record<string, unknown>;
+    tags: string[];
+  };
+
   active_duration: number;
   all_time_download: number;
   all_time_upload: number;
-  category: string | null;
   download_rate: number;
-  error: ErrC | null;
-  eta: number;
+  errc: ErrC | null;
   finished_duration: number;
-  flags: string[];
-  info_hash: [string | null, string | null];
+  flags: number;
+  info_hash: InfoHash;
   last_download: number;
   last_upload: number;
   list_peers: number;
   list_seeds: number;
-  metadata: Record<string, unknown>;
   moving_storage: boolean;
   name: string;
   num_peers: number;
   num_seeds: number;
   progress: number;
   queue_position: number;
-  ratio: number;
   save_path: string;
   seeding_duration: number;
-  session_id: number;
-  session_name: string;
   size: number;
   state: number;
   tags: string[];
   total: number;
   total_done: number;
   upload_rate: number;
-}
+};
 
 export type PluginsList = {
   plugins: PluginsListItem[];
-}
+};
 
 export type PresetsList = {
   presets: PresetsListItem[];
-}
+};
 
 export type PluginsListItem = {
   id: number;
   name: string;
-}
+};
 
 export type PresetsListItem = {
   id: number;
   name: string;
-}
+};
 
 export type SessionsList = {
   sessions: SessionsListItem[];
-}
+};
 
 export type SessionsListItem = {
   id: number;
   name: string;
-}
+};
 
 export type Plugin = {
   id: number;
   name: string;
-}
+};
 
 export type Preset = {
   id: number;
@@ -89,33 +89,64 @@ export type Preset = {
   storage_mode: "allocate" | "sparse" | null;
   tags: string[];
   upload_limit: number | null;
-}
+};
+
+export type TorrentFile = {
+  name: string;
+  size: number;
+};
+
+export type TorrentsFilesList = {
+  files: TorrentFile[];
+};
+
+export type TorrentsFilesProgress = {
+  progress: number[];
+};
+
+export type Peer = {
+  ip: [string, number];
+  client: string;
+};
+
+export type TorrentsPeersList = {
+  peers: Peer[];
+};
+
+export type AnnounceEntry = {
+  url: string;
+};
+
+export type TorrentsTrackersList = {
+  trackers: AnnounceEntry[];
+};
 
 export type TorrentsOverviewSession = {
   torrents_errors: number;
   torrents_per_category: Record<string, number>;
+  torrents_per_flags: [[number, number]];
   torrents_per_state: Record<string, number>;
   torrents_per_tag: Record<string, number>;
   torrents_per_tracker: Record<string, number>;
   torrents_total: number;
-}
+};
 
 export type TorrentsOverview = {
   sessions: Record<string, TorrentsOverviewSession>;
-}
+};
 
 const fetcher = function <T>(method: string, params: any) {
   return async () => {
     return await jsonrpc<T>(method, params);
   };
-}
+};
 
 export class RpcError extends Error {
   data: any;
   code: number;
 
   constructor(code: number, message: string, data: any) {
-    super(message)
+    super(message);
     this.name = "RpcError";
     this.code = code;
     this.data = data;
@@ -130,14 +161,14 @@ export class AuthError extends Error {
 }
 
 async function jsonrpc<T>(method: string, params?: any) {
-  const res = await fetch(prefixPath('/api/v1/jsonrpc'), {
+  const res = await fetch(prefixPath("/api/v1/jsonrpc"), {
     body: JSON.stringify({
-      jsonrpc: '2.0',
+      jsonrpc: "2.0",
       method,
       id: Date.now(),
-      params: params || {}
+      params: params || {},
     }),
-    method: 'POST'
+    method: "POST",
   });
 
   if (res.status === 401) {
@@ -162,5 +193,9 @@ export function useInvoker<T>(method: string) {
 }
 
 export function useRPC<T>(method: string, params?: any, config?: any) {
-  return useSWR(params ? [method, params] : method, fetcher<T>(method, params), config);
+  return useSWR(
+    params ? [method, params] : method,
+    fetcher<T>(method, params),
+    config
+  );
 }
