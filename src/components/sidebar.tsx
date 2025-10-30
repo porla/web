@@ -9,11 +9,11 @@ export default function Sidebar() {
   const navigate = useNavigate();
 
   const sessions = useRPC<SessionsList>("sessions.list", null, {
-    refreshInterval: 5000
+    refetchInterval: 5000
   });
 
   const overview = useRPC<TorrentsOverview>("torrents.overview", null, {
-    refreshInterval: 1000,
+    refetchInterval: 1000,
   });
 
   useEffect(() => {
@@ -75,7 +75,7 @@ export default function Sidebar() {
               <p>loading sessions</p>
             )}
             <ul>
-              {sessions.data?.sessions.map(s => (
+              {sessions.data && sessions.data?.sessions.map(s => (
                 <li key={s.id} className="text-sm">
                   <Link
                     to="/"
@@ -91,7 +91,7 @@ export default function Sidebar() {
                     <span
                       className="size-3 rounded"
                       style={{
-                        backgroundColor: s.metadata["$color"] ? String(s.metadata["$color"]) : "#ccc"
+                        backgroundColor: s.metadata["color"] ? String(s.metadata["color"]) : "#ccc"
                       }}
                     ></span>
                     <span>{s.name}</span>

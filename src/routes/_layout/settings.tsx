@@ -7,6 +7,7 @@ import {
   type SessionsList,
 } from "../../jsonrpc";
 import { useSWRConfig } from "swr";
+import { StarIcon } from "@heroicons/react/20/solid";
 
 export const Route = createFileRoute("/_layout/settings")({
   component: RouteComponent,
@@ -48,10 +49,11 @@ function RouteComponent() {
                   <span
                     className="size-3 rounded"
                     style={{
-                      backgroundColor: s.metadata["$color"] ? String(s.metadata["$color"]) : "#ccc"
+                      backgroundColor: s.metadata["color"] ? String(s.metadata["color"]) : "#ccc"
                     }}
                   ></span>
                   {s.name}
+                  {s.is_default && <StarIcon className="size-4" />}
                 </Link>
               </li>
             ))}
@@ -93,7 +95,7 @@ function RouteComponent() {
             ))}
           </ul>
         </div>
-        <div className="overflow-y-auto">
+        <div className="overflow-y-auto p-5">
           <Outlet />
         </div>
       </div>

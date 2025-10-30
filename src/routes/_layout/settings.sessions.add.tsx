@@ -21,7 +21,7 @@ function RouteComponent() {
       settings_base: "default"
     },
     onSubmit: async ({ value }) => {
-      const { id } = await add(value);
+      const { id } = await add.mutateAsync(value);
       await navigate({ to: "/settings/sessions/$id", params: { id } })
     }
   })

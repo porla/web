@@ -1,9 +1,14 @@
-import useSWR from "swr";
+import {
+  useMutation,
+  useQuery,
+  type DefinedInitialDataOptions,
+  type UseMutationOptions,
+} from "@tanstack/react-query";
 import { prefixPath } from "@/base";
 
 export const TorrentFlags = {
-  Paused: 16
-}
+  Paused: 16,
+};
 
 export type ErrC = {};
 
@@ -77,6 +82,7 @@ export type SessionsList = {
 export type SessionsListItem = {
   id: number;
   name: string;
+  is_default: boolean;
   metadata: Record<string, unknown>;
   torrents_total: number;
 };
@@ -147,12 +153,6 @@ export type TorrentsOverview = {
   sessions: TorrentsOverviewSession[];
 };
 
-const fetcher = function <T>(method: string, params: any) {
-  return async () => {
-    return await jsonrpc<T>(method, params);
-  };
-};
-
 export class RpcError extends Error {
   data: any;
   code: number;
@@ -200,14 +200,25 @@ async function jsonrpc<T>(method: string, params?: any) {
   return data.result as T;
 }
 
-export function useInvoker<T>(method: string) {
-  return (params?: any) => jsonrpc<T>(method, params);
+export function useInvoker<T>(
+  method: string,
+  options?: Partial<UseMutationOptions<T, Error, any, unknown>>
+) {
+  return useMutation({
+    mutationFn: (params: any) => jsonrpc<T>(method, params),
+    mutationKey: [method],
+    ...options,
+  });
 }
 
-export function useRPC<T>(method: string, params?: any, config?: any) {
-  return useSWR(
-    params ? [method, params] : method,
-    fetcher<T>(method, params),
-    config
-  );
+export function useRPC<T>(
+  method: string,
+  params?: any,
+  config?: Partial<DefinedInitialDataOptions<T, Error, T, readonly unknown[]>>
+) {
+  return useQuery<T>({
+    queryFn: () => jsonrpc<T>(method, params),
+    queryKey: [method, params],
+    ...config,
+  });
 }
