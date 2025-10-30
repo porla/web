@@ -16,26 +16,60 @@ import { filesize } from "filesize";
 import clsx from "clsx";
 
 type TorrentSearch = {
+  session_id?: number;
   state?: "downloading" | "finished" | "seeding" | "paused" | "error";
   selected_info_hash?: InfoHash;
   selected_session_id?: number;
   selected_tab_id?: string;
 };
 
+const isValidState = (value: unknown): value is TorrentSearch['state'] => {
+  return typeof value === 'string' &&
+    ['downloading', 'finished', 'seeding', 'paused', 'error'].includes(value);
+};
+
 export const Route = createFileRoute("/_layout/")({
   component: Index,
   validateSearch: (search: Record<string, unknown>): TorrentSearch => {
     return {
-      state: search.state === "downloading" ? "downloading" : undefined,
+      session_id: search.session_id ? Number(search.session_id) : undefined,
+      state: isValidState(search.state) ? search.state : undefined,
     };
   },
 });
+
+function buildFilter(state: TorrentSearch['state']) {
+  if (state == "downloading") {
+    return { state: "downloading" }
+  }
+
+  if (state === "error") {
+    return { errc: true }
+  }
+
+  if (state === "finished") {
+    return { state: "finished" }
+  }
+
+  if (state === "paused") {
+    return { flags: 16 }
+  }
+
+  if (state === "seeding") {
+    return { state: "seeding" }
+  }
+}
 
 function Index() {
   const search = Route.useSearch();
   const [addOpen, setAddOpen] = useState(false);
 
-  const torrents = useRPC<TorrentsList>("torrents.list", null, {
+  const torrents = useRPC<TorrentsList>("torrents.list", {
+    filters: {
+      session_id: search.session_id,
+      ...buildFilter(search.state)
+    }
+  }, {
     refreshInterval: 1000,
   });
 
@@ -50,7 +84,13 @@ function Index() {
       <div className="flex-1 overflow-auto">
         <table className="w-full text-sm">
           <thead>
-            <tr className="bg-gray-900">
+            <tr className="bg-gray-900 text-gray-500">
+              <th className="w-min border-b-gray-700 border-b">
+                <input type="checkbox" />
+              </th>
+              <th className="w-min border-b-gray-700 border-b">
+                #
+              </th>
               <th className="py-2 pl-2 border-b-gray-700 border-b text-left">
                 Name
               </th>
@@ -69,6 +109,12 @@ function Index() {
           <tbody>
             {torrents.data?.torrents.map((t) => (
               <tr key={t.info_hash[0]} className="hover:bg-gray-700">
+                <td className="text-center">
+                  <input type="checkbox" />
+                </td>
+                <td className="text-center text-gray-500">
+                  {t.queue_position < 0 ? "-" : t.queue_position}
+                </td>
                 <td className="pl-2 py-1 font-medium">
                   <Link
                     to="/"
@@ -76,14 +122,14 @@ function Index() {
                       ...search,
                       selected_info_hash:
                         t.info_hash[1] || t.info_hash[0] || t.info_hash,
-                      selected_session_id: 1337,
+                      selected_session_id: search.session_id,
                       selected_tab_id: search.selected_tab_id || "general",
                     }}
                   >
                     {t.name}
                   </Link>
                 </td>
-                <td className="text-right">{filesize(t.size)}</td>
+                <td className="text-right">{filesize(t.total)}</td>
                 <td className="py-2 px-3 flex items-center justify-center">
                   <progress
                     className="w-full rounded-sm border border-blue-400"
@@ -92,13 +138,15 @@ function Index() {
                   />
                 </td>
                 <td>{t.state}</td>
-                <td className="text-right">{filesize(t.download_rate)}/s</td>
-                <td className="text-right">{filesize(t.upload_rate)}/s</td>
+                <td className="text-right">{filesize(t.download_payload_rate)}/s</td>
+                <td className="text-right">{filesize(t.upload_payload_rate)}/s</td>
                 <td className="flex justify-center items-center">
-                  <TorrentMenu
-                    info_hash={t.info_hash}
-                    session_id={1337}
-                  />
+                  {search.session_id && (
+                    <TorrentMenu
+                      info_hash={t.info_hash}
+                      session_id={search.session_id}
+                    />
+                  )}
                 </td>
               </tr>
             ))}
@@ -106,7 +154,11 @@ function Index() {
         </table>
       </div>
 
-      <div className="bg-red-100">paging</div>
+      {torrents.data && (
+        <div className="bg-gray-800 text-white text-sm p-2">
+          Showing {Math.min((torrents.data.page + 1) * torrents.data.page_size, torrents.data.torrents.length)} of {torrents.data.torrents_total} torrent(s)
+        </div>
+      )}
 
       {search.selected_info_hash && (
         <TorrentDetails
@@ -134,7 +186,7 @@ function TorrentDetails(props: TorrentDetailsProps) {
   const search = Route.useSearch();
 
   return (
-    <div className="h-[400px] border-t border-t-gray-400 mt-3 pt-1 bg-gray-800 flex flex-col">
+    <div className="h-[400px] border-t border-t-gray-400 pt-1 bg-gray-800 flex flex-col">
       <div className="flex justify-between">
         <div>
           <div className="grid grid-cols-1 sm:hidden">

@@ -2,6 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useInvoker, useRPC } from "@/jsonrpc";
 import { useForm } from "@tanstack/react-form";
 import { useCallback, useMemo } from "react";
+import Button from "@/components/button";
 
 export const Route = createFileRoute("/_layout/settings/sessions/$id")({
   component: RouteComponent,
@@ -10,8 +11,15 @@ export const Route = createFileRoute("/_layout/settings/sessions/$id")({
   }
 });
 
-type SessionsSettingsList = {
+type Session = {
+  id: number;
+  name: string;
+  metadata: Record<string, unknown>;
   settings: SessionSettings;
+}
+
+type SessionsGet = {
+  session: Session;
 };
 
 type SessionSettings = {
@@ -23,22 +31,70 @@ type SessionSettings = {
 
 function RouteComponent() {
   const { id } = Route.useParams();
-  const settings = useRPC<SessionsSettingsList>("sessions.settings.list", { id });
+  const session = useRPC<SessionsGet>("sessions.get", { id });
+  const update = useInvoker("sessions.update");
 
-  if (settings.isLoading) {
+  const form = useForm({
+    defaultValues: {
+      dollar_color: String(session.data?.session.metadata["$color"] || "#000000")
+    },
+    onSubmit: async ({ value }) => {
+      await update({
+        id,
+        metadata: {
+          ...session.data?.session.metadata,
+          "$color": value.dollar_color
+        }
+      })
+    }
+  });
+
+  if (session.isLoading) {
     return <>Loading settings</>;
   }
 
-  if (settings.error) {
+  if (session.error) {
     return <>failed to load session settings</>;
   }
 
-  if (!settings.data) {
+  if (!session.data) {
     return <>no data</>;
   }
 
   return (
-    <SessionSettingsForm session_name={"dd"} settings={settings.data.settings} />
+    <>
+      <h1>{session.data.session.name}</h1>
+      <div className="m-5 border rounded p-5">
+        <form
+          onSubmit={(e) => {
+            e.preventDefault()
+            e.stopPropagation()
+            form.handleSubmit()
+          }}
+          className="flex flex-col space-y-3"
+        >
+          <form.Field
+            name="dollar_color"
+            children={(field) => (
+              <div className="flex items-center space-x-5">
+                <label htmlFor={field.name}>Session color</label>
+                <input
+                  type="color"
+                  className="cursor-pointer rounded size-8"
+                  id={field.name}
+                  name={field.name}
+                  value={field.state.value}
+                  onBlur={field.handleBlur}
+                  onChange={(e) => field.handleChange(e.target.value)}
+                />
+              </div>
+            )}
+          />
+          <Button type="submit" text="Update session" />
+        </form>
+      </div>
+      <SessionSettingsForm session_name={"dd"} settings={session.data.session.settings} />
+    </>
   );
 }
 

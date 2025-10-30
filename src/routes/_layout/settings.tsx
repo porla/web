@@ -45,7 +45,12 @@ function RouteComponent() {
                   params={{ id: s.id }}
                   activeProps={{ className: "menu-active" }}
                 >
-                  <span className="size-3 bg-red-400 rounded"></span>
+                  <span
+                    className="size-3 rounded"
+                    style={{
+                      backgroundColor: s.metadata["$color"] ? String(s.metadata["$color"]) : "#ccc"
+                    }}
+                  ></span>
                   {s.name}
                 </Link>
               </li>

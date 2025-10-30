@@ -1,15 +1,22 @@
 import useSWR from "swr";
 import { prefixPath } from "@/base";
 
+export const TorrentFlags = {
+  Paused: 16
+}
+
 export type ErrC = {};
 
 export type TorrentsList = {
-  torrents: TorrentsListItem[];
+  page: number;
+  page_size: number;
+  torrents: Torrent[];
+  torrents_total: number;
 };
 
 export type InfoHash = [string | null, string | null] | string;
 
-export type TorrentsListItem = {
+export type Torrent = {
   $userdata: {
     category: string | null;
     metadata: Record<string, unknown>;
@@ -19,6 +26,7 @@ export type TorrentsListItem = {
   active_duration: number;
   all_time_download: number;
   all_time_upload: number;
+  download_payload_rate: number;
   download_rate: number;
   errc: ErrC | null;
   finished_duration: number;
@@ -36,11 +44,11 @@ export type TorrentsListItem = {
   queue_position: number;
   save_path: string;
   seeding_duration: number;
-  size: number;
   state: number;
   tags: string[];
   total: number;
   total_done: number;
+  upload_payload_rate: number;
   upload_rate: number;
 };
 
@@ -69,6 +77,8 @@ export type SessionsList = {
 export type SessionsListItem = {
   id: number;
   name: string;
+  metadata: Record<string, unknown>;
+  torrents_total: number;
 };
 
 export type Plugin = {
@@ -122,6 +132,8 @@ export type TorrentsTrackersList = {
 };
 
 export type TorrentsOverviewSession = {
+  session_id: number;
+  session_name: string;
   torrents_errors: number;
   torrents_per_category: Record<string, number>;
   torrents_per_flags: [[number, number]];
@@ -132,7 +144,7 @@ export type TorrentsOverviewSession = {
 };
 
 export type TorrentsOverview = {
-  sessions: Record<string, TorrentsOverviewSession>;
+  sessions: TorrentsOverviewSession[];
 };
 
 const fetcher = function <T>(method: string, params: any) {
