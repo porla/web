@@ -1,25 +1,12 @@
 'use client'
 
+import { Suspense } from 'react';
 import { Dialog, DialogBackdrop, DialogPanel, DialogTitle } from '@headlessui/react'
 import { ExclamationTriangleIcon } from '@heroicons/react/24/outline'
 import Button from '@/components/button';
 import { useAppForm } from '@/hooks/form';
 import { useInvoker } from '@/jsonrpc';
-import { Suspense } from 'react';
-
-const readSingleFile = (blob: Blob): Promise<string> => {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onload = function () {
-      const idx = reader.result?.toString().indexOf("base64,")!;
-      const data = reader.result?.toString().substring(idx + "base64,".length);
-      if (!data) return reject();
-      resolve(data);
-    };
-    reader.onerror = () => reject();
-    reader.readAsDataURL(blob);
-  });
-}
+import { readFile } from '@/utils';
 
 type AddTorrentModalProps = {
   open: boolean;
@@ -44,9 +31,9 @@ export default function AddTorrentModal(props: AddTorrentModalProps) {
         return;
       }
 
-      await add({
+      await add.mutateAsync({
         save_path: value.save_path,
-        ti: await readSingleFile(value.ti[0])
+        ti: await readFile(value.ti[0])
       })
 
       props.onClose();

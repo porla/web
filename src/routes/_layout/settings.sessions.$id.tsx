@@ -144,6 +144,8 @@ function SessionPage({ id }: { id: number }) {
           </div>
         </div>
       </form>
+
+      <SessionSettingsForm session_name={session.data.session.name} settings={session.data.session.settings} />
     </>
   );
 }
@@ -160,7 +162,7 @@ function SessionSettingsForm(props: SessionSettingsFormProps) {
     return Object.keys(settings || {}) as (keyof SessionSettings)[];
   }, [settings]);
 
-  const updateSettings = useInvoker("sessions.settings.set");
+  const updateSettings = useInvoker("sessions.update");
 
   const form = useForm({
     defaultValues: settings,
@@ -184,7 +186,7 @@ function SessionSettingsForm(props: SessionSettingsFormProps) {
 
   return (
     <form onSubmit={formSubmit}>
-      <div className="m-5 border border-gray-600 rounded shadow bg-gray-800">
+      <div className="mt-5 border border-gray-600 rounded shadow bg-gray-800">
         <div className="p-3 bg-gray-600 flex items-center justify-between">
           <span>Session settings</span>
 

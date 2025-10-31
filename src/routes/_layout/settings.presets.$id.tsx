@@ -1,7 +1,7 @@
 import { createFileRoute } from '@tanstack/react-router'
-import { useInvoker, useRPC, type Preset, type SessionsList } from '../../jsonrpc';
-import { useForm } from '@tanstack/react-form';
-import { useSWRConfig } from 'swr';
+import { useInvoker, useRPC, type Preset, type SessionsList } from '@/jsonrpc';
+import { useAppForm } from '@/hooks/form';
+import { Suspense } from 'react';
 
 export const Route = createFileRoute('/_layout/settings/presets/$id')({
   component: RouteComponent,
@@ -23,7 +23,7 @@ function RouteComponent() {
     return <>preset not found</>
   }
 
-  return <PresetForm preset={preset.data} />
+  return <PresetForm key={id} preset={preset.data} />
 }
 
 type PresetFormProps = {
@@ -35,205 +35,107 @@ function PresetForm(props: PresetFormProps) {
 
   const sessions = useRPC<SessionsList>("sessions.list");
   const update = useInvoker("presets.update");
-  const { mutate } = useSWRConfig();
 
-  const form = useForm({
+  const form = useAppForm({
     defaultValues: preset,
     onSubmit: async ({ value }) => {
-      await update(value);
-      mutate(["presets.get", { id: preset.id }]);
-      mutate("presets.list");
+      await update.mutateAsync(value);
     }
   });
 
+  if (!sessions.data) {
+    return <>loading sessions</>
+  }
+
   return (
-    <form onSubmit={(e) => {
-      e.preventDefault();
-      e.stopPropagation();
-      form.handleSubmit();
-    }}>
-      <div className="m-5 border border-gray-600 rounded shadow bg-gray-800">
-        <div className="p-3 bg-gray-600 flex items-center justify-between">
-          <span>Edit preset {preset.name}</span>
+    <form
+      onSubmit={(e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        form.handleSubmit();
+      }}
+    >
+      <div className="divide-y divide-gray-200 overflow-hidden rounded-lg bg-white shadow-sm dark:divide-white/10 dark:bg-gray-800/50 dark:shadow-none dark:outline dark:-outline-offset-1 dark:outline-white/10">
+        <div className="px-3 py-3 flex items-center justify-between">
+          <h1 className="font-bold">{preset.name}</h1>
 
           <form.Subscribe
             selector={(state) => [state.canSubmit, state.isSubmitting]}
             children={([canSubmit, isSubmitting]) => (
               <button
                 type="submit"
-                disabled={!canSubmit}
-                className="text-xs border p-1 rounded cursor-pointer"
+                className="relative inline-flex disabled:text-gray-300 disabled:cursor-not-allowed items-center rounded-l-md bg-white px-3 py-2 text-sm font-semibold text-gray-900 inset-ring-1 inset-ring-gray-300 hover:bg-gray-50 focus:z-10 dark:bg-white/10 dark:text-white dark:inset-ring-gray-700 dark:hover:bg-white/20"
+                disabled={!canSubmit || isSubmitting}
               >
-                {isSubmitting ? "..." : "Save changes"}
+                Save
               </button>
             )}
           />
         </div>
-        {/*
+        <div className="px-4 py-3 space-y-5">
+          <Suspense fallback={<p>Loading form</p>}>
+            <form.AppField
+              name="name"
+              children={(field) => <field.TextField label="Name" />}
+            />
+
+            <form.AppField
+              name="is_default"
+              children={(field) => <field.CheckboxField label="Is default" />}
+            />
+
+            <form.AppField
+              name="metadata.color"
+              children={(field) => <field.ColorField label="Color" />}
+            />
+
+            <form.AppField
+              name="session_id"
+              children={
+                (field) => <field.SelectField
+                  label="Session"
+                  items={sessions.data?.sessions.map(s => { return { id: s.id, name: s.name } })}
+                />
+              }
+            />
+
+            <form.AppField
+              name="save_path"
+              children={(field) => <field.TextField label="Save path" />}
+            />
+
+            <form.AppField
+              name="category"
+              children={(field) => <field.TextField label="Category" />}
+            />
+
+            <form.AppField
+              name="download_limit"
+              children={(field) => <field.NumberField label="Download rate limit" />}
+            />
+
+            <form.AppField
+              name="upload_limit"
+              children={(field) => <field.NumberField label="Upload rate limit" />}
+            />
+
+            <form.AppField
+              name="max_connections"
+              children={(field) => <field.NumberField label="Max connections" />}
+            />
+
+            <form.AppField
+              name="max_uploads"
+              children={(field) => <field.NumberField label="Max uploads" />}
+            />
+
+            {/*
 
   metadata: unknown | null;
   storage_mode: "allocate" | "sparse" | null;
   tags: string[];
    */}
-        <div className="grid grid-cols-[300px_1fr] p-3 space-y-3">
-          <form.Field
-            name="name"
-            children={(field) => (
-              <>
-                <div>Name</div>
-                <div>
-                  <input
-                    className="border p-2 w-full"
-                    type="text"
-                    id={field.name}
-                    name={field.name}
-                    value={field.state.value}
-                    onChange={(e) => field.handleChange(e.target.value)}
-                  />
-                </div>
-              </>
-            )}
-          />
-
-          <form.Field
-            name="category"
-            children={(field) => (
-              <>
-                <div>Category</div>
-                <div>
-                  <input
-                    className="border p-2 w-full"
-                    type="text"
-                    id={field.name}
-                    name={field.name}
-                    value={field.state.value || undefined}
-                    onChange={(e) => field.handleChange(e.target.value)}
-                  />
-                </div>
-              </>
-            )}
-          />
-
-          <form.Field
-            name="download_limit"
-            children={(field) => (
-              <>
-                <div>Download limit</div>
-                <div>
-                  <input
-                    className="border p-2 w-full"
-                    type="number"
-                    id={field.name}
-                    name={field.name}
-                    value={field.state.value || undefined}
-                    onChange={(e) => field.handleChange(parseInt(e.target.value, 10))}
-                  />
-                </div>
-              </>
-            )}
-          />
-
-          <form.Field
-            name="upload_limit"
-            children={(field) => (
-              <>
-                <div>Upload limit</div>
-                <div>
-                  <input
-                    className="border p-2 w-full"
-                    type="number"
-                    id={field.name}
-                    name={field.name}
-                    value={field.state.value || undefined}
-                    onChange={(e) => field.handleChange(parseInt(e.target.value, 10))}
-                  />
-                </div>
-              </>
-            )}
-          />
-
-          <form.Field
-            name="max_connections"
-            children={(field) => (
-              <>
-                <div>Max connections</div>
-                <div>
-                  <input
-                    className="border p-2 w-full"
-                    type="number"
-                    id={field.name}
-                    name={field.name}
-                    value={field.state.value || undefined}
-                    onChange={(e) => field.handleChange(parseInt(e.target.value, 10))}
-                  />
-                </div>
-              </>
-            )}
-          />
-
-          <form.Field
-            name="max_uploads"
-            children={(field) => (
-              <>
-                <div>Max uploads</div>
-                <div>
-                  <input
-                    className="border p-2 w-full"
-                    type="number"
-                    id={field.name}
-                    name={field.name}
-                    value={field.state.value || undefined}
-                    onChange={(e) => field.handleChange(parseInt(e.target.value, 10))}
-                  />
-                </div>
-              </>
-            )}
-          />
-
-          <form.Field
-            name="save_path"
-            children={(field) => (
-              <>
-                <div>Save path</div>
-                <div>
-                  <input
-                    className="border p-2 w-full"
-                    type="text"
-                    id={field.name}
-                    name={field.name}
-                    value={field.state.value || ""}
-                    onChange={(e) => field.handleChange(e.target.value)}
-                  />
-                </div>
-              </>
-            )}
-          />
-
-          <form.Field
-            name="session"
-            children={(field) => (
-              <>
-                <div>Session</div>
-                <div>
-                  {sessions.data && (
-                    <select
-                      id={field.name}
-                      name={field.name}
-                      value={field.state.value || undefined}
-                      onChange={(e) => field.handleChange(e.target.value)}
-                    >
-                      <option value={""}>Not set</option>
-                      {
-                        sessions.data.sessions.map(s => (
-                          <option key={s.id} value={s.name}>{s.name}</option>
-                        ))
-                      }
-                    </select>
-                  )}
-                </div>
-              </>
-            )}
-          />
+          </Suspense>
         </div>
       </div>
     </form>

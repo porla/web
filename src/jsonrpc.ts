@@ -62,15 +62,10 @@ export type PluginsList = {
 };
 
 export type PresetsList = {
-  presets: PresetsListItem[];
+  presets: Pick<Preset, "id" | "name" | "is_default" | "metadata">[];
 };
 
 export type PluginsListItem = {
-  id: number;
-  name: string;
-};
-
-export type PresetsListItem = {
   id: number;
   name: string;
 };
@@ -89,18 +84,23 @@ export type SessionsListItem = {
 
 export type Plugin = {
   id: number;
-  name: string;
+  name: string | null;
+  config: string | null;
+  metadata: Record<string, unknown> | null;
+  type: "path" | "archive";
+  version: string | null;
 };
 
 export type Preset = {
   id: number;
   name: string;
+  is_default: boolean;
   category: string | null;
   download_limit: number | null;
   max_connections: number | null;
   max_uploads: number | null;
-  metadata: unknown | null;
-  session: string | null;
+  metadata: Record<string, unknown>;
+  session_id: number | null;
   save_path: string | null;
   storage_mode: "allocate" | "sparse" | null;
   tags: string[];

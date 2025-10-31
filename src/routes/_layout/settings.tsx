@@ -1,12 +1,10 @@
 import { createFileRoute, Link, Outlet } from "@tanstack/react-router";
 import {
-  useInvoker,
   useRPC,
   type PluginsList,
   type PresetsList,
   type SessionsList,
 } from "../../jsonrpc";
-import { useSWRConfig } from "swr";
 import { StarIcon } from "@heroicons/react/20/solid";
 
 export const Route = createFileRoute("/_layout/settings")({
@@ -18,17 +16,13 @@ function RouteComponent() {
   const presetsList = useRPC<PresetsList>("presets.list");
   const sessionsList = useRPC<SessionsList>("sessions.list");
 
-  const sessionsAdd = useInvoker("sessions.add");
-
-  const { mutate } = useSWRConfig();
-
   return (
-    <div className="h-full">
+    <div className="h-full flex flex-col">
       <div className="bg-gray-600 text-lg p-3">
         <div>Settings</div>
       </div>
 
-      <div className="grid grid-cols-[300px_1fr] h-dvh">
+      <div className="grid grid-cols-[300px_1fr] flex-1">
         <div className="bg-gray-800">
           <ul className="menu w-full">
             <li className="menu-title">Sessions</li>
@@ -69,7 +63,14 @@ function RouteComponent() {
             {presetsList.data?.presets.map((p) => (
               <li key={p.id}>
                 <Link to="/settings/presets/$id" params={{ id: p.id }}>
+                  <span
+                    className="size-3 rounded"
+                    style={{
+                      backgroundColor: p.metadata["color"] ? String(p.metadata["color"]) : "#ccc"
+                    }}
+                  ></span>
                   {p.name}
+                  {p.is_default && <StarIcon className="size-4" />}
                 </Link>
               </li>
             ))}
@@ -95,7 +96,7 @@ function RouteComponent() {
             ))}
           </ul>
         </div>
-        <div className="overflow-y-auto p-5">
+        <div className="p-5 overflow-y-auto">
           <Outlet />
         </div>
       </div>

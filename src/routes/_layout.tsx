@@ -1,13 +1,11 @@
 import { useEffect, useState } from "react";
 import {
   createFileRoute,
-  Link,
   Navigate,
   Outlet,
-  useSearch,
 } from "@tanstack/react-router";
 
-import { AuthError, type SessionsList, useRPC, type TorrentsOverview } from "@/jsonrpc";
+import { AuthError, useRPC } from "@/jsonrpc";
 import { prefixPath } from "@/base";
 import Sidebar from "@/components/sidebar";
 
@@ -63,7 +61,7 @@ type AuthAppProps = {
   versions: SysVersions;
 };
 
-function AuthApp({ versions }: AuthAppProps) {
+function AuthApp({ }: AuthAppProps) {
   return (
     <div className="text-white h-dvh grid grid-cols-[300px_1fr]">
       <Sidebar />

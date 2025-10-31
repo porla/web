@@ -70,7 +70,7 @@ function Index() {
       ...buildFilter(search.state)
     }
   }, {
-    refreshInterval: 1000,
+    refetchInterval: 1000,
   });
 
   return (
@@ -266,7 +266,7 @@ function TorrentPeerDetails(props: TorrentDetailsProps) {
     "torrents.peers.list",
     { ...props },
     {
-      refreshInterval: 1000,
+      refetchInterval: 1000,
     }
   );
 
@@ -297,7 +297,7 @@ function TorrentFileDetails(props: TorrentDetailsProps) {
     "torrents.files.list",
     { ...props },
     {
-      refreshInterval: 1000,
+      refetchInterval: 1000,
     }
   );
 
@@ -305,7 +305,7 @@ function TorrentFileDetails(props: TorrentDetailsProps) {
     "torrents.files.progress",
     { ...props },
     {
-      refreshInterval: 1000,
+      refetchInterval: 1000,
     }
   );
 
@@ -352,7 +352,7 @@ function TorrentTrackerDetails(props: TorrentDetailsProps) {
     "torrents.trackers.list",
     { ...props },
     {
-      refreshInterval: 1000,
+      refetchInterval: 1000,
     }
   );
 
@@ -428,7 +428,7 @@ export default function TorrentMenu(props: TorrentMenuProps) {
                 type="button"
                 className="block w-full px-4 py-2 text-left text-sm text-gray-700 data-focus:bg-gray-100 data-focus:text-gray-900 data-focus:outline-hidden dark:text-gray-300 dark:data-focus:bg-white/5 dark:data-focus:text-white"
                 onClick={async () => {
-                  await remove({
+                  await remove.mutateAsync({
                     info_hashes: [props.info_hash],
                     session_id: props.session_id,
                     remove_data: true,
