@@ -1,0 +1,20 @@
+{
+  "active_checking": "The limit of number of simultaneous checking torrents.",
+  "active_dht_limit": "The max number of torrents to announce to the DHT.",
+  "active_downloads": "The amount of active downloading torrents the queuing mechanism allows",
+  "active_limit": "The hard limit on the number of active (auto managed) torrents. This limit also applies to slow torrents.",
+  "active_loaded_limit": "Deprecated.",
+  "active_lsd_limit": "The max number of torrents to announce to the local network over the local service discovery protocol.",
+  "active_tracker_limit": "The max number of torrents to announce to their trackers.",
+  "auto_manage_interval": "The number of seconds between the torrent queue is updated, and rotated.",
+  "auto_manage_startup": "The number of seconds a torrent is considered active after it was started, regardless of upload and download speed. This is so that newly started torrents are not considered inactive until they have a fair chance to start downloading.",
+  "auto_scrape_interval": "The number of seconds between scrapes of queued torrents (auto managed and paused torrents). Auto managed torrents that are paused, are scraped regularly in order to keep track of their downloader/seed ratio. This ratio is used to determine which torrents to seed and which to pause.",
+  "auto_scrape_min_interval": "The minimum number of seconds between any automatic scrape (regardless of torrent). In case there are a large number of paused auto managed torrents, this puts a limit on how often a scrape request is sent.",
+  "max_paused_peerlist_size": "The max peer list size used for torrents that are paused. This can be used to save memory for paused torrents, since it's not as important for them to keep a large peer list.",
+  "max_peer_recv_buffer_size": "The max number of bytes a single peer connection's receive buffer is allowed to grow to.",
+  "max_peerlist_size": "The maximum number of peers in the list of known peers. These peers are not necessarily connected, so this number should be much greater than the maximum number of connected peers. Peers are evicted from the cache when the list grows passed 90% of this limit, and once the size hits the limit, peers are no longer added to the list. If this limit is set to 0, there is no limit on how many peers we'll keep in the peer list.",
+  "max_rejects": "The number of piece requests we will reject in a row while a peer is choked before the peer is considered abusive and is disconnected.",
+  "min_announce_interval": "The minimum allowed announce interval for a tracker. This is specified in seconds and is used as a sanity check on what is returned from a tracker. It mitigates hammering mis-configured trackers.",
+  "seed_time_limit": "The limit on the time a torrent has been an active seed (specified in seconds) before it is considered having met the seed limit criteria.",
+  "seeding_piece_quota": "The number of pieces to send to a peer, when seeding, before rotating in another peer to the unchoke set."
+}

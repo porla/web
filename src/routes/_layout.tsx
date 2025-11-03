@@ -1,9 +1,5 @@
 import { useEffect, useState } from "react";
-import {
-  createFileRoute,
-  Navigate,
-  Outlet,
-} from "@tanstack/react-router";
+import { createFileRoute, Navigate, Outlet } from "@tanstack/react-router";
 
 import { AuthError, useRPC } from "@/jsonrpc";
 import { prefixPath } from "@/base";
@@ -61,11 +57,13 @@ type AuthAppProps = {
   versions: SysVersions;
 };
 
-function AuthApp({ }: AuthAppProps) {
+function AuthApp({}: AuthAppProps) {
   return (
-    <div className="text-white h-dvh grid grid-cols-[300px_1fr]">
+    <div className="text-white h-full grid grid-cols-[300px_1fr]">
       <Sidebar />
-      <Outlet />
+      <div className="h-full overflow-y-auto">
+        <Outlet />
+      </div>
     </div>
   );
 }

@@ -1,6 +1,14 @@
 import Isotype from "@/assets/isotype.svg?react";
-import { TorrentFlags, useRPC, type SessionsList, type TorrentsOverview } from "@/jsonrpc";
-import { ArrowDownTrayIcon, ArrowsRightLeftIcon, ArrowUpTrayIcon, CheckIcon, CogIcon, ExclamationTriangleIcon, PauseIcon } from "@heroicons/react/20/solid";
+import { useRPC, type SessionsList, type TorrentsCount } from "@/jsonrpc";
+import {
+  ArrowDownTrayIcon,
+  ArrowsRightLeftIcon,
+  ArrowUpTrayIcon,
+  CheckIcon,
+  CogIcon,
+  ExclamationTriangleIcon,
+  PauseIcon,
+} from "@heroicons/react/20/solid";
 import { useSearch, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect } from "react";
 
@@ -9,11 +17,7 @@ export default function Sidebar() {
   const navigate = useNavigate();
 
   const sessions = useRPC<SessionsList>("sessions.list", null, {
-    refetchInterval: 5000
-  });
-
-  const overview = useRPC<TorrentsOverview>("torrents.overview", null, {
-    refetchInterval: 1000,
+    refetchInterval: 5000,
   });
 
   useEffect(() => {
@@ -23,41 +27,14 @@ export default function Sidebar() {
 
     if (sessions.data && torrentSearch.session_id === undefined) {
       navigate({
-        to: "/", search: {
+        to: "/",
+        search: {
           ...torrentSearch,
-          session_id: sessions.data.sessions[0].id
-        }
-      })
+          session_id: sessions.data.sessions[0].id,
+        },
+      });
     }
   }, [torrentSearch, sessions]);
-
-  const torrentsAll = (to: TorrentsOverview) =>
-    to.sessions
-      .filter(s => torrentSearch?.session_id === undefined || s.session_id == torrentSearch.session_id)
-      .map(s => s.torrents_total)
-      .reduce((prev, curr) => prev + curr);
-
-  const torrentsPaused = (to: TorrentsOverview) =>
-    to.sessions
-      .filter(s => torrentSearch?.session_id === undefined || s.session_id == torrentSearch.session_id)
-      .map(s => s.torrents_per_flags
-        .filter(f => (f[0] & TorrentFlags.Paused) === TorrentFlags.Paused)
-        .map(f => f[1] ?? 0)
-        .reduce((p, c) => p + c, 0)
-      )
-      .reduce((prev, curr) => prev + curr, 0);
-
-  const torrentsState = (state: string, to: TorrentsOverview) =>
-    to.sessions
-      .filter(s => torrentSearch?.session_id === undefined || s.session_id == torrentSearch.session_id)
-      .map(s => s.torrents_per_state[state] ?? 0)
-      .reduce((prev, curr) => prev + curr);
-
-  const torrentsError = (to: TorrentsOverview) =>
-    to.sessions
-      .filter(s => torrentSearch?.session_id === undefined || s.session_id == torrentSearch.session_id)
-      .map(s => s.torrents_errors)
-      .reduce((prev, curr) => prev + curr);
 
   return (
     <div className="bg-[#313244] border-r border-r-gray-500 h-dvh flex flex-col shadow-md">
@@ -71,145 +48,38 @@ export default function Sidebar() {
             <div className="text-xs/6 font-semibold text-gray-400 dark:text-gray-500">
               Sessions
             </div>
-            {sessions.isLoading && (
-              <p>loading sessions</p>
-            )}
+            {sessions.isLoading && <p>loading sessions</p>}
             <ul>
-              {sessions.data && sessions.data?.sessions.map(s => (
-                <li key={s.id} className="text-sm">
-                  <Link
-                    to="/"
-                    search={{
-                      ...torrentSearch,
-                      session_id: s.id
-                    }}
-                    activeProps={{
-                      className: "bg-gray-600"
-                    }}
-                    className="flex items-center space-x-2 p-1 hover:bg-gray-700 rounded"
-                  >
-                    <span
-                      className="size-3 rounded"
-                      style={{
-                        backgroundColor: s.metadata["color"] ? String(s.metadata["color"]) : "#ccc"
+              {sessions.data &&
+                sessions.data?.sessions.map((s) => (
+                  <li key={s.id} className="text-sm">
+                    <Link
+                      to="/"
+                      search={{
+                        ...torrentSearch,
+                        session_id: s.id,
                       }}
-                    ></span>
-                    <span>{s.name}</span>
-                  </Link>
-                </li>
-              ))}
+                      activeProps={{
+                        className: "bg-gray-600",
+                      }}
+                      className="flex items-center space-x-2 p-1 hover:bg-gray-700 rounded"
+                    >
+                      <span
+                        className="size-3 rounded"
+                        style={{
+                          backgroundColor: s.metadata["color"]
+                            ? String(s.metadata["color"])
+                            : "#ccc",
+                        }}
+                      ></span>
+                      <span>{s.name}</span>
+                    </Link>
+                  </li>
+                ))}
             </ul>
           </li>
           <li>
-            <div className="text-xs/6 font-semibold text-gray-400 dark:text-gray-500">
-              Torrents
-            </div>
-            <ul className="text-sm">
-              <li>
-                <Link
-                  to="/"
-                  search={{
-                    ...torrentSearch,
-                    state: undefined
-                  }}
-                  activeOptions={{ exact: true }}
-                  activeProps={{ className: "bg-gray-600 rounded" }}
-                  className="flex justify-between p-1"
-                >
-                  <div className="flex space-x-2 items-center">
-                    <ArrowsRightLeftIcon className="size-4" />
-                    <span>All</span>
-                  </div>
-                  <span>{overview.data && torrentsAll(overview.data)}</span>
-                </Link>
-              </li>
-              <li>
-                <Link
-                  to="/"
-                  search={{
-                    ...torrentSearch,
-                    state: "downloading"
-                  }}
-                  activeProps={{ className: "bg-gray-600 rounded" }}
-                  className="flex justify-between p-1"
-                >
-                  <div className="flex space-x-2 items-center">
-                    <ArrowDownTrayIcon className="size-4 text-green-600" />
-                    <span>Downloading</span>
-                  </div>
-                  <span>{overview.data && torrentsState("downloading", overview.data)}</span>
-                </Link>
-              </li>
-              <li>
-                <Link
-                  to="/"
-                  search={{
-                    ...torrentSearch,
-                    state: "seeding"
-                  }}
-                  activeProps={{ className: "bg-gray-600 rounded" }}
-                  className="flex justify-between p-1"
-                >
-                  <div className="flex space-x-2 items-center">
-                    <ArrowUpTrayIcon className="size-4 text-blue-600" />
-                    <span>Seeding</span>
-                  </div>
-                  <span>{overview.data && torrentsState("seeding", overview.data)}</span>
-                </Link>
-              </li>
-              <li>
-                <Link
-                  to="/"
-                  search={{
-                    ...torrentSearch,
-                    state: "finished"
-                  }}
-                  activeProps={{ className: "bg-gray-600 rounded" }}
-                  className="flex justify-between p-1"
-                >
-                  <div className="flex space-x-2 items-center">
-                    <CheckIcon className="size-4 text-purple-600" />
-                    <span>Finished</span>
-                  </div>
-                  <span>{overview.data && torrentsState("finished", overview.data)}</span>
-                </Link>
-              </li>
-              <li>
-                <Link
-                  to="/"
-                  search={{
-                    ...torrentSearch,
-                    state: "paused"
-                  }}
-                  activeProps={{ className: "bg-gray-600 rounded" }}
-                  className="flex justify-between p-1"
-                >
-                  <div className="flex space-x-2 items-center">
-                    <PauseIcon className="size-4 text-orange-600" />
-                    <span>Paused</span>
-                  </div>
-                  <span>{overview.data && torrentsPaused(overview.data)}</span>
-                </Link>
-              </li>
-              <li>
-                <Link
-                  to="/"
-                  search={{
-                    ...torrentSearch,
-                    state: "error"
-                  }}
-                  activeProps={{ className: "bg-gray-600 rounded" }}
-                  className="flex justify-between p-1"
-                >
-
-                  <div className="flex space-x-2 items-center">
-                    <ExclamationTriangleIcon className="size-4 text-red-600" />
-                    <span>Error</span>
-                  </div>
-                  <span>{overview.data && torrentsError(overview.data)}</span>
-                </Link>
-              </li>
-            </ul>
+            <TorrentsList session_id={torrentSearch?.session_id} />
           </li>
         </ul>
       </div>
@@ -225,5 +95,136 @@ export default function Sidebar() {
         </Link>
       </div>
     </div>
-  )
+  );
+}
+
+function TorrentsList({ session_id }: { session_id?: number }) {
+  const torrentSearch = useSearch({ from: "/_layout/", shouldThrow: false });
+
+  const count = useRPC<TorrentsCount>(
+    "torrents.count",
+    { session_id },
+    {
+      enabled: session_id !== undefined,
+      refetchInterval: 1000,
+    }
+  );
+
+  return (
+    <>
+      <div className="text-xs/6 font-semibold text-gray-400 dark:text-gray-500">
+        Torrents
+      </div>
+      <ul className="text-sm">
+        <li>
+          <Link
+            to="/"
+            search={{
+              ...torrentSearch,
+              status: undefined,
+            }}
+            activeOptions={{ exact: true }}
+            activeProps={{ className: "bg-gray-600 rounded" }}
+            className="flex justify-between p-1"
+          >
+            <div className="flex space-x-2 items-center">
+              <ArrowsRightLeftIcon className="size-4" />
+              <span>All</span>
+            </div>
+            {count.data && <span>{count.data.total}</span>}
+          </Link>
+        </li>
+        <li>
+          <Link
+            to="/"
+            search={{
+              ...torrentSearch,
+              status: ["downloading", "downloading_queued"],
+            }}
+            activeProps={{ className: "bg-gray-600 rounded" }}
+            className="flex justify-between p-1"
+          >
+            <div className="flex space-x-2 items-center">
+              <ArrowDownTrayIcon className="size-4 text-green-600" />
+              <span>Downloading</span>
+            </div>
+            <span>
+              {count.data &&
+                count.data.downloading + count.data.downloading_queued}
+            </span>
+          </Link>
+        </li>
+        <li>
+          <Link
+            to="/"
+            search={{
+              ...torrentSearch,
+              status: ["seeding", "seeding_queued"],
+            }}
+            activeProps={{ className: "bg-gray-600 rounded" }}
+            className="flex justify-between p-1"
+          >
+            <div className="flex space-x-2 items-center">
+              <ArrowUpTrayIcon className="size-4 text-blue-600" />
+              <span>Seeding</span>
+            </div>
+            <span>
+              {count.data && count.data.seeding + count.data.seeding_queued}
+            </span>
+          </Link>
+        </li>
+        <li>
+          <Link
+            to="/"
+            search={{
+              ...torrentSearch,
+              status: ["finished"],
+            }}
+            activeProps={{ className: "bg-gray-600 rounded" }}
+            className="flex justify-between p-1"
+          >
+            <div className="flex space-x-2 items-center">
+              <CheckIcon className="size-4 text-purple-600" />
+              <span>Finished</span>
+            </div>
+            <span>{count.data && count.data.finished}</span>
+          </Link>
+        </li>
+        <li>
+          <Link
+            to="/"
+            search={{
+              ...torrentSearch,
+              status: ["paused"],
+            }}
+            activeProps={{ className: "bg-gray-600 rounded" }}
+            className="flex justify-between p-1"
+          >
+            <div className="flex space-x-2 items-center">
+              <PauseIcon className="size-4 text-orange-600" />
+              <span>Paused</span>
+            </div>
+            <span>{count.data && count.data.paused}</span>
+          </Link>
+        </li>
+        <li>
+          <Link
+            to="/"
+            search={{
+              ...torrentSearch,
+              status: ["error"],
+            }}
+            activeProps={{ className: "bg-gray-600 rounded" }}
+            className="flex justify-between p-1"
+          >
+            <div className="flex space-x-2 items-center">
+              <ExclamationTriangleIcon className="size-4 text-red-600" />
+              <span>Error</span>
+            </div>
+            <span>{count.data && count.data.error}</span>
+          </Link>
+        </li>
+      </ul>
+    </>
+  );
 }

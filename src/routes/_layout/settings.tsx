@@ -17,13 +17,12 @@ function RouteComponent() {
   const sessionsList = useRPC<SessionsList>("sessions.list");
 
   return (
-    <div className="h-full flex flex-col">
-      <div className="bg-gray-600 text-lg p-3">
-        <div>Settings</div>
-      </div>
-
-      <div className="grid grid-cols-[300px_1fr] flex-1">
+    <div className="h-full">
+      <div className="h-full grid grid-cols-[300px_1fr] flex-1">
         <div className="bg-gray-800">
+          <div className="bg-gray-600 text-lg p-3">
+            <div>Settings</div>
+          </div>
           <ul className="menu w-full">
             <li className="menu-title">Sessions</li>
 
@@ -43,7 +42,9 @@ function RouteComponent() {
                   <span
                     className="size-3 rounded"
                     style={{
-                      backgroundColor: s.metadata["color"] ? String(s.metadata["color"]) : "#ccc"
+                      backgroundColor: s.metadata["color"]
+                        ? String(s.metadata["color"])
+                        : "#ccc",
                     }}
                   ></span>
                   {s.name}
@@ -66,7 +67,9 @@ function RouteComponent() {
                   <span
                     className="size-3 rounded"
                     style={{
-                      backgroundColor: p.metadata["color"] ? String(p.metadata["color"]) : "#ccc"
+                      backgroundColor: p.metadata["color"]
+                        ? String(p.metadata["color"])
+                        : "#ccc",
                     }}
                   ></span>
                   {p.name}

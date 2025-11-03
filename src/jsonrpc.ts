@@ -6,8 +6,14 @@ import {
 } from "@tanstack/react-query";
 import { prefixPath } from "@/base";
 
+export function isBitSet(num: number, bit: number) {
+  return (num & (1 << bit)) !== 0;
+}
+
+// These numbers represent *bits*
 export const TorrentFlags = {
-  Paused: 16,
+  Paused: 4,
+  AutoManaged: 5,
 };
 
 export type ErrC = {};
@@ -29,8 +35,10 @@ export type Torrent = {
   };
 
   active_duration: number;
+  added_time: number;
   all_time_download: number;
   all_time_upload: number;
+  completed_time: number;
   download_payload_rate: number;
   download_rate: number;
   errc: ErrC | null;
@@ -137,20 +145,18 @@ export type TorrentsTrackersList = {
   trackers: AnnounceEntry[];
 };
 
-export type TorrentsOverviewSession = {
-  session_id: number;
-  session_name: string;
-  torrents_errors: number;
-  torrents_per_category: Record<string, number>;
-  torrents_per_flags: [[number, number]];
-  torrents_per_state: Record<string, number>;
-  torrents_per_tag: Record<string, number>;
-  torrents_per_tracker: Record<string, number>;
-  torrents_total: number;
-};
-
-export type TorrentsOverview = {
-  sessions: TorrentsOverviewSession[];
+export type TorrentsCount = {
+  categories: Record<string, number>;
+  downloading: number;
+  downloading_queued: number;
+  error: number;
+  finished: number;
+  paused: number;
+  seeding: number;
+  seeding_queued: number;
+  total: number;
+  tags: Record<string, number>;
+  trackers: Record<string, number>;
 };
 
 export class RpcError extends Error {

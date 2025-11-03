@@ -9,23 +9,29 @@ import {
   type TorrentsTrackersList,
   type TorrentsFilesList,
   type TorrentsFilesProgress,
+  type Torrent,
+  isBitSet,
 } from "@/jsonrpc";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useState } from "react";
 import { filesize } from "filesize";
 import clsx from "clsx";
 
+type TorrentFilterStatus =
+  | "downloading"
+  | "downloading_queued"
+  | "finished"
+  | "seeding"
+  | "seeding_queued"
+  | "paused"
+  | "error";
+
 type TorrentSearch = {
   session_id?: number;
-  state?: "downloading" | "finished" | "seeding" | "paused" | "error";
+  status?: TorrentFilterStatus[];
   selected_info_hash?: InfoHash;
   selected_session_id?: number;
   selected_tab_id?: string;
-};
-
-const isValidState = (value: unknown): value is TorrentSearch['state'] => {
-  return typeof value === 'string' &&
-    ['downloading', 'finished', 'seeding', 'paused', 'error'].includes(value);
 };
 
 export const Route = createFileRoute("/_layout/")({
@@ -33,77 +39,63 @@ export const Route = createFileRoute("/_layout/")({
   validateSearch: (search: Record<string, unknown>): TorrentSearch => {
     return {
       session_id: search.session_id ? Number(search.session_id) : undefined,
-      state: isValidState(search.state) ? search.state : undefined,
+      status:
+        typeof search.status === "undefined"
+          ? undefined
+          : (search.status as TorrentFilterStatus[]),
     };
   },
 });
-
-function buildFilter(state: TorrentSearch['state']) {
-  if (state == "downloading") {
-    return { state: "downloading" }
-  }
-
-  if (state === "error") {
-    return { errc: true }
-  }
-
-  if (state === "finished") {
-    return { state: "finished" }
-  }
-
-  if (state === "paused") {
-    return { flags: 16 }
-  }
-
-  if (state === "seeding") {
-    return { state: "seeding" }
-  }
-}
 
 function Index() {
   const search = Route.useSearch();
   const [addOpen, setAddOpen] = useState(false);
 
-  const torrents = useRPC<TorrentsList>("torrents.list", {
-    filters: {
-      session_id: search.session_id,
-      ...buildFilter(search.state)
+  const torrents = useRPC<TorrentsList>(
+    "torrents.list",
+    {
+      filters: {
+        session_id: search.session_id,
+        status: search.status,
+      },
+    },
+    {
+      refetchInterval: 1000,
     }
-  }, {
-    refetchInterval: 1000,
-  });
+  );
 
   return (
     <div className="h-full flex flex-col">
-      <AddTorrentModal open={addOpen} onClose={() => setAddOpen(false)} />
-      <div className="flex items-center justify-between p-2 text-sm bg-gray-800">
-        <h1>Torrents</h1>
-        <Button text="Add torrent" onClick={() => setAddOpen(true)} />
-      </div>
-
-      <div className="flex-1 overflow-auto">
-        <table className="w-full text-sm">
+      <div className="h-full flex-1 overflow-auto">
+        <table className="w-full text-sm table-fixed">
           <thead>
             <tr className="bg-gray-900 text-gray-500">
-              <th className="w-min border-b-gray-700 border-b">
+              <th className="w-8 border-b-gray-700 border-b text-center">
                 <input type="checkbox" />
               </th>
-              <th className="w-min border-b-gray-700 border-b">
-                #
-              </th>
-              <th className="py-2 pl-2 border-b-gray-700 border-b text-left">
+              <th className="w-8 border-b-gray-700 border-b text-right">#</th>
+              <th className="w-[600px] py-2 pl-3 border-b-gray-700 border-b text-left">
                 Name
               </th>
-              <th className="py-2 border-b-gray-700 border-b text-right  w-28">
+              <th className="w-24 py-2 border-b-gray-700 border-b text-right">
                 Size
               </th>
-              <th className="py-2 border-b-gray-700 border-b text-center w-32">
+              <th className="w-32 py-2 border-b-gray-700 border-b text-center">
                 Progress
               </th>
-              <th className="text-left border-b-gray-700 border-b">State</th>
-              <th className="text-right border-b-gray-700 border-b w-28">DL</th>
-              <th className="text-right border-b-gray-700 border-b w-28">UL</th>
-              <th className="border-b-gray-700 border-b w-min"></th>
+              <th className="w-16 text-left border-b-gray-700 border-b">
+                State
+              </th>
+              <th className="w-28 text-right border-b-gray-700 border-b">DL</th>
+              <th className="w-28 text-right border-b-gray-700 border-b pr-3">
+                UL
+              </th>
+              <th className="w-40 text-left border-b-gray-700 border-b pr-3">
+                Added
+              </th>
+              <th className="w-40 text-left border-b-gray-700 border-b pr-3">
+                Completed
+              </th>
             </tr>
           </thead>
           <tbody>
@@ -112,10 +104,10 @@ function Index() {
                 <td className="text-center">
                   <input type="checkbox" />
                 </td>
-                <td className="text-center text-gray-500">
+                <td className="text-right text-gray-500">
                   {t.queue_position < 0 ? "-" : t.queue_position}
                 </td>
-                <td className="pl-2 py-1 font-medium">
+                <td className="pl-3 py-1 font-medium overflow-hidden text-ellipsis text-nowrap">
                   <Link
                     to="/"
                     search={{
@@ -129,7 +121,9 @@ function Index() {
                     {t.name}
                   </Link>
                 </td>
-                <td className="text-right">{filesize(t.total)}</td>
+                <td className="text-right">
+                  {filesize(t.total + t.total_done, { base: 2 })}
+                </td>
                 <td className="py-2 px-3 flex items-center justify-center">
                   <progress
                     className="w-full rounded-sm border border-blue-400"
@@ -137,15 +131,35 @@ function Index() {
                     max={1}
                   />
                 </td>
-                <td>{t.state}</td>
-                <td className="text-right">{filesize(t.download_payload_rate)}/s</td>
-                <td className="text-right">{filesize(t.upload_payload_rate)}/s</td>
-                <td className="flex justify-center items-center">
-                  {search.session_id && (
-                    <TorrentMenu
-                      info_hash={t.info_hash}
-                      session_id={search.session_id}
-                    />
+                <td>
+                  <TorrentStateBadge torrent={t} />
+                </td>
+                <td className="text-right">
+                  {t.download_payload_rate < 1024 ? (
+                    <span className="text-gray-400">-</span>
+                  ) : (
+                    <>{filesize(t.download_payload_rate)}/s</>
+                  )}
+                </td>
+                <td className="text-right pr-3">
+                  {t.upload_payload_rate < 1024 ? (
+                    <span className="text-gray-400">-</span>
+                  ) : (
+                    <>{filesize(t.upload_payload_rate)}/s</>
+                  )}
+                </td>
+                <td>
+                  {new Date(t.added_time * 1000).toLocaleString("sv-SE", {
+                    timeZone: "Europe/Stockholm",
+                  })}
+                </td>
+                <td>
+                  {t.completed_time === 0 ? (
+                    <span className="text-gray-400">-</span>
+                  ) : (
+                    new Date(t.completed_time * 1000).toLocaleString("sv-SE", {
+                      timeZone: "Europe/Stockholm",
+                    })
                   )}
                 </td>
               </tr>
@@ -156,7 +170,12 @@ function Index() {
 
       {torrents.data && (
         <div className="bg-gray-800 text-white text-sm p-2">
-          Showing {Math.min((torrents.data.page + 1) * torrents.data.page_size, torrents.data.torrents.length)} of {torrents.data.torrents_total} torrent(s)
+          Showing{" "}
+          {Math.min(
+            (torrents.data.page + 1) * torrents.data.page_size,
+            torrents.data.torrents.length
+          )}{" "}
+          of {torrents.data.torrents_total} torrent(s)
         </div>
       )}
 
@@ -168,6 +187,57 @@ function Index() {
       )}
     </div>
   );
+}
+
+function TorrentStateBadge({ torrent }: { torrent: Torrent }) {
+  if (
+    torrent.state == TorrentState.seeding &&
+    isBitSet(torrent.flags, 4) &&
+    !isBitSet(torrent.flags, 5)
+  ) {
+    return (
+      <span className="inline-flex items-center rounded-md bg-purple-50 px-2 py-1 text-xs font-medium text-purple-700 inset-ring inset-ring-purple-700/10 dark:bg-purple-400/10 dark:text-purple-400 dark:inset-ring-purple-400/30">
+        Finished
+      </span>
+    );
+  }
+
+  if (
+    torrent.state == TorrentState.downloading &&
+    isBitSet(torrent.flags, 4) &&
+    !isBitSet(torrent.flags, 5)
+  ) {
+    // torrent is paused forever
+    return (
+      <span className="inline-flex items-center rounded-md bg-yellow-50 px-2 py-1 text-xs font-medium text-yellow-800 inset-ring inset-ring-yellow-600/20 dark:bg-yellow-400/10 dark:text-yellow-500 dark:inset-ring-yellow-400/20">
+        Paused
+      </span>
+    );
+  }
+
+  if (torrent.state === TorrentState.downloading) {
+    return (
+      <span className="inline-flex items-center rounded-md bg-green-50 px-2 py-1 text-xs font-medium text-green-700 inset-ring inset-ring-green-600/20 dark:bg-green-400/10 dark:text-green-400 dark:inset-ring-green-500/20">
+        Downloading
+      </span>
+    );
+  }
+
+  //
+  if (torrent.state === TorrentState.seeding) {
+    if (isBitSet(torrent.flags, 4) && isBitSet(torrent.flags, 5)) {
+      return (
+        <span className="text-nowrap inline-flex items-center rounded-md bg-gray-50 px-2 py-1 text-xs font-medium text-gray-600 inset-ring inset-ring-gray-500/10 dark:bg-gray-400/10 dark:text-gray-400 dark:inset-ring-gray-400/20">
+          Seeding (queued)
+        </span>
+      );
+    }
+    return (
+      <span className="inline-flex items-center rounded-md bg-blue-50 px-2 py-1 text-xs font-medium text-blue-700 inset-ring inset-ring-blue-700/10 dark:bg-blue-400/10 dark:text-blue-400 dark:inset-ring-blue-400/30">
+        Seeding
+      </span>
+    );
+  }
 }
 
 type TorrentDetailsProps = {
@@ -378,6 +448,7 @@ function TorrentTrackerDetails(props: TorrentDetailsProps) {
 
 import { Menu, MenuButton, MenuItem, MenuItems } from "@headlessui/react";
 import { Bars3Icon, ChevronDownIcon } from "@heroicons/react/20/solid";
+import { TorrentState } from "@/types";
 
 type TorrentMenuProps = {
   info_hash: InfoHash;
