@@ -38,17 +38,25 @@ export default function Sidebar() {
 
   return (
     <div className="bg-[#313244] border-r border-r-gray-500 h-dvh flex flex-col shadow-md">
-      <div className="m-2 space-x-2">
-        <Isotype className="w-8" />
+      <div className="m-2 space-x-2 flex items-center justify-between">
+        <div className="flex-1">
+          <Isotype className="w-8" />
+        </div>
+        <Link
+          to="/add"
+          className="rounded-md bg-white px-2.5 py-1.5 text-sm font-semibold text-gray-900 shadow-xs inset-ring inset-ring-gray-300 hover:bg-gray-50 dark:bg-white/10 dark:text-white dark:shadow-none dark:inset-ring-white/5 dark:hover:bg-white/20"
+        >
+          Add torrent
+        </Link>
       </div>
 
       <div className="flex-1 mx-2 mt-3">
         <ul className="space-y-3">
           <li>
-            <div className="text-xs/6 font-semibold text-gray-400 dark:text-gray-500">
+            <div className="text-sm/6 font-bold text-gray-400 dark:text-gray-500">
               Sessions
             </div>
-            {sessions.isLoading && <p>loading sessions</p>}
+
             <ul>
               {sessions.data &&
                 sessions.data?.sessions.map((s) => (
@@ -62,17 +70,20 @@ export default function Sidebar() {
                       activeProps={{
                         className: "bg-gray-600",
                       }}
-                      className="flex items-center space-x-2 p-1 hover:bg-gray-700 rounded"
+                      className="flex items-center justify-between space-x-2 p-1 hover:bg-gray-700 rounded"
                     >
-                      <span
-                        className="size-3 rounded"
-                        style={{
-                          backgroundColor: s.metadata["color"]
-                            ? String(s.metadata["color"])
-                            : "#ccc",
-                        }}
-                      ></span>
-                      <span>{s.name}</span>
+                      <div className="flex space-x-2 items-center">
+                        <span
+                          className="size-3 rounded"
+                          style={{
+                            backgroundColor: s.metadata["color"]
+                              ? String(s.metadata["color"])
+                              : "#ccc",
+                          }}
+                        ></span>
+                        <span>{s.name}</span>
+                      </div>
+                      <span>{s.torrents_total}</span>
                     </Link>
                   </li>
                 ))}
@@ -112,7 +123,7 @@ function TorrentsList({ session_id }: { session_id?: number }) {
 
   return (
     <>
-      <div className="text-xs/6 font-semibold text-gray-400 dark:text-gray-500">
+      <div className="text-sm/6 font-bold text-gray-400 dark:text-gray-500">
         Torrents
       </div>
       <ul className="text-sm">

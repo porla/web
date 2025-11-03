@@ -13,7 +13,13 @@ type PresetsAdd = {
 
 function RouteComponent() {
   const navigate = useNavigate();
-  const add = useInvoker<PresetsAdd>("presets.add");
+  const add = useInvoker<PresetsAdd>("presets.add", {
+    onSuccess(_data, _variables, _onMutateResult, context) {
+      context.client.invalidateQueries({
+        queryKey: ["presets.list"]
+      })
+    },
+  });
 
   const form = useAppForm({
     defaultValues: {

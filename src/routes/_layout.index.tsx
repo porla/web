@@ -69,7 +69,7 @@ function Index() {
       <div className="h-full flex-1 overflow-auto">
         <table className="w-full text-sm table-fixed">
           <thead>
-            <tr className="bg-gray-900 text-gray-500">
+            <tr className="bg-gray-900 text-gray-500 sticky top-0">
               <th className="w-8 border-b-gray-700 border-b text-center">
                 <input type="checkbox" />
               </th>

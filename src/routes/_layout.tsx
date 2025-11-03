@@ -29,7 +29,7 @@ function RouteComponent() {
   }, []);
 
   if (!status) {
-    return <div>Loading...</div>;
+    return <div>Loading system status</div>;
   }
 
   if (status.status === "setup") {
@@ -40,14 +40,17 @@ function RouteComponent() {
 }
 
 function App() {
-  const versions = useRPC<SysVersions>("sys.versions");
+  const versions = useRPC<SysVersions>("sys.versions", null, {
+    networkMode: "always",
+    retry: false
+  });
 
   if (versions.error instanceof AuthError) {
     return <Navigate to="/login" />;
   }
 
   if (!versions.data) {
-    return <div>loading</div>;
+    return <div>Loading Porla</div>;
   }
 
   return <AuthApp versions={versions.data} />;
@@ -57,7 +60,7 @@ type AuthAppProps = {
   versions: SysVersions;
 };
 
-function AuthApp({}: AuthAppProps) {
+function AuthApp({ }: AuthAppProps) {
   return (
     <div className="text-white h-full grid grid-cols-[300px_1fr]">
       <Sidebar />

@@ -335,6 +335,10 @@ function UpdateSettingModal(props: UpdateSettingModalProps) {
                               {typeof field.state.value === "number" && (
                                 <field.NumberField />
                               )}
+
+                              {typeof field.state.value === "string" && (
+                                <field.TextField />
+                              )}
                             </>
                           )}
                         />

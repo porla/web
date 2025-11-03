@@ -86,6 +86,8 @@ export type SessionsListItem = {
   id: number;
   name: string;
   is_default: boolean;
+  is_listening: boolean;
+  is_paused: boolean;
   metadata: Record<string, unknown>;
   torrents_total: number;
 };

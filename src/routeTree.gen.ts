@@ -14,6 +14,7 @@ import { Route as LoginRouteImport } from './routes/login'
 import { Route as LayoutRouteImport } from './routes/_layout'
 import { Route as LayoutIndexRouteImport } from './routes/_layout.index'
 import { Route as LayoutSettingsRouteImport } from './routes/_layout/settings'
+import { Route as LayoutAddRouteImport } from './routes/_layout.add'
 import { Route as LayoutSettingsSessionsAddRouteImport } from './routes/_layout/settings.sessions.add'
 import { Route as LayoutSettingsSessionsIdRouteImport } from './routes/_layout/settings.sessions.$id'
 import { Route as LayoutSettingsPresetsAddRouteImport } from './routes/_layout/settings.presets.add'
@@ -43,6 +44,11 @@ const LayoutIndexRoute = LayoutIndexRouteImport.update({
 const LayoutSettingsRoute = LayoutSettingsRouteImport.update({
   id: '/settings',
   path: '/settings',
+  getParentRoute: () => LayoutRoute,
+} as any)
+const LayoutAddRoute = LayoutAddRouteImport.update({
+  id: '/add',
+  path: '/add',
   getParentRoute: () => LayoutRoute,
 } as any)
 const LayoutSettingsSessionsAddRoute =
@@ -83,6 +89,7 @@ const LayoutSettingsPluginsIdRoute = LayoutSettingsPluginsIdRouteImport.update({
 export interface FileRoutesByFullPath {
   '/login': typeof LoginRoute
   '/setup': typeof SetupRoute
+  '/add': typeof LayoutAddRoute
   '/settings': typeof LayoutSettingsRouteWithChildren
   '/': typeof LayoutIndexRoute
   '/settings/plugins/$id': typeof LayoutSettingsPluginsIdRoute
@@ -95,6 +102,7 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/login': typeof LoginRoute
   '/setup': typeof SetupRoute
+  '/add': typeof LayoutAddRoute
   '/settings': typeof LayoutSettingsRouteWithChildren
   '/': typeof LayoutIndexRoute
   '/settings/plugins/$id': typeof LayoutSettingsPluginsIdRoute
@@ -109,6 +117,7 @@ export interface FileRoutesById {
   '/_layout': typeof LayoutRouteWithChildren
   '/login': typeof LoginRoute
   '/setup': typeof SetupRoute
+  '/_layout/add': typeof LayoutAddRoute
   '/_layout/settings': typeof LayoutSettingsRouteWithChildren
   '/_layout/': typeof LayoutIndexRoute
   '/_layout/settings/plugins/$id': typeof LayoutSettingsPluginsIdRoute
@@ -123,6 +132,7 @@ export interface FileRouteTypes {
   fullPaths:
     | '/login'
     | '/setup'
+    | '/add'
     | '/settings'
     | '/'
     | '/settings/plugins/$id'
@@ -135,6 +145,7 @@ export interface FileRouteTypes {
   to:
     | '/login'
     | '/setup'
+    | '/add'
     | '/settings'
     | '/'
     | '/settings/plugins/$id'
@@ -148,6 +159,7 @@ export interface FileRouteTypes {
     | '/_layout'
     | '/login'
     | '/setup'
+    | '/_layout/add'
     | '/_layout/settings'
     | '/_layout/'
     | '/_layout/settings/plugins/$id'
@@ -199,6 +211,13 @@ declare module '@tanstack/react-router' {
       path: '/settings'
       fullPath: '/settings'
       preLoaderRoute: typeof LayoutSettingsRouteImport
+      parentRoute: typeof LayoutRoute
+    }
+    '/_layout/add': {
+      id: '/_layout/add'
+      path: '/add'
+      fullPath: '/add'
+      preLoaderRoute: typeof LayoutAddRouteImport
       parentRoute: typeof LayoutRoute
     }
     '/_layout/settings/sessions/add': {
@@ -269,11 +288,13 @@ const LayoutSettingsRouteWithChildren = LayoutSettingsRoute._addFileChildren(
 )
 
 interface LayoutRouteChildren {
+  LayoutAddRoute: typeof LayoutAddRoute
   LayoutSettingsRoute: typeof LayoutSettingsRouteWithChildren
   LayoutIndexRoute: typeof LayoutIndexRoute
 }
 
 const LayoutRouteChildren: LayoutRouteChildren = {
+  LayoutAddRoute: LayoutAddRoute,
   LayoutSettingsRoute: LayoutSettingsRouteWithChildren,
   LayoutIndexRoute: LayoutIndexRoute,
 }
