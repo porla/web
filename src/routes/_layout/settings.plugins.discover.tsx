@@ -95,6 +95,6 @@ function GitHubRepoRelease(props: GitHubRepoReleaseProps) {
   });
 
   return (
-    <>-</>
+    <>{JSON.stringify(ghReleases)}</>
   )
 }

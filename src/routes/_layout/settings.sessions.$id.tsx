@@ -179,7 +179,6 @@ const readonlyMapper: ReadonlySettings = {
 };
 
 function SessionSettingsCard(props: SessionSettingsCardProps) {
-  const { id } = Route.useParams();
   const { settings } = props;
   const [selectedSetting, setSelectedSetting] = useState<
     keyof SessionSettings | undefined

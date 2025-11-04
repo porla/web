@@ -1,5 +1,3 @@
-import Button from "@/components/button";
-import AddTorrentModal from "@/components/modals/add-torrent";
 import {
   type TorrentsPeersList,
   useRPC,
@@ -13,7 +11,6 @@ import {
   isBitSet,
 } from "@/jsonrpc";
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useState } from "react";
 import { filesize } from "filesize";
 import clsx from "clsx";
 
@@ -49,7 +46,6 @@ export const Route = createFileRoute("/_layout/")({
 
 function Index() {
   const search = Route.useSearch();
-  const [addOpen, setAddOpen] = useState(false);
 
   const torrents = useRPC<TorrentsList>(
     "torrents.list",
