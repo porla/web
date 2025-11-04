@@ -1,5 +1,5 @@
 import { useAppForm } from '@/hooks/form';
-import { useInvoker } from '@/jsonrpc';
+import { type PresetsList, useInvoker, useRPC } from '@/jsonrpc';
 import { readFile } from '@/utils';
 import { createFileRoute } from '@tanstack/react-router'
 import { Suspense } from 'react';
@@ -9,16 +9,19 @@ export const Route = createFileRoute('/_layout/add')({
 })
 
 type AddTorrentForm = {
-  save_path: string;
+  save_path: string | null;
+  preset_id: number | null;
   ti: FileList | null;
 }
 
 function RouteComponent() {
+  const presets = useRPC<PresetsList>("presets.list");
   const add = useInvoker("torrents.add");
 
   const form = useAppForm({
     defaultValues: {
-      save_path: "",
+      save_path: null,
+      preset_id: null,
       ti: null
     } as AddTorrentForm,
     onSubmit: async ({ value }) => {
@@ -27,6 +30,7 @@ function RouteComponent() {
       }
 
       await add.mutateAsync({
+        preset_id: value.preset_id,
         save_path: value.save_path,
         ti: await readFile(value.ti[0])
       })
@@ -61,6 +65,17 @@ function RouteComponent() {
             <form.AppField
               name="ti"
               children={(field) => <field.FileListField label="Torrent file(s)" />}
+            />
+
+            <form.AppField
+              name="preset_id"
+              children={
+                (field) => <field.SelectField
+                  label="Preset"
+                  description="Preset to apply when adding this torrent"
+                  items={presets.data?.presets.map(p => { return { id: p.id, name: p.name } }) ?? []}
+                />
+              }
             />
 
             <form.AppField

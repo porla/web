@@ -94,6 +94,7 @@ function PresetForm(props: PresetFormProps) {
               children={
                 (field) => <field.SelectField
                   label="Session"
+                  description="The session to use for this preset."
                   items={sessions.data?.sessions.map(s => { return { id: s.id, name: s.name } })}
                 />
               }

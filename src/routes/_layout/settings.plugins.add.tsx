@@ -9,8 +9,8 @@ export const Route = createFileRoute("/_layout/settings/plugins/add")({
 });
 
 type PluginsAddType =
-  | { type: "path"; data: string | null }
-  | { type: "archive"; data: FileList | null };
+  | { type: "path"; data: string | null, config: string | null }
+  | { type: "archive"; data: FileList | null, config: string | null };
 
 type PluginsAdd = {
   id: number;
@@ -30,14 +30,16 @@ function RouteComponent() {
   const form = useAppForm({
     defaultValues: {
       type: "path",
-      data: null
+      data: null,
+      config: null
     } as PluginsAddType,
     onSubmit: async ({ value }) => {
       const { id } = await pluginsAdd.mutateAsync({
         type: value.type,
         data: value.type == "archive" && value.data != null
           ? await readFile(value.data[0])
-          : value.data
+          : value.data,
+        config: value.config
       });
 
       await navigate({ to: "/settings/plugins/$id", params: { id } });
@@ -59,10 +61,10 @@ function RouteComponent() {
           <div className="inline-flex rounded-md shadow-xs dark:shadow-none">
             <button
               type="submit"
-              className="relative inline-flex items-center rounded-l-md bg-white px-3 py-2 text-sm font-semibold text-gray-900 inset-ring-1 inset-ring-gray-300 hover:bg-gray-50 focus:z-10 dark:bg-white/10 dark:text-white dark:inset-ring-gray-700 dark:hover:bg-white/20"
+              className="relative inline-flex items-center rounded-md bg-white px-3 py-2 text-sm font-semibold text-gray-900 inset-ring-1 inset-ring-gray-300 hover:bg-gray-50 focus:z-10 dark:bg-white/10 dark:text-white dark:inset-ring-gray-700 dark:hover:bg-white/20"
               disabled={form.state.isSubmitting}
             >
-              Save
+              Add
             </button>
           </div>
         </div>
@@ -101,6 +103,10 @@ function RouteComponent() {
               )}
             />
 
+            <form.AppField
+              name="config"
+              children={(field) => <field.TextareaField className="font-mono" label="Configuration" placeholder="Plugin configuration goes here" />}
+            />
           </Suspense>
         </div>
       </div>

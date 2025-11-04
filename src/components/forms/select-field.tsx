@@ -8,6 +8,7 @@ type Item = {
 }
 
 type SelectFieldProps = {
+  description?: string;
   label: string;
   items: Item[];
 };
@@ -58,7 +59,9 @@ export default function SelectField(props: SelectFieldProps) {
           </ListboxOptions>
         </div>
       </Listbox>
-      <p className="text-sm text-gray-400 mt-2">The session to use for this preset.</p>
+      {props.description && (
+        <p className="text-sm text-gray-400 mt-2">{props.description}</p>
+      )}
     </div>
   )
 }

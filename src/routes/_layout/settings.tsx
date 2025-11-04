@@ -5,7 +5,7 @@ import {
   type PresetsList,
   type SessionsList,
 } from "@/jsonrpc";
-import { PlusCircleIcon, StarIcon } from "@heroicons/react/20/solid";
+import { GlobeAltIcon, PlusCircleIcon, StarIcon } from "@heroicons/react/20/solid";
 import { Suspense } from "react";
 
 export const Route = createFileRoute("/_layout/settings")({
@@ -103,11 +103,14 @@ function RouteComponent() {
             <li className="menu-title">
               <div className="text-sm/6 flex items-center justify-between">
                 <span className="font-bold text-gray-400 dark:text-gray-500 ">Plugins</span>
-                <span>
+                <div className="flex space-x-2">
+                  <Link to="/settings/plugins/discover">
+                    <GlobeAltIcon className="size-4" />
+                  </Link>
                   <Link to="/settings/plugins/add">
                     <PlusCircleIcon className="size-4" />
                   </Link>
-                </span>
+                </div>
               </div>
 
               <ul>
