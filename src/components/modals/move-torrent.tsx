@@ -1,40 +1,34 @@
-'use client'
-
 import { Suspense } from 'react';
 import { Dialog, DialogBackdrop, DialogPanel, DialogTitle } from '@headlessui/react'
 import { ExclamationTriangleIcon } from '@heroicons/react/24/outline'
 import Button from '@/components/button';
 import { useAppForm } from '@/hooks/form';
-import { useInvoker } from '@/jsonrpc';
-import { readFile } from '@/utils';
+import { useInvoker, type Torrent } from '@/jsonrpc';
 
-type AddTorrentModalProps = {
+type MoveTorrentModalProps = {
+  torrent: Torrent;
+  session_id: number;
   open: boolean;
   onClose: () => void;
 }
 
-type AddTorrentForm = {
+type MoveTorrentForm = {
   save_path: string;
-  ti: FileList | null;
 }
 
-export default function AddTorrentModal(props: AddTorrentModalProps) {
-  const add = useInvoker("torrents.add");
+export default function MoveTorrentModal(props: MoveTorrentModalProps) {
+  const move = useInvoker("torrents.move");
 
   const form = useAppForm({
     defaultValues: {
-      save_path: "",
-      ti: null
-    } as AddTorrentForm,
+      save_path: props.torrent.save_path,
+    } as MoveTorrentForm,
     onSubmit: async ({ value }) => {
-      if (value.ti === null) {
-        return;
-      }
-
-      await add.mutateAsync({
-        save_path: value.save_path,
-        ti: await readFile(value.ti[0])
-      })
+      await move.mutateAsync({
+        info_hash: props.torrent.info_hash,
+        session_id: props.session_id,
+        path: value.save_path
+      });
 
       props.onClose();
     }
@@ -61,24 +55,16 @@ export default function AddTorrentModal(props: AddTorrentModalProps) {
                   form.handleSubmit()
                 }}
               >
-                <div className="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4 dark:bg-gray-800">
+                <div className="bg-white px-4 pt-5 pb-4 sm:p-4 sm:pb-4 dark:bg-gray-800">
                   <div className="sm:flex sm:items-start">
-                    <div className="mx-auto flex size-12 shrink-0 items-center justify-center rounded-full bg-red-100 sm:mx-0 sm:size-10 dark:bg-red-500/10">
-                      <ExclamationTriangleIcon aria-hidden="true" className="size-6 text-red-600 dark:text-red-400" />
-                    </div>
-                    <div className="mt-3 flex-1 text-center sm:mt-0 sm:ml-4 sm:text-left">
-                      <DialogTitle as="h3" className="text-base font-semibold text-gray-900 dark:text-white">
-                        Add torrent
+                    <div className="mt-3 flex-1 text-center sm:mt-0 sm:text-left max-w-full">
+                      <DialogTitle as="h3" className="text-base font-semibold text-gray-900 dark:text-white overflow-x-hidden text-ellipsis text-nowrap">
+                        Move {props.torrent.name}
                       </DialogTitle>
                       <div className="mt-2 space-y-3">
                         <form.AppField
-                          name="ti"
-                          children={(field) => <field.FileListField label="Torrent file(s)" />}
-                        />
-
-                        <form.AppField
                           name="save_path"
-                          children={(field) => <field.TextField label="Save path" />}
+                          children={(field) => <field.TextField label="New save path" />}
                         />
                       </div>
                     </div>
@@ -86,7 +72,7 @@ export default function AddTorrentModal(props: AddTorrentModalProps) {
                 </div>
                 <div className="bg-gray-50 px-4 py-3 sm:flex sm:flex-row-reverse sm:px-6 dark:bg-gray-700/25">
                   <Button
-                    text="Add torrent"
+                    text="Move torrent"
                     type="submit"
                   />
                 </div>

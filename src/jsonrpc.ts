@@ -55,6 +55,8 @@ export type Torrent = {
   num_seeds: number;
   progress: number;
   queue_position: number;
+  ratio: number;
+  ratio_real: number;
   save_path: string;
   seeding_duration: number;
   state: number;

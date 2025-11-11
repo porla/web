@@ -3,7 +3,6 @@ import {
   useRPC,
   type InfoHash,
   type TorrentsList,
-  useInvoker,
   type TorrentsTrackersList,
   type TorrentsFilesList,
   type TorrentsFilesProgress,
@@ -44,8 +43,15 @@ export const Route = createFileRoute("/_layout/")({
   },
 });
 
+type CurrentTorrent = {
+  session_id: number;
+  torrent: Torrent;
+}
+
 function Index() {
   const search = Route.useSearch();
+  const [current, setCurrent] = useState<CurrentTorrent | null>(null);
+  const [moveOpen, setMoveOpen] = useState(false);
 
   const torrents = useRPC<TorrentsList>(
     "torrents.list",
@@ -62,6 +68,18 @@ function Index() {
 
   return (
     <div className="h-full flex flex-col">
+      {current && (
+        <MoveTorrentModal
+          torrent={current.torrent}
+          session_id={current.session_id}
+          open={moveOpen}
+          onClose={() => {
+            setMoveOpen(false);
+            setCurrent(null);
+          }}
+        />
+      )}
+
       <div className="h-full flex-1 overflow-auto">
         <table className="w-full text-sm table-fixed">
           <thead>
@@ -75,6 +93,9 @@ function Index() {
               </th>
               <th className="w-24 py-2 border-b-gray-700 border-b text-right">
                 Size
+              </th>
+              <th className="w-20 py-2 border-b-gray-700 border-b text-right">
+                Ratio
               </th>
               <th className="w-32 py-2 border-b-gray-700 border-b text-center">
                 Progress
@@ -96,29 +117,51 @@ function Index() {
           </thead>
           <tbody>
             {torrents.data?.torrents.map((t) => (
-              <tr key={t.info_hash[0]} className="hover:bg-gray-700">
+              <tr key={t.info_hash[0]} className="hover:bg-gray-700 group ti">
                 <td className="text-center">
                   <input type="checkbox" />
                 </td>
                 <td className="text-right text-gray-500">
                   {t.queue_position < 0 ? "-" : t.queue_position}
                 </td>
-                <td className="pl-3 py-1 font-medium overflow-hidden text-ellipsis text-nowrap">
-                  <Link
-                    to="/"
-                    search={{
-                      ...search,
-                      selected_info_hash:
-                        t.info_hash[1] || t.info_hash[0] || t.info_hash,
-                      selected_session_id: search.session_id,
-                      selected_tab_id: search.selected_tab_id || "general",
-                    }}
-                  >
-                    {t.name}
-                  </Link>
+                <td className="pl-3 py-1 font-medium">
+                  <div className="flex justify-between items-center space-x-1">
+                    <div className="overflow-x-hidden text-ellipsis text-nowrap">
+                      <Link
+                        to="/"
+                        search={{
+                          ...search,
+                          selected_info_hash:
+                            t.info_hash[1] || t.info_hash[0] || t.info_hash,
+                          selected_session_id: search.session_id,
+                          selected_tab_id: search.selected_tab_id || "general",
+                        }}
+                      >
+                        {t.name}
+                      </Link>
+                    </div>
+
+                    <div className="pr-1">
+                      <TorrentMenu
+                        onMove={() => {
+                          if (search.session_id) {
+                            setCurrent({
+                              torrent: t,
+                              session_id: search.session_id
+                            })
+                            setMoveOpen(true);
+                          }
+                        }}
+                        onRemove={() => { }}
+                      />
+                    </div>
+                  </div>
                 </td>
                 <td className="text-right">
                   {filesize(t.total + t.total_done, { base: 2 })}
+                </td>
+                <td className="text-right">
+                  {t.ratio}
                 </td>
                 <td className="py-2 px-3 flex items-center justify-center">
                   <progress
@@ -445,67 +488,44 @@ function TorrentTrackerDetails(props: TorrentDetailsProps) {
 import { Menu, MenuButton, MenuItem, MenuItems } from "@headlessui/react";
 import { Bars3Icon, ChevronDownIcon } from "@heroicons/react/20/solid";
 import { TorrentState } from "@/types";
+import { useState } from "react";
+import MoveTorrentModal from "@/components/modals/move-torrent";
 
 type TorrentMenuProps = {
-  info_hash: InfoHash;
-  session_id: number;
+  onMove: () => void;
+  onRemove: () => void;
 };
 
 export default function TorrentMenu(props: TorrentMenuProps) {
-  const remove = useInvoker("torrents.remove");
-
   return (
     <Menu as="div" className="relative inline-block">
-      <MenuButton className="cursor-pointer rounded-sm bg-indigo-600 p-1 text-white shadow-xs hover:bg-indigo-500 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600 dark:bg-indigo-500 dark:shadow-none dark:hover:bg-indigo-400 dark:focus-visible:outline-indigo-500">
+      <MenuButton className="cursor-pointer rounded-sm bg-indigo-600 p-1 text-white shadow-xs hover:bg-indigo-500 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600 dark:bg-gray-800 dark:shadow-none dark:hover:bg-gray-900 dark:focus-visible:outline-gray-800">
         <Bars3Icon aria-hidden="true" className="size-3" />
       </MenuButton>
 
       <MenuItems
         transition
-        className="absolute right-0 z-10 mt-2 w-56 origin-top-right rounded-md bg-white shadow-lg outline-1 outline-black/5 transition data-closed:scale-95 data-closed:transform data-closed:opacity-0 data-enter:duration-100 data-enter:ease-out data-leave:duration-75 data-leave:ease-in dark:bg-gray-800 dark:shadow-none dark:-outline-offset-1 dark:outline-white/10"
+        className="absolute left-6 -top-3 z-10 mt-2 w-56 origin-top-left rounded-md bg-white shadow-lg outline-1 outline-black/5 transition data-closed:scale-95 data-closed:transform data-closed:opacity-0 data-enter:duration-100 data-enter:ease-out data-leave:duration-75 data-leave:ease-in dark:bg-gray-800 dark:shadow-none dark:-outline-offset-1 dark:outline-white/10"
       >
         <div className="py-1">
           <MenuItem>
-            <a
-              href="#"
-              className="block px-4 py-2 text-sm text-gray-700 data-focus:bg-gray-100 data-focus:text-gray-900 data-focus:outline-hidden dark:text-gray-300 dark:data-focus:bg-white/5 dark:data-focus:text-white"
+            <button
+              type="button"
+              className="cursor-pointer block w-full px-4 py-2 text-left text-sm text-gray-700 data-focus:bg-gray-100 data-focus:text-gray-900 data-focus:outline-hidden dark:text-gray-300 dark:data-focus:bg-white/5 dark:data-focus:text-white"
+              onClick={() => props.onMove()}
             >
-              Account settings
-            </a>
+              Move
+            </button>
           </MenuItem>
           <MenuItem>
-            <a
-              href="#"
-              className="block px-4 py-2 text-sm text-gray-700 data-focus:bg-gray-100 data-focus:text-gray-900 data-focus:outline-hidden dark:text-gray-300 dark:data-focus:bg-white/5 dark:data-focus:text-white"
+            <button
+              type="button"
+              className="cursor-pointer block w-full px-4 py-2 text-left text-sm text-gray-700 data-focus:bg-gray-100 data-focus:text-gray-900 data-focus:outline-hidden dark:text-gray-300 dark:data-focus:bg-white/5 dark:data-focus:text-white"
+              onClick={() => props.onRemove()}
             >
-              Support
-            </a>
+              Remove
+            </button>
           </MenuItem>
-          <MenuItem>
-            <a
-              href="#"
-              className="block px-4 py-2 text-sm text-gray-700 data-focus:bg-gray-100 data-focus:text-gray-900 data-focus:outline-hidden dark:text-gray-300 dark:data-focus:bg-white/5 dark:data-focus:text-white"
-            >
-              License
-            </a>
-          </MenuItem>
-          <form action="#" method="POST">
-            <MenuItem>
-              <button
-                type="button"
-                className="block w-full px-4 py-2 text-left text-sm text-gray-700 data-focus:bg-gray-100 data-focus:text-gray-900 data-focus:outline-hidden dark:text-gray-300 dark:data-focus:bg-white/5 dark:data-focus:text-white"
-                onClick={async () => {
-                  await remove.mutateAsync({
-                    info_hashes: [props.info_hash],
-                    session_id: props.session_id,
-                    remove_data: true,
-                  });
-                }}
-              >
-                Remove
-              </button>
-            </MenuItem>
-          </form>
         </div>
       </MenuItems>
     </Menu>
