@@ -1,41 +1,53 @@
-import React from 'react';
-import ReactDOM from 'react-dom/client';
-import { BrowserRouter, Routes, Route, } from 'react-router-dom';
-import { ChakraProvider } from '@chakra-ui/react';
+import { StrictMode } from "react";
+import ReactDOM from "react-dom/client";
+import { RouterProvider, createRouter } from "@tanstack/react-router";
 
-import App from './App';
-import theme from './theme';
-import Home from './pages/Home';
-import Settings from './pages/Settings';
-import Setup from './pages/Setup';
-import { AuthProvider } from './contexts/auth';
-import Login from './pages/Login';
-import { NinjaProvider } from './contexts/ninja';
-import { TorrentsFilterProvider } from './contexts/TorrentsFilterContext';
-import Plugins from './pages/Plugins';
+import "./index.css";
 
-const basename = (window as any).porla.base_path;
+// Import the generated route tree
+import { routeTree } from "./routeTree.gen";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { AuthError } from "@/api";
+import { ModalProvider } from "./components/modal";
 
-ReactDOM.createRoot(document.getElementById('root') as HTMLElement).render(
-  <React.StrictMode>
-    <ChakraProvider theme={theme}>
-        <BrowserRouter basename={basename}>
-          <AuthProvider>
-            <NinjaProvider>
-              <TorrentsFilterProvider>
-                <Routes>
-                  <Route path="/" element={<App />}>
-                    <Route index element={<Home />} />
-                    <Route path="/plugins" element={<Plugins />} />
-                    <Route path="/settings" element={<Settings />} />
-                  </Route>
-                  <Route path="/login" element={<Login />} />
-                  <Route path="/setup" element={<Setup />} />
-                </Routes>
-              </TorrentsFilterProvider>
-            </NinjaProvider>
-          </AuthProvider>
-        </BrowserRouter>
-    </ChakraProvider>
-  </React.StrictMode>
-)
+// Create a new router instance
+const router = createRouter({ routeTree });
+
+// Register the router instance for type safety
+declare module "@tanstack/react-router" {
+  interface Register {
+    router: typeof router;
+  }
+}
+
+// Render the app
+const rootElement = document.getElementById("root")!;
+
+if (!rootElement.innerHTML) {
+  const root = ReactDOM.createRoot(rootElement);
+
+  const queryClient = new QueryClient({
+    defaultOptions: {
+      queries: {
+        retry(failureCount, error) {
+          if (error instanceof AuthError) {
+            router.navigate({ to: "/login" });
+            return false;
+          }
+
+          return failureCount < 3;
+        },
+      },
+    },
+  });
+
+  root.render(
+    <StrictMode>
+      <QueryClientProvider client={queryClient}>
+        <ModalProvider>
+          <RouterProvider router={router} />
+        </ModalProvider>
+      </QueryClientProvider>
+    </StrictMode>,
+  );
+}
