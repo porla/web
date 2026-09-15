@@ -55,7 +55,7 @@ export default function FilesTab({ info_hash, session_id }: FilesTabProps) {
   return (
     <table className="table table-sm">
       <tbody>
-        {files.data?.files.map((f, idx) => (
+        {files.data?.files.map((f) => (
           <tr key={`file_${f.path}`}>
             <td>{f.path}</td>
             <td>{filesize(f.size)}</td>

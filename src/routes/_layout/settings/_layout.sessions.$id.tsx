@@ -193,7 +193,6 @@ function EditSessionSetting({
   session_id,
   name,
   value,
-  description,
 }: EditSessionSettingProps) {
   const queryClient = useQueryClient();
 
