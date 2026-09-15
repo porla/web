@@ -1,6 +1,7 @@
 import { useInvoker } from "@/api";
 import { useAppForm } from "@/hooks/form";
-import { createFileRoute } from "@tanstack/react-router";
+import { useQueryClient } from "@tanstack/react-query";
+import { createFileRoute, useRouter } from "@tanstack/react-router";
 
 export const Route = createFileRoute("/setup")({
   component: RouteComponent,
@@ -8,6 +9,8 @@ export const Route = createFileRoute("/setup")({
 
 function RouteComponent() {
   const navigate = Route.useNavigate();
+
+  const queryClient = useQueryClient();
 
   const authInit = useInvoker("auth.init");
   const authLogin = useInvoker("auth.login");
@@ -20,6 +23,9 @@ function RouteComponent() {
     onSubmit: async ({ value }) => {
       await authInit.mutateAsync(value);
       await authLogin.mutateAsync(value);
+
+      queryClient.clear();
+
       await navigate({ to: "/" });
     },
   });
