@@ -188,6 +188,9 @@ function TorrentsTable({ torrents }: TorrentsTableProps) {
   const navigate = Route.useNavigate();
   const search = Route.useSearch();
 
+  const pause = useInvoker("torrents.pause");
+  const resume = useInvoker("torrents.resume");
+  const recheck = useInvoker("torrents.recheck");
   const queueTop = useInvoker("torrents.queue.top");
   const queueUp = useInvoker("torrents.queue.up");
   const queueDown = useInvoker("torrents.queue.down");
@@ -259,6 +262,45 @@ function TorrentsTable({ torrents }: TorrentsTableProps) {
                 id={`popover_${t.info_hash[0]}`}
                 style={{ positionAnchor: `--anchor-${t.info_hash[0]}` }}
               >
+                {t.flags.includes("paused") ? (
+                  <li>
+                    <button
+                      onClick={() =>
+                        resume.mutateAsync({
+                          session_id: search.session_id!,
+                          info_hash: t.info_hash,
+                        })
+                      }
+                    >
+                      Resume
+                    </button>
+                  </li>
+                ) : (
+                  <li>
+                    <button
+                      onClick={() =>
+                        pause.mutateAsync({
+                          session_id: search.session_id!,
+                          info_hash: t.info_hash,
+                        })
+                      }
+                    >
+                      Pause
+                    </button>
+                  </li>
+                )}
+                <li>
+                  <button
+                    onClick={() =>
+                      recheck.mutateAsync({
+                        session_id: search.session_id!,
+                        info_hash: t.info_hash,
+                      })
+                    }
+                  >
+                    Recheck
+                  </button>
+                </li>
                 <li>
                   <button
                     onClick={async () => {
