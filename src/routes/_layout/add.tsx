@@ -2,6 +2,7 @@ import { type PresetsList, type SessionsList, useInvoker, useRPC } from "@/api";
 import { useAppForm } from "@/hooks/form";
 import { readFile } from "@/utils";
 import { createFileRoute } from "@tanstack/react-router";
+import { Suspense } from "react";
 
 export const Route = createFileRoute("/_layout/add")({
   component: RouteComponent,
@@ -53,82 +54,84 @@ function RouteComponent() {
 
   return (
     <div>
-      <form
-        onSubmit={(e) => {
-          e.preventDefault();
-          e.stopPropagation();
-          form.handleSubmit();
-        }}
-      >
-        <form.AppField
-          name="file"
-          children={(field) => <field.FileInputField label="Torrent file" />}
-        />
-
-        <form.AppField
-          name="preset_id"
-          children={(field) => (
-            <field.SelectField
-              label="Preset"
-              items={
-                presets.data?.presets.map((p) => {
-                  return {
-                    value: p.id,
-                    label: p.name,
-                  };
-                }) ?? []
-              }
-            />
-          )}
-        />
-        {sessions.data && sessions.data.sessions.length > 1 && (
+      <Suspense>
+        <form
+          onSubmit={(e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            form.handleSubmit();
+          }}
+        >
           <form.AppField
-            name="session_id"
+            name="file"
+            children={(field) => <field.FileInputField label="Torrent file" />}
+          />
+
+          <form.AppField
+            name="preset_id"
             children={(field) => (
               <field.SelectField
-                label="Session"
+                label="Preset"
                 items={
-                  sessions.data.sessions.map((s) => {
+                  presets.data?.presets.map((p) => {
                     return {
-                      value: s.id,
-                      label: s.name,
+                      value: p.id,
+                      label: p.name,
                     };
                   }) ?? []
                 }
               />
             )}
           />
-        )}
+          {sessions.data && sessions.data.sessions.length > 1 && (
+            <form.AppField
+              name="session_id"
+              children={(field) => (
+                <field.SelectField
+                  label="Session"
+                  items={
+                    sessions.data.sessions.map((s) => {
+                      return {
+                        value: s.id,
+                        label: s.name,
+                      };
+                    }) ?? []
+                  }
+                />
+              )}
+            />
+          )}
 
-        <form.AppField
-          name="save_path"
-          children={(field) => <field.TextField label="Save path" />}
-        />
+          <form.AppField
+            name="save_path"
+            children={(field) => <field.TextField label="Save path" />}
+          />
 
-        <form.AppField
-          name="download_limit"
-          children={(field) => <field.NumberField label="Download limit" />}
-        />
+          <form.AppField
+            name="download_limit"
+            children={(field) => <field.NumberField label="Download limit" />}
+          />
 
-        <form.AppField
-          name="upload_limit"
-          children={(field) => <field.NumberField label="Upload limit" />}
-        />
+          <form.AppField
+            name="upload_limit"
+            children={(field) => <field.NumberField label="Upload limit" />}
+          />
 
-        <form.AppField
-          name="max_connections"
-          children={(field) => <field.NumberField label="Max connections" />}
-        />
+          <form.AppField
+            name="max_connections"
+            children={(field) => <field.NumberField label="Max connections" />}
+          />
 
-        <form.AppField
-          name="max_uploads"
-          children={(field) => <field.NumberField label="Max uploads" />}
-        />
+          <form.AppField
+            name="max_uploads"
+            children={(field) => <field.NumberField label="Max uploads" />}
+          />
 
-        <form.AppForm>
-          <form.SubmitButton label="Add torrent" />
-        </form.AppForm>
-      </form>
+          <form.AppForm>
+            <form.SubmitButton label="Add torrent" />
+          </form.AppForm>
+        </form>
+      </Suspense>
     </div>
   );
 }

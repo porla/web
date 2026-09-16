@@ -284,7 +284,11 @@ export type SysStatus = {
   status: "ok" | "setup";
 };
 
-export type SysVersions = {};
+export type SysVersions = {
+  porla: {
+    version: string;
+  };
+};
 
 export class RpcError extends Error {
   data: any;
