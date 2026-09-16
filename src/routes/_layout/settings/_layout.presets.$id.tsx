@@ -4,6 +4,7 @@ import {
   useRPC,
   type Preset,
   type PresetsGet,
+  type SessionsList,
   type TorrentFlag,
 } from "@/api";
 import { useAppForm } from "@/hooks/form";
@@ -59,6 +60,8 @@ type PresetFormProps = {
 function PresetForm({ preset }: PresetFormProps) {
   const queryClient = useQueryClient();
   const navigate = Route.useNavigate();
+
+  const sessions = useRPC<SessionsList>("sessions.list");
 
   const remove = useInvoker("presets.remove", {
     onSuccess: () =>
@@ -130,6 +133,24 @@ function PresetForm({ preset }: PresetFormProps) {
         children={(field) => <field.TextField label="Save path" />}
       />
 
+      {sessions.data && sessions.data.sessions.length > 1 && (
+        <form.AppField
+          name="session_id"
+          children={(field) => (
+            <field.SelectField
+              label="Session"
+              items={
+                sessions.data.sessions.map((s) => {
+                  return {
+                    value: s.id,
+                    label: s.name,
+                  };
+                }) ?? []
+              }
+            />
+          )}
+        />
+      )}
       <form.AppField
         name="upload_limit"
         children={(field) => <field.NumberField label="Upload limit" />}
