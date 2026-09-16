@@ -9,6 +9,7 @@ import { TorrentListColumns } from "@/components/lists/torrents";
 import { useModal } from "@/components/modal";
 import MigrateTorrentModal from "@/components/modals/torrent-migrate";
 import MoveTorrentModal from "@/components/modals/torrent-move";
+import TorrentPropertiesModal from "@/components/modals/torrent-properties";
 import RemoveTorrentModal from "@/components/modals/torrent-remove";
 import TorrentDetailsPanel from "@/components/torrent-details-panel";
 import { useForm } from "@tanstack/react-form";
@@ -28,6 +29,8 @@ type TorrentSearch = {
   page?: number;
   query?: string;
   session_id?: number;
+  category?: string;
+  tag?: string;
   status?: TorrentFilterStatus[];
   selected_info_hash?: InfoHash;
   selected_session_id?: number;
@@ -62,8 +65,11 @@ function RouteComponent() {
       await navigate({
         to: "/",
         search: {
-          ...search,
+          session_id: search.session_id,
           query: !value.query?.length ? undefined : value.query,
+          page: undefined,
+          selected_info_hash: search.selected_info_hash,
+          selected_session_id: search.selected_session_id,
         },
       });
     },
@@ -73,9 +79,11 @@ function RouteComponent() {
     "torrents.list",
     {
       filters: {
+        category: search.category,
         query: search.query,
         session_id: search.session_id,
         status: search.status,
+        tags: search.tag ? [search.tag] : undefined,
       },
       page: search.page ? search.page - 1 : 0,
       pageSize,
@@ -180,8 +188,10 @@ function TorrentsTable({ torrents }: TorrentsTableProps) {
   const navigate = Route.useNavigate();
   const search = Route.useSearch();
 
-  const queueBottom = useInvoker("torrents.queue.bottom");
+  const queueTop = useInvoker("torrents.queue.top");
+  const queueUp = useInvoker("torrents.queue.up");
   const queueDown = useInvoker("torrents.queue.down");
+  const queueBottom = useInvoker("torrents.queue.bottom");
 
   const modal = useModal();
 
@@ -219,7 +229,7 @@ function TorrentsTable({ torrents }: TorrentsTableProps) {
               {torrentsColumns[col].title}
             </th>
           ))}
-          <th className="w-4"></th>
+          <th className="w-16"></th>
         </tr>
       </thead>
       <tbody>
@@ -244,7 +254,7 @@ function TorrentsTable({ torrents }: TorrentsTableProps) {
               </button>
 
               <ul
-                className="dropdown menu w-52 rounded-box bg-base-100 shadow-sm"
+                className="dropdown dropdown-end menu w-52 rounded-box bg-base-100 shadow-sm"
                 popover="auto"
                 id={`popover_${t.info_hash[0]}`}
                 style={{ positionAnchor: `--anchor-${t.info_hash[0]}` }}
@@ -273,37 +283,63 @@ function TorrentsTable({ torrents }: TorrentsTableProps) {
                     Move
                   </button>
                 </li>
-                <li>
-                  <details>
-                    <summary>Queuing</summary>
-                    <ul>
-                      <li>
-                        <button
-                          onClick={() =>
-                            queueBottom.mutateAsync({
-                              info_hash: t.info_hash,
-                              session_id: search.session_id!,
-                            })
-                          }
-                        >
-                          Bottom
-                        </button>
-                      </li>
-                      <li>
-                        <button
-                          onClick={() =>
-                            queueDown.mutateAsync({
-                              info_hash: t.info_hash,
-                              session_id: search.session_id!,
-                            })
-                          }
-                        >
-                          Down
-                        </button>
-                      </li>
-                    </ul>
-                  </details>
-                </li>
+                {t.queue_position >= 0 && (
+                  <li>
+                    <details>
+                      <summary>Queuing</summary>
+                      <ul>
+                        <li>
+                          <button
+                            onClick={() =>
+                              queueTop.mutateAsync({
+                                info_hash: t.info_hash,
+                                session_id: search.session_id!,
+                              })
+                            }
+                          >
+                            Top
+                          </button>
+                        </li>
+                        <li>
+                          <button
+                            onClick={() =>
+                              queueUp.mutateAsync({
+                                info_hash: t.info_hash,
+                                session_id: search.session_id!,
+                              })
+                            }
+                          >
+                            Up
+                          </button>
+                        </li>
+                        <li>
+                          <button
+                            onClick={() =>
+                              queueDown.mutateAsync({
+                                info_hash: t.info_hash,
+                                session_id: search.session_id!,
+                              })
+                            }
+                          >
+                            Down
+                          </button>
+                        </li>
+                        <li>
+                          <button
+                            onClick={() =>
+                              queueBottom.mutateAsync({
+                                info_hash: t.info_hash,
+                                session_id: search.session_id!,
+                              })
+                            }
+                          >
+                            Bottom
+                          </button>
+                        </li>
+                      </ul>
+                    </details>
+                  </li>
+                )}
                 <li>
                   <button
                     onClick={async () => {
@@ -333,6 +369,18 @@ function TorrentsTable({ torrents }: TorrentsTableProps) {
                     }}
                   >
                     Remove
+                  </button>
+                </li>
+                <li>
+                  <button
+                    onClick={async () => {
+                      await modal.show(TorrentPropertiesModal, {
+                        info_hash: t.info_hash,
+                        session_id: search.session_id!,
+                      });
+                    }}
+                  >
+                    Properties
                   </button>
                 </li>
               </ul>

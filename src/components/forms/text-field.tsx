@@ -4,9 +4,11 @@ import type { HTMLInputTypeAttribute } from "react";
 
 export default function TextField({
   label,
+  description,
   type,
 }: {
   label: string;
+  description?: string;
   type?: HTMLInputTypeAttribute;
 }) {
   const field = useFieldContext<string>();
@@ -24,6 +26,8 @@ export default function TextField({
         onChange={(e) => field.handleChange(e.target.value)}
         onBlur={field.handleBlur}
       />
+
+      {description && <div className="text-base-content">{description}</div>}
 
       {errors.map((error: string) => (
         <div key={error} style={{ color: "red" }}>
