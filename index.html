@@ -1,23 +1,36 @@
 <!doctype html>
-<html lang="en" class="h-full" style="background-color: oklch(25.33% 0.016 252.42);">
 
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Porla</title>
-</head>
+<html lang="en" class="h-full">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Porla</title>
 
-<body class="h-full">
-  <div id="root" class="h-full"></div>
-  <script type="module" src="/src/main.tsx"></script>
-  <script>
-    window.porla = {
-      base_path: "%BASE_PATH%"
-    };
-    if (window.porla.base_path === "%BASE" + "_" + "PATH%") {
-      window.porla.base_path = "/";
-    }
-  </script>
-</body>
+    <style>
+      :root {
+        color-scheme: light dark;
+      }
+      html[data-theme="light"] {
+        color-scheme: light;
+        background-color: oklch(100% 0 0);
+      }
+      html[data-theme="dark"] {
+        color-scheme: dark;
+        background-color: oklch(25.33% 0.016 252.42);
+      }
+    </style>
+  </head>
 
+  <body class="h-full">
+    <div id="root" class="h-full"></div>
+    <script type="module" src="/src/main.tsx"></script>
+    <script>
+      window.porla = {
+        base_path: "%BASE_PATH%",
+      };
+      if (window.porla.base_path === "%BASE" + "_" + "PATH%") {
+        window.porla.base_path = "/";
+      }
+    </script>
+  </body>
 </html>
