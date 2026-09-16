@@ -54,7 +54,7 @@ export default function MoveTorrentModal({
       />
 
       <div className="modal-action">
-        <button className="btn" onClick={() => close(false)}>
+        <button type="button" className="btn" onClick={() => close(false)}>
           Cancel
         </button>
 
