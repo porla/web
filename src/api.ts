@@ -11,11 +11,48 @@ export function isBitSet(num: number, bit: number) {
   return (num & (1 << bit)) !== 0;
 }
 
-// These numbers represent *bits*
-export const TorrentFlags = {
-  Paused: 4,
-  AutoManaged: 5,
-};
+export const AllTorrentFlags = [
+  "seed_mode",
+  "upload_mode",
+  "share_mode",
+  "apply_ip_filter",
+  "paused",
+  "auto_managed",
+  "duplicate_is_error",
+  "update_subscribe",
+  "super_seeding",
+  "sequential_download",
+  "stop_when_ready",
+  "need_save_resume",
+  "disable_dht",
+  "disable_lsd",
+  "disable_pex",
+  "no_verify_files",
+  "default_dont_download",
+  "i2p_torrent",
+  "disable_v1_hashes",
+] as TorrentFlag[];
+
+export type TorrentFlag =
+  | "seed_mode"
+  | "upload_mode"
+  | "share_mode"
+  | "apply_ip_filter"
+  | "paused"
+  | "auto_managed"
+  | "duplicate_is_error"
+  | "update_subscribe"
+  | "super_seeding"
+  | "sequential_download"
+  | "stop_when_ready"
+  | "need_save_resume"
+  | "disable_dht"
+  | "disable_lsd"
+  | "disable_pex"
+  | "no_verify_files"
+  | "default_dont_download"
+  | "i2p_torrent"
+  | "disable_v1_hashes";
 
 export type ErrC = {
   message: string;
@@ -74,7 +111,7 @@ export type Torrent = {
   download_rate: number;
   errc: ErrC | null;
   finished_duration: number;
-  flags: number;
+  flags: TorrentFlag[];
   info_hash: InfoHash;
   last_download: number;
   last_upload: number;
@@ -149,6 +186,8 @@ export type Preset = {
   is_default: boolean;
   category: string | null;
   download_limit: number | null;
+  flags: TorrentFlag[] | null;
+  flags_mask: TorrentFlag[] | null;
   max_connections: number | null;
   max_uploads: number | null;
   metadata: Record<string, unknown>;
@@ -245,7 +284,11 @@ export type SysStatus = {
   status: "ok" | "setup";
 };
 
-export type SysVersions = {};
+export type SysVersions = {
+  porla: {
+    version: string;
+  };
+};
 
 export class RpcError extends Error {
   data: any;

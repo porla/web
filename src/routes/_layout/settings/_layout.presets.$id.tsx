@@ -1,4 +1,11 @@
-import { useInvoker, useRPC, type Preset, type PresetsGet } from "@/api";
+import {
+  AllTorrentFlags,
+  useInvoker,
+  useRPC,
+  type Preset,
+  type PresetsGet,
+  type TorrentFlag,
+} from "@/api";
 import { useAppForm } from "@/hooks/form";
 import { useQueryClient } from "@tanstack/react-query";
 import { createFileRoute } from "@tanstack/react-router";
@@ -7,6 +14,17 @@ import { Suspense } from "react";
 export const Route = createFileRoute("/_layout/settings/_layout/presets/$id")({
   component: RouteComponent,
 });
+
+type FlagState = "on" | "off" | "unchanged";
+
+const flagState = (
+  f: TorrentFlag,
+  flags: TorrentFlag[],
+  mask: TorrentFlag[],
+): FlagState =>
+  !mask.includes(f) ? "unchanged" : flags.includes(f) ? "on" : "off";
+
+const OPTIONS = ["on", "off", "unchanged"] as const;
 
 function RouteComponent() {
   const { id } = Route.useParams();
@@ -55,10 +73,15 @@ function PresetForm({ preset }: PresetFormProps) {
   const form = useAppForm({
     defaultValues: {
       ...preset,
+      flags: (preset.flags ?? []).filter((f) =>
+        (preset.flags_mask ?? []).includes(f),
+      ),
+      flags_mask: preset.flags_mask ?? [],
     },
     onSubmit: async ({ value }) => {
       await update.mutateAsync({
         ...value,
+        flags: value.flags.filter((f) => value.flags_mask.includes(f)),
         id: preset.id,
       });
     },
@@ -111,6 +134,77 @@ function PresetForm({ preset }: PresetFormProps) {
         name="upload_limit"
         children={(field) => <field.NumberField label="Upload limit" />}
       />
+
+      <div className="flex">
+        <form.AppField
+          name="flags"
+          children={(flagsField) => (
+            <form.AppField
+              name="flags_mask"
+              children={(maskField) => {
+                const flags = flagsField.state.value ?? [];
+                const mask = maskField.state.value ?? [];
+
+                const set = (f: TorrentFlag, next: FlagState) => {
+                  const nextFlags = flags.filter((x) => x !== f);
+                  const nextMask = mask.filter((x) => x !== f);
+
+                  if (next === "on") {
+                    nextFlags.push(f);
+                    nextMask.push(f);
+                  }
+
+                  if (next === "off") {
+                    nextMask.push(f);
+                  }
+
+                  flagsField.handleChange(nextFlags);
+                  maskField.handleChange(nextMask);
+                };
+
+                return (
+                  <div className="fieldset">
+                    <label className="label">Flags</label>
+                    <table className="table">
+                      <thead>
+                        <tr>
+                          <th>Flag</th>
+                          <th>Set</th>
+                          <th>Unset</th>
+                          <th>Leave</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {AllTorrentFlags.map((f) => {
+                          const current = flagState(f, flags, mask);
+
+                          return (
+                            <tr key={f}>
+                              <td>{f}</td>
+                              {OPTIONS.map((opt) => (
+                                <td key={opt}>
+                                  <input
+                                    type="radio"
+                                    className="radio"
+                                    name={`flags-${f}`}
+                                    value={opt}
+                                    checked={current === opt}
+                                    onChange={() => set(f, opt)}
+                                  />
+                                </td>
+                              ))}
+                            </tr>
+                          );
+                        })}
+                      </tbody>
+                    </table>
+                  </div>
+                );
+              }}
+            />
+          )}
+        />
+      </div>
 
       <form.AppForm>
         <form.SubmitButton label="Update" />
