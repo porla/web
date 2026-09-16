@@ -70,7 +70,7 @@ function SysVersionsLayout() {
         </div>
       )}
 
-      <div className="flex flex-1">
+      <div className="flex flex-1 h-full">
         <div className="bg-base-300 w-64 shrink-0">
           {boundary("sidebar", <Sidebar />)}
         </div>
