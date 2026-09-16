@@ -17,7 +17,9 @@ function RouteComponent() {
 
   const form = useAppForm({
     defaultValues: {
-      file: null as File | null,
+      type: "torrent" as "torrent" | "magnet",
+      files: null as FileList | null,
+      magnet_link: null as string | null,
       download_limit: null as number | null,
       upload_limit: null as number | null,
       http_seeds: null as string[] | null,
@@ -30,30 +32,45 @@ function RouteComponent() {
       session_id: null as number | null,
     },
     onSubmit: async ({ value }) => {
-      if (!value.file) {
-        return;
+      if (value.type === "torrent" && value.files && value.files.length > 0) {
+        for (const file of value.files) {
+          await add.mutateAsync({
+            ti: await readFile(file),
+            download_limit: value.download_limit,
+            upload_limit: value.upload_limit,
+            http_seeds: value.http_seeds,
+            max_connections: value.max_connections,
+            max_uploads: value.max_uploads,
+            save_path: value.save_path,
+            trackers: value.trackers,
+            url_seeds: value.url_seeds,
+            preset_id: value.preset_id,
+            session_id: value.session_id,
+          });
+        }
+      } else if (value.type === "magnet" && value.magnet_link) {
+        await add.mutateAsync({
+          magnet_uri: value.magnet_link,
+          download_limit: value.download_limit,
+          upload_limit: value.upload_limit,
+          http_seeds: value.http_seeds,
+          max_connections: value.max_connections,
+          max_uploads: value.max_uploads,
+          save_path: value.save_path,
+          trackers: value.trackers,
+          url_seeds: value.url_seeds,
+          preset_id: value.preset_id,
+          session_id: value.session_id,
+        });
       }
-
-      await add.mutateAsync({
-        ti: await readFile(value.file),
-        download_limit: value.download_limit,
-        upload_limit: value.upload_limit,
-        http_seeds: value.http_seeds,
-        max_connections: value.max_connections,
-        max_uploads: value.max_uploads,
-        save_path: value.save_path,
-        trackers: value.trackers,
-        url_seeds: value.url_seeds,
-        preset_id: value.preset_id,
-        session_id: value.session_id,
-      });
 
       await navigate({ to: "/" });
     },
   });
 
   return (
-    <div>
+    <div className="m-5">
+      <h1>Add torrent</h1>
       <Suspense>
         <form
           onSubmit={(e) => {
@@ -63,9 +80,55 @@ function RouteComponent() {
           }}
         >
           <form.AppField
-            name="file"
-            children={(field) => <field.FileInputField label="Torrent file" />}
+            name="type"
+            children={(field) => (
+              <div className="flex items-center space-x-5">
+                <label className="label">
+                  <input
+                    type="radio"
+                    name="add_type"
+                    className="radio radio-xs"
+                    checked={field.state.value === "torrent"}
+                    onClick={(_) => field.handleChange("torrent")}
+                  />
+                  Torrent file
+                </label>
+                <label className="label">
+                  <input
+                    type="radio"
+                    name="add_type"
+                    className="radio radio-xs"
+                    checked={field.state.value === "magnet"}
+                    onClick={(_) => field.handleChange("magnet")}
+                  />
+                  Magnet link
+                </label>
+              </div>
+            )}
           />
+          <form.Subscribe selector={(state) => state.values.type}>
+            {(type) => (
+              <>
+                {type === "torrent" && (
+                  <form.AppField
+                    name="files"
+                    children={(field) => (
+                      <field.FileInputField label="Torrent file(s)" />
+                    )}
+                  />
+                )}
+
+                {type === "magnet" && (
+                  <form.AppField
+                    name="magnet_link"
+                    children={(field) => (
+                      <field.TextField label="Magnet link" />
+                    )}
+                  />
+                )}
+              </>
+            )}
+          </form.Subscribe>
 
           <form.AppField
             name="preset_id"

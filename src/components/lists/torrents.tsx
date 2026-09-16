@@ -31,7 +31,7 @@ export const TorrentListColumns = () => {
           }}
           className="hover:underline"
         >
-          {t.name}
+          {t.name.length > 0 ? t.name : t.info_hash[0]}
         </Link>
       ),
     },
