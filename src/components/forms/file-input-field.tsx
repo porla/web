@@ -2,7 +2,7 @@ import { useSelector } from "@tanstack/react-form";
 import { useFieldContext } from "@/hooks/form-context.tsx";
 
 export default function FileInputField({ label }: { label: string }) {
-  const field = useFieldContext<File | null>();
+  const field = useFieldContext<FileList | null>();
 
   const errors = useSelector(field.store, (state) => state.meta.errors);
 
@@ -16,9 +16,10 @@ export default function FileInputField({ label }: { label: string }) {
         onBlur={field.handleBlur}
         onChange={(e) =>
           e.target.files
-            ? field.handleChange(e.target.files[0])
+            ? field.handleChange(e.target.files)
             : field.handleChange(null)
         }
+        multiple
       />
 
       {errors.map((error: string) => (
