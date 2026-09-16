@@ -1,11 +1,13 @@
 import { type SessionsList, type TorrentsCount, useRPC } from "@/api";
 import { Link, useNavigate, useSearch } from "@tanstack/react-router";
 import {
+  Archive,
   ArrowLeftRight,
   Check,
   Cog,
   Download,
   Pause,
+  Tag,
   TriangleAlert,
   Upload,
 } from "lucide-react";
@@ -104,7 +106,7 @@ export default function Sidebar() {
   );
 }
 
-function TorrentsList({ session_id }: { session_id?: Number }) {
+function TorrentsList({ session_id }: { session_id?: number }) {
   const torrentSearch = useSearch({ from: "/_layout/", shouldThrow: false });
 
   const count = useRPC<TorrentsCount>(
@@ -116,137 +118,223 @@ function TorrentsList({ session_id }: { session_id?: Number }) {
     },
   );
 
+  const categories = Object.entries(count.data?.categories ?? {}).filter(
+    ([, n]) => n > 0,
+  );
+
+  const tags = Object.entries(count.data?.tags ?? {}).filter(([, n]) => n > 0);
+
   return (
-    <ul className="menu w-full">
-      <li className="menu-title">Torrents</li>
-      <li>
-        <Link
-          to="/"
-          search={{
-            ...torrentSearch,
-            status: undefined,
-          }}
-          activeOptions={{
-            exact: true,
-          }}
-          activeProps={{
-            className: "bg-base-100",
-          }}
-          className="flex justify-between w-full"
-        >
-          <div className="flex space-x-2 items-center">
-            <ArrowLeftRight className="size-4 text-gray-300" />
-            <span>All</span>
-          </div>
-          <span>{count.data?.total}</span>
-        </Link>
-      </li>
-      <li>
-        <Link
-          to="/"
-          search={{
-            ...torrentSearch,
-            status: ["downloading", "downloading_queued"],
-          }}
-          activeOptions={{
-            exact: true,
-          }}
-          activeProps={{
-            className: "bg-base-100",
-          }}
-          className="flex justify-between w-full"
-        >
-          <div className="flex space-x-2 items-center">
-            <Download className="size-4 text-green-300" />
-            <span>Downloading</span>
-          </div>
-          <span>
-            {count.data &&
-              count.data.downloading + count.data.downloading_queued}
-          </span>
-        </Link>
-      </li>
-      <li>
-        <Link
-          to="/"
-          search={{
-            ...torrentSearch,
-            status: ["seeding", "seeding_queued"],
-          }}
-          activeOptions={{
-            exact: true,
-          }}
-          activeProps={{
-            className: "bg-base-100",
-          }}
-          className="flex justify-between w-full"
-        >
-          <div className="flex space-x-2 items-center">
-            <Upload className="size-4 text-blue-300" />
-            <span>Seeding</span>
-          </div>
-          <span>
-            {count.data && count.data.seeding + count.data.seeding_queued}
-          </span>
-        </Link>
-      </li>
-      <li>
-        <Link
-          to="/"
-          search={{
-            ...torrentSearch,
-            status: ["finished"],
-          }}
-          activeProps={{
-            className: "bg-base-100",
-          }}
-          className="flex justify-between w-full"
-        >
-          <div className="flex space-x-2 items-center">
-            <Check className="size-4 text-purple-300" />
-            <span>Finished</span>
-          </div>
-          <span>{count.data && count.data.finished}</span>
-        </Link>
-      </li>
-      <li>
-        <Link
-          to="/"
-          search={{
-            ...torrentSearch,
-            status: ["paused"],
-          }}
-          activeProps={{
-            className: "bg-base-100",
-          }}
-          className="flex justify-between w-full"
-        >
-          <div className="flex space-x-2 items-center">
-            <Pause className="size-4 text-orange-300" />
-            <span>Paused</span>
-          </div>
-          <span>{count.data && count.data.paused}</span>
-        </Link>
-      </li>
-      <li>
-        <Link
-          to="/"
-          search={{
-            ...torrentSearch,
-            status: ["error"],
-          }}
-          activeProps={{
-            className: "bg-base-100",
-          }}
-          className="flex justify-between w-full"
-        >
-          <div className="flex space-x-2 items-center">
-            <TriangleAlert className="size-4 text-red-300" />
-            <span>Error</span>
-          </div>
-          <span>{count.data && count.data.error}</span>
-        </Link>
-      </li>
-    </ul>
+    <>
+      <ul className="menu w-full">
+        <li className="menu-title">Torrents</li>
+        <li>
+          <Link
+            to="/"
+            search={{
+              ...torrentSearch,
+              category: undefined,
+              query: undefined,
+              status: undefined,
+              tag: undefined,
+            }}
+            activeOptions={{
+              exact: true,
+            }}
+            activeProps={{
+              className: "bg-base-100",
+            }}
+            className="flex justify-between w-full"
+          >
+            <div className="flex space-x-2 items-center">
+              <ArrowLeftRight className="size-4 text-gray-300" />
+              <span>All</span>
+            </div>
+            <span>{count.data?.total}</span>
+          </Link>
+        </li>
+        <li>
+          <Link
+            to="/"
+            search={{
+              ...torrentSearch,
+              category: undefined,
+              query: undefined,
+              status: ["downloading", "downloading_queued"],
+              tag: undefined,
+            }}
+            activeOptions={{
+              exact: true,
+            }}
+            activeProps={{
+              className: "bg-base-100",
+            }}
+            className="flex justify-between w-full"
+          >
+            <div className="flex space-x-2 items-center">
+              <Download className="size-4 text-green-300" />
+              <span>Downloading</span>
+            </div>
+            <span>
+              {count.data &&
+                count.data.downloading + count.data.downloading_queued}
+            </span>
+          </Link>
+        </li>
+        <li>
+          <Link
+            to="/"
+            search={{
+              ...torrentSearch,
+              category: undefined,
+              query: undefined,
+              status: ["seeding", "seeding_queued"],
+              tag: undefined,
+            }}
+            activeOptions={{
+              exact: true,
+            }}
+            activeProps={{
+              className: "bg-base-100",
+            }}
+            className="flex justify-between w-full"
+          >
+            <div className="flex space-x-2 items-center">
+              <Upload className="size-4 text-blue-300" />
+              <span>Seeding</span>
+            </div>
+            <span>
+              {count.data && count.data.seeding + count.data.seeding_queued}
+            </span>
+          </Link>
+        </li>
+        <li>
+          <Link
+            to="/"
+            search={{
+              ...torrentSearch,
+              category: undefined,
+              query: undefined,
+              status: ["finished"],
+              tag: undefined,
+            }}
+            activeProps={{
+              className: "bg-base-100",
+            }}
+            className="flex justify-between w-full"
+          >
+            <div className="flex space-x-2 items-center">
+              <Check className="size-4 text-purple-300" />
+              <span>Finished</span>
+            </div>
+            <span>{count.data && count.data.finished}</span>
+          </Link>
+        </li>
+        <li>
+          <Link
+            to="/"
+            search={{
+              ...torrentSearch,
+              category: undefined,
+              query: undefined,
+              status: ["paused"],
+              tag: undefined,
+            }}
+            activeProps={{
+              className: "bg-base-100",
+            }}
+            className="flex justify-between w-full"
+          >
+            <div className="flex space-x-2 items-center">
+              <Pause className="size-4 text-orange-300" />
+              <span>Paused</span>
+            </div>
+            <span>{count.data && count.data.paused}</span>
+          </Link>
+        </li>
+        <li>
+          <Link
+            to="/"
+            search={{
+              ...torrentSearch,
+              category: undefined,
+              query: undefined,
+              status: ["error"],
+              tag: undefined,
+            }}
+            activeProps={{
+              className: "bg-base-100",
+            }}
+            className="flex justify-between w-full"
+          >
+            <div className="flex space-x-2 items-center">
+              <TriangleAlert className="size-4 text-red-300" />
+              <span>Error</span>
+            </div>
+            <span>{count.data && count.data.error}</span>
+          </Link>
+        </li>
+      </ul>
+
+      {categories.length > 0 && (
+        <ul className="menu w-full">
+          <li className="menu-title">Categories</li>
+          {categories.map(([c, n]) => (
+            <li key={`category_${c}`}>
+              <Link
+                to="/"
+                activeOptions={{
+                  exact: true,
+                }}
+                activeProps={{
+                  className: "bg-base-100",
+                }}
+                className="flex justify-between w-full"
+                search={{
+                  session_id,
+                  category: c,
+                }}
+              >
+                <div className="flex space-x-2 items-center">
+                  <Archive className="size-4 text-neutral-content" />
+                  <span>{c}</span>
+                </div>
+                <span>{n}</span>
+              </Link>
+            </li>
+          ))}
+        </ul>
+      )}
+
+      {tags.length > 0 && (
+        <ul className="menu w-full">
+          <li className="menu-title">Tags</li>
+          {tags.map(([t, n]) => (
+            <li key={`tag_${t}`}>
+              <Link
+                to="/"
+                activeOptions={{
+                  exact: true,
+                }}
+                activeProps={{
+                  className: "bg-base-100",
+                }}
+                className="flex justify-between w-full"
+                search={{
+                  session_id,
+                  tag: t,
+                }}
+              >
+                <div className="flex space-x-2 items-center">
+                  <Tag className="size-4 text-neutral-content" />
+                  <span>{t}</span>
+                </div>
+                <span>{n}</span>
+              </Link>
+            </li>
+          ))}
+        </ul>
+      )}
+    </>
   );
 }

@@ -90,6 +90,13 @@ export type TorrentsGet = {
   torrent: Torrent;
 };
 
+export type TorrentsPropertiesGet = {
+  download_limit: number;
+  max_connections: number;
+  max_uploads: number;
+  upload_limit: number;
+};
+
 export type InfoHash = [string | null, string | null] | string;
 
 export type Bitfield = [number, string];
