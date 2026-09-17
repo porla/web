@@ -80,12 +80,17 @@ function PresetForm({ preset }: PresetFormProps) {
         (preset.flags_mask ?? []).includes(f),
       ),
       flags_mask: preset.flags_mask ?? [],
+      tags: preset.tags.join(", "),
     },
     onSubmit: async ({ value }) => {
       await update.mutateAsync({
         ...value,
         flags: value.flags.filter((f) => value.flags_mask.includes(f)),
         id: preset.id,
+        tags: value.tags
+          ?.split(",")
+          .map((s) => s.trim())
+          .filter(Boolean),
       });
     },
   });
@@ -151,6 +156,17 @@ function PresetForm({ preset }: PresetFormProps) {
           )}
         />
       )}
+
+      <form.AppField
+        name="tags"
+        children={(field) => (
+          <field.TextField
+            label="Tags"
+            description="A comma (,) separated list of tags"
+          />
+        )}
+      />
+
       <form.AppField
         name="upload_limit"
         children={(field) => <field.NumberField label="Upload limit" />}
