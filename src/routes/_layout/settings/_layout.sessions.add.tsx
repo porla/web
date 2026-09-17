@@ -2,10 +2,26 @@ import { useInvoker } from "@/api";
 import { useAppForm } from "@/hooks/form";
 import { useQueryClient } from "@tanstack/react-query";
 import { createFileRoute } from "@tanstack/react-router";
+import z from "zod";
 
 export const Route = createFileRoute("/_layout/settings/_layout/sessions/add")({
   component: RouteComponent,
 });
+
+const schema = z.object({
+  name: z.string().min(1, "Session name is required."),
+  settings_base: z.enum([
+    "default",
+    "min_memory_usage",
+    "high_performance_seed",
+  ]),
+  timer_dht_stats: z.number(),
+  timer_save_state: z.number(),
+  timer_session_stats: z.number(),
+  timer_torrent_updates: z.number(),
+});
+
+type Settings = z.infer<typeof schema>["settings_base"];
 
 function RouteComponent() {
   const navigate = Route.useNavigate();
@@ -19,6 +35,15 @@ function RouteComponent() {
   const form = useAppForm({
     defaultValues: {
       name: "",
+      settings_base: "default",
+      timer_dht_stats: 5000,
+      timer_save_state: 300000,
+      timer_session_stats: 5000,
+      timer_torrent_updates: 1000,
+    },
+    validators: {
+      onMount: schema,
+      onChange: schema,
     },
     onSubmit: async ({ value }) => {
       const result = await add.mutateAsync(value);
@@ -41,6 +66,7 @@ function RouteComponent() {
     <div className="card bg-base-200 shadow-sm w-full">
       <div className="card-body">
         <form
+          className="space-y-4"
           onSubmit={(e) => {
             e.preventDefault();
             e.stopPropagation();
@@ -51,6 +77,66 @@ function RouteComponent() {
             name="name"
             children={(field) => <field.TextField label="Name" />}
           />
+
+          <form.AppField
+            name="settings_base"
+            children={(field) => (
+              <div className="fieldset">
+                <label className="label">Settings base</label>
+
+                <select
+                  className="select"
+                  onBlur={field.handleBlur}
+                  onChange={(e) => {
+                    field.handleChange(e.target.value as Settings);
+                  }}
+                  value={field.state.value}
+                >
+                  <option value={"default"}>Default</option>
+                  <option value={"min_memory_usage"}>Min. memory usage</option>
+                  <option value={"high_performance_seed"}>
+                    High performance seed
+                  </option>
+                </select>
+              </div>
+            )}
+          />
+
+          <details
+            className="collapse bg-base-100 border border-base-300"
+            name="settings-advanced"
+          >
+            <summary className="collapse-title font-semibold">Advanced</summary>
+            <div className="collapse-content text-sm">
+              <form.AppField
+                name="timer_dht_stats"
+                children={(field) => (
+                  <field.NumberField label="DHT stats interval (ms)" />
+                )}
+              />
+
+              <form.AppField
+                name="timer_save_state"
+                children={(field) => (
+                  <field.NumberField label="Save state interval (ms)" />
+                )}
+              />
+
+              <form.AppField
+                name="timer_session_stats"
+                children={(field) => (
+                  <field.NumberField label="Session stats interval (ms)" />
+                )}
+              />
+
+              <form.AppField
+                name="timer_torrent_updates"
+                children={(field) => (
+                  <field.NumberField label="Torrent update interval (ms)" />
+                )}
+              />
+            </div>
+          </details>
 
           <form.AppForm>
             <form.SubmitButton label="Add session" />

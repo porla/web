@@ -5,6 +5,7 @@ export default function NumberField({ label }: { label: string }) {
   const field = useFieldContext<number | null>();
 
   const errors = useSelector(field.store, (state) => state.meta.errors);
+  const isTouched = useSelector(field.store, (state) => state.meta.isTouched);
 
   return (
     <div className="fieldset">
@@ -24,11 +25,12 @@ export default function NumberField({ label }: { label: string }) {
         onBlur={field.handleBlur}
       />
 
-      {errors.map((error: string) => (
-        <div key={error} style={{ color: "red" }}>
-          {error}
-        </div>
-      ))}
+      {isTouched &&
+        errors.map((error, i) => (
+          <div key={i} className="text-red-400">
+            {typeof error === "string" ? error : error?.message}
+          </div>
+        ))}
     </div>
   );
 }

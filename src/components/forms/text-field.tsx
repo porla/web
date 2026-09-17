@@ -14,6 +14,7 @@ export default function TextField({
   const field = useFieldContext<string>();
 
   const errors = useSelector(field.store, (state) => state.meta.errors);
+  const isTouched = useSelector(field.store, (state) => state.meta.isTouched);
 
   return (
     <div className="fieldset">
@@ -29,11 +30,12 @@ export default function TextField({
 
       {description && <div className="text-base-content">{description}</div>}
 
-      {errors.map((error: string) => (
-        <div key={error} style={{ color: "red" }}>
-          {error}
-        </div>
-      ))}
+      {isTouched &&
+        errors.map((error, i) => (
+          <div key={i} className="text-red-400">
+            {typeof error === "string" ? error : error?.message}
+          </div>
+        ))}
     </div>
   );
 }
