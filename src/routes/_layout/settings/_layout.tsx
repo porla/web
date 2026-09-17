@@ -5,6 +5,7 @@ import {
   type SessionsList,
 } from "@/api";
 import { createFileRoute, Link, Outlet } from "@tanstack/react-router";
+import { Star } from "lucide-react";
 
 export const Route = createFileRoute("/_layout/settings/_layout")({
   component: RouteComponent,
@@ -47,6 +48,7 @@ function SessionsMenu() {
             activeProps={{
               className: "bg-base-300",
             }}
+            className="flex justify-between w-full"
           >
             <div className="flex items-center space-x-2">
               <span
@@ -59,6 +61,11 @@ function SessionsMenu() {
               ></span>
               <span>{s.name}</span>
             </div>
+            {s.is_default && (
+              <span>
+                <Star className="size-4 text-yellow-500" />
+              </span>
+            )}
           </Link>
         </li>
       ))}

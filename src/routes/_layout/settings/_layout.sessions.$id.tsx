@@ -11,7 +11,8 @@ import { useQueryClient } from "@tanstack/react-query";
 import { createFileRoute } from "@tanstack/react-router";
 import clsx from "clsx";
 import { SlidersHorizontal } from "lucide-react";
-import { useRef, useState } from "react";
+import { Suspense, useEffect, useRef, useState } from "react";
+import z from "zod";
 
 export const Route = createFileRoute("/_layout/settings/_layout/sessions/$id")({
   component: RouteComponent,
@@ -23,7 +24,11 @@ function RouteComponent() {
   const session = useRPC<SessionsGet>("sessions.get", { id: parseInt(id, 10) });
 
   if (session.isLoading) {
-    return <>loading</>;
+    return (
+      <div>
+        <span className="loading loading-spinner loading-xl"></span>
+      </div>
+    );
   }
 
   if (session.error) {
@@ -36,43 +41,91 @@ function RouteComponent() {
 
   return (
     <div>
-      <SessionData session={session.data.session} />
-      <SessionSettings session={session.data.session} />
+      <div className="card bg-base-200 shadow-sm w-full">
+        <div className="card-body">
+          <SessionForm
+            key={`data_${session.data.session.id}`}
+            session={session.data.session}
+          />
+        </div>
+      </div>
+
+      <SessionSettings
+        key={`settings_${session.data.session.id}`}
+        session={session.data.session}
+      />
     </div>
   );
 }
 
-function SessionData({ session }: { session: Session }) {
+const sessionSchema = z.object({
+  name: z.string().min(1, "Session name is required"),
+  metadata: z.any(),
+  is_default: z.boolean(),
+});
+
+function SessionForm({ session }: { session: Session }) {
+  const navigate = Route.useNavigate();
   const queryClient = useQueryClient();
 
+  const remove = useInvoker("sessions.remove", {
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["sessions.list"] });
+      queryClient.invalidateQueries({
+        queryKey: ["sessions.get"],
+        refetchType: "all",
+      });
+    },
+  });
+
   const update = useInvoker("sessions.update", {
-    onSuccess: () =>
-      queryClient.invalidateQueries({ queryKey: ["sessions.list"] }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["sessions.list"] });
+      queryClient.invalidateQueries({
+        queryKey: ["sessions.get"],
+        refetchType: "all",
+      });
+    },
   });
 
   const form = useAppForm({
     defaultValues: {
       name: session.name,
       metadata: session.metadata,
+      is_default: session.is_default,
+    },
+    validators: {
+      onMount: sessionSchema,
+      onChange: sessionSchema,
     },
     onSubmit: async ({ value }) => {
       await update.mutateAsync({
         id: session.id,
         name: value.name,
-        is_default: session.is_default,
+        is_default: value.is_default,
         metadata: value.metadata,
       });
     },
   });
 
+  useEffect(() => {
+    form.reset({
+      name: session.name,
+      metadata: session.metadata,
+      is_default: session.is_default,
+    });
+  }, [session]);
+
   return (
-    <div>
-      <form
-        onSubmit={(e) => {
-          e.preventDefault();
-          e.stopPropagation();
-          form.handleSubmit();
-        }}
+    <form
+      onSubmit={(e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        form.handleSubmit();
+      }}
+    >
+      <Suspense
+        fallback={<span className="loading loading-spinner loading-xl"></span>}
       >
         <form.AppField
           name="name"
@@ -80,21 +133,43 @@ function SessionData({ session }: { session: Session }) {
         />
 
         <form.AppField
+          name="is_default"
+          children={(field) => <field.CheckboxField label="Is default" />}
+        />
+
+        <form.AppField
           name="metadata.color"
           children={(field) => <field.ColorField label="Color" />}
         />
 
-        <button
-          type="submit"
-          className={clsx([
-            "btn btn-primary",
-            form.state.isSubmitting && "btn-disabled",
-          ])}
-        >
-          Update
-        </button>
-      </form>
-    </div>
+        <div className="flex space-x-5">
+          <form.AppForm>
+            <form.SubmitButton label="Update" />
+          </form.AppForm>
+
+          <button
+            type="button"
+            className="btn btn-warning"
+            disabled={
+              !!(session.state && session.state.torrents_total > 0) ||
+              remove.isPending
+            }
+            onClick={async () => {
+              await remove.mutateAsync({
+                id: session.id,
+              });
+
+              await navigate({ to: "/settings" });
+            }}
+          >
+            Remove session
+            {session.state && session.state.torrents_total > 0 && (
+              <> ({session.state.torrents_total} torrents)</>
+            )}
+          </button>
+        </div>
+      </Suspense>
+    </form>
   );
 }
 
