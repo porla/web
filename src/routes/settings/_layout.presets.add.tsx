@@ -3,7 +3,7 @@ import { useAppForm } from "@/hooks/form";
 import { useQueryClient } from "@tanstack/react-query";
 import { createFileRoute } from "@tanstack/react-router";
 
-export const Route = createFileRoute("/_layout/settings/_layout/presets/add")({
+export const Route = createFileRoute("/settings/_layout/presets/add")({
   component: RouteComponent,
 });
 

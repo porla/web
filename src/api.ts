@@ -168,6 +168,7 @@ export type PresetsList = {
 export type PluginsListItem = {
   id: number;
   name: string;
+  path: string;
 };
 
 export type SessionsList = {

@@ -12,7 +12,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { createFileRoute } from "@tanstack/react-router";
 import { Suspense } from "react";
 
-export const Route = createFileRoute("/_layout/settings/_layout/presets/$id")({
+export const Route = createFileRoute("/settings/_layout/presets/$id")({
   component: RouteComponent,
 });
 

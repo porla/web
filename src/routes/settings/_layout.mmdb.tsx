@@ -3,7 +3,7 @@ import { useAppForm } from "@/hooks/form";
 import { createFileRoute } from "@tanstack/react-router";
 import { useState } from "react";
 
-export const Route = createFileRoute("/_layout/settings/_layout/mmdb")({
+export const Route = createFileRoute("/settings/_layout/mmdb")({
   component: RouteComponent,
 });
 
