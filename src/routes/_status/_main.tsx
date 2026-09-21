@@ -1,10 +1,5 @@
-import {
-  CatchBoundary,
-  createFileRoute,
-  Navigate,
-  Outlet,
-} from "@tanstack/react-router";
-import { type SysVersions, useRPC, type SysStatus } from "@/api";
+import { CatchBoundary, createFileRoute, Outlet } from "@tanstack/react-router";
+import { type SysVersions, useRPC } from "@/api";
 import Sidebar from "@/components/sidebar";
 import { feature, featureRange, initializeFeatures } from "@/features";
 import { MessageCircleWarning } from "lucide-react";
