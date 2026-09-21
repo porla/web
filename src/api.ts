@@ -299,13 +299,15 @@ export type SysVersions = {
 };
 
 export class RpcError extends Error {
-  data: any;
   code: number;
+  message: string;
+  data: unknown;
 
-  constructor(code: number, message: string, data: any) {
+  constructor(code: number, message: string, data: unknown) {
     super(message);
     this.name = "RpcError";
     this.code = code;
+    this.message = message;
     this.data = data;
   }
 }

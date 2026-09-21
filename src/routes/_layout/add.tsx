@@ -1,8 +1,14 @@
-import { type PresetsList, type SessionsList, useInvoker, useRPC } from "@/api";
+import {
+  type PresetsList,
+  RpcError,
+  type SessionsList,
+  useInvoker,
+  useRPC,
+} from "@/api";
 import { useAppForm } from "@/hooks/form";
 import { readFile } from "@/utils";
 import { createFileRoute } from "@tanstack/react-router";
-import { Suspense } from "react";
+import { Suspense, useState } from "react";
 
 export const Route = createFileRoute("/_layout/add")({
   component: RouteComponent,
@@ -14,6 +20,7 @@ function RouteComponent() {
   const add = useInvoker("torrents.add");
   const presets = useRPC<PresetsList>("presets.list");
   const sessions = useRPC<SessionsList>("sessions.list");
+  const [error, setError] = useState<string>();
 
   const form = useAppForm({
     defaultValues: {
@@ -32,10 +39,28 @@ function RouteComponent() {
       session_id: null as number | null,
     },
     onSubmit: async ({ value }) => {
-      if (value.type === "torrent" && value.files && value.files.length > 0) {
-        for (const file of value.files) {
+      setError(undefined);
+
+      try {
+        if (value.type === "torrent" && value.files && value.files.length > 0) {
+          for (const file of value.files) {
+            await add.mutateAsync({
+              ti: await readFile(file),
+              download_limit: value.download_limit,
+              upload_limit: value.upload_limit,
+              http_seeds: value.http_seeds,
+              max_connections: value.max_connections,
+              max_uploads: value.max_uploads,
+              save_path: value.save_path,
+              trackers: value.trackers,
+              url_seeds: value.url_seeds,
+              preset_id: value.preset_id,
+              session_id: value.session_id,
+            });
+          }
+        } else if (value.type === "magnet" && value.magnet_link) {
           await add.mutateAsync({
-            ti: await readFile(file),
+            magnet_uri: value.magnet_link,
             download_limit: value.download_limit,
             upload_limit: value.upload_limit,
             http_seeds: value.http_seeds,
@@ -48,20 +73,12 @@ function RouteComponent() {
             session_id: value.session_id,
           });
         }
-      } else if (value.type === "magnet" && value.magnet_link) {
-        await add.mutateAsync({
-          magnet_uri: value.magnet_link,
-          download_limit: value.download_limit,
-          upload_limit: value.upload_limit,
-          http_seeds: value.http_seeds,
-          max_connections: value.max_connections,
-          max_uploads: value.max_uploads,
-          save_path: value.save_path,
-          trackers: value.trackers,
-          url_seeds: value.url_seeds,
-          preset_id: value.preset_id,
-          session_id: value.session_id,
-        });
+      } catch (err) {
+        if (err instanceof RpcError) {
+          setError(err.message);
+        }
+
+        return;
       }
 
       await navigate({ to: "/" });
@@ -89,7 +106,7 @@ function RouteComponent() {
                     name="add_type"
                     className="radio radio-xs"
                     checked={field.state.value === "torrent"}
-                    onClick={(_) => field.handleChange("torrent")}
+                    onChange={() => field.handleChange("torrent")}
                   />
                   Torrent file
                 </label>
@@ -99,7 +116,7 @@ function RouteComponent() {
                     name="add_type"
                     className="radio radio-xs"
                     checked={field.state.value === "magnet"}
-                    onClick={(_) => field.handleChange("magnet")}
+                    onChange={() => field.handleChange("magnet")}
                   />
                   Magnet link
                 </label>
@@ -190,9 +207,15 @@ function RouteComponent() {
             children={(field) => <field.NumberField label="Max uploads" />}
           />
 
-          <form.AppForm>
-            <form.SubmitButton label="Add torrent" />
-          </form.AppForm>
+          <div className="flex items-center space-x-3">
+            <form.AppForm>
+              <form.SubmitButton label="Add torrent" />
+            </form.AppForm>
+
+            <span className="text-sm text-red-400">
+              {error && <>{error}</>}
+            </span>
+          </div>
         </form>
       </Suspense>
     </div>
