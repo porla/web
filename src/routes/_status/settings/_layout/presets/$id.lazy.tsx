@@ -9,10 +9,10 @@ import {
 } from "@/api";
 import { useAppForm } from "@/hooks/form";
 import { useQueryClient } from "@tanstack/react-query";
-import { createFileRoute } from "@tanstack/react-router";
+import { createLazyFileRoute } from "@tanstack/react-router";
 import { Suspense } from "react";
 
-export const Route = createFileRoute("/_layout/settings/_layout/presets/$id")({
+export const Route = createLazyFileRoute("/_status/settings/_layout/presets/$id")({
   component: RouteComponent,
 });
 
@@ -45,10 +45,14 @@ function RouteComponent() {
   }
 
   return (
-    <div>
-      <Suspense fallback={"Loading"}>
-        <PresetForm preset={preset.data.preset} />
-      </Suspense>
+    <div className="space-y-6">
+      <div className="card bg-base-200 shadow-sm w-full">
+        <div className="card-body">
+          <Suspense fallback={"Loading"}>
+            <PresetForm preset={preset.data.preset} />
+          </Suspense>
+        </div>
+      </div>
     </div>
   );
 }

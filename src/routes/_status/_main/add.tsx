@@ -10,7 +10,7 @@ import { readFile } from "@/utils";
 import { createFileRoute } from "@tanstack/react-router";
 import { Suspense, useState } from "react";
 
-export const Route = createFileRoute("/_layout/add")({
+export const Route = createFileRoute("/_status/_main/add")({
   component: RouteComponent,
 });
 

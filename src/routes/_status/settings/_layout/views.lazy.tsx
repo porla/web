@@ -1,9 +1,9 @@
 import { useInvoker, useRPC } from "@/api";
 import { TorrentListColumns } from "@/components/lists/torrents";
 import { useAppForm } from "@/hooks/form";
-import { createFileRoute } from "@tanstack/react-router";
+import { createLazyFileRoute } from "@tanstack/react-router";
 
-export const Route = createFileRoute("/_layout/settings/_layout/views")({
+export const Route = createLazyFileRoute("/_status/settings/_layout/views")({
   component: RouteComponent,
 });
 

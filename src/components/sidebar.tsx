@@ -15,7 +15,10 @@ import { useEffect } from "react";
 
 export default function Sidebar() {
   const navigate = useNavigate();
-  const torrentSearch = useSearch({ from: "/_layout/", shouldThrow: false });
+  const torrentSearch = useSearch({
+    from: "/_status/_main/",
+    shouldThrow: false,
+  });
 
   const sessions = useRPC<SessionsList>("sessions.list", null, {
     refetchInterval: 5000,
@@ -107,7 +110,10 @@ export default function Sidebar() {
 }
 
 function TorrentsList({ session_id }: { session_id?: number }) {
-  const torrentSearch = useSearch({ from: "/_layout/", shouldThrow: false });
+  const torrentSearch = useSearch({
+    from: "/_status/_main/",
+    shouldThrow: false,
+  });
 
   const count = useRPC<TorrentsCount>(
     "torrents.count",

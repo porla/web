@@ -3,7 +3,10 @@ import { Link, useSearch } from "@tanstack/react-router";
 import { filesize } from "filesize";
 
 export const TorrentListColumns = () => {
-  const torrentSearch = useSearch({ from: "/_layout/", shouldThrow: false });
+  const torrentSearch = useSearch({
+    from: "/_status/_main/",
+    shouldThrow: false,
+  });
 
   return {
     queue_position: {

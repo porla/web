@@ -4,7 +4,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { createFileRoute, Link } from "@tanstack/react-router";
 
 export const Route = createFileRoute(
-  "/_layout/settings/_layout/plugins/install",
+  "/_status/settings/_layout/plugins/install",
 )({
   component: RouteComponent,
 });

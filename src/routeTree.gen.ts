@@ -8,24 +8,54 @@
 // You should NOT make any changes in this file as it will be overwritten.
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
+import { createFileRoute } from '@tanstack/react-router'
+
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as SetupRouteImport } from './routes/setup'
 import { Route as LoginRouteImport } from './routes/login'
-import { Route as LayoutRouteImport } from './routes/_layout'
-import { Route as LayoutIndexRouteImport } from './routes/_layout/index'
-import { Route as LayoutAddRouteImport } from './routes/_layout/add'
-import { Route as LayoutSettingsLayoutRouteImport } from './routes/_layout/settings/_layout'
-import { Route as LayoutSettingsLayoutIndexRouteImport } from './routes/_layout/settings/_layout.index'
-import { Route as LayoutSettingsLayoutWebuiRouteImport } from './routes/_layout/settings/_layout.webui'
-import { Route as LayoutSettingsLayoutViewsRouteImport } from './routes/_layout/settings/_layout.views'
-import { Route as LayoutSettingsLayoutMmdbRouteImport } from './routes/_layout/settings/_layout.mmdb'
-import { Route as LayoutSettingsLayoutSessionsAddRouteImport } from './routes/_layout/settings/_layout.sessions.add'
-import { Route as LayoutSettingsLayoutSessionsIdRouteImport } from './routes/_layout/settings/_layout.sessions.$id'
-import { Route as LayoutSettingsLayoutPresetsAddRouteImport } from './routes/_layout/settings/_layout.presets.add'
-import { Route as LayoutSettingsLayoutPresetsIdRouteImport } from './routes/_layout/settings/_layout.presets.$id'
-import { Route as LayoutSettingsLayoutPluginsInstallRouteImport } from './routes/_layout/settings/_layout/plugins.install'
-import { Route as LayoutSettingsLayoutPluginsAddRouteImport } from './routes/_layout/settings/_layout.plugins.add'
-import { Route as LayoutSettingsLayoutPluginsIdRouteImport } from './routes/_layout/settings/_layout.plugins.$id'
+import { Route as StatusRouteImport } from './routes/_status'
+import { Route as StatusMainRouteImport } from './routes/_status/_main'
+import { Route as StatusMainIndexRouteImport } from './routes/_status/_main/index'
+import { Route as StatusSettingsLayoutRouteImport } from './routes/_status/settings/_layout'
+import { Route as StatusMainAddRouteImport } from './routes/_status/_main/add'
+import { Route as StatusSettingsLayoutPluginsInstallRouteImport } from './routes/_status/settings/_layout/plugins.install'
+
+const StatusSettingsLayoutIndexLazyRouteImport = createFileRoute(
+  '/_status/settings/_layout/',
+)()
+const StatusSettingsLayoutViewsLazyRouteImport = createFileRoute(
+  '/_status/settings/_layout/views',
+)()
+const StatusSettingsLayoutMmdbLazyRouteImport = createFileRoute(
+  '/_status/settings/_layout/mmdb',
+)()
+const StatusSettingsLayoutSessionsIndexLazyRouteImport = createFileRoute(
+  '/_status/settings/_layout/sessions/',
+)()
+const StatusSettingsLayoutPresetsIndexLazyRouteImport = createFileRoute(
+  '/_status/settings/_layout/presets/',
+)()
+const StatusSettingsLayoutPluginsIndexLazyRouteImport = createFileRoute(
+  '/_status/settings/_layout/plugins/',
+)()
+const StatusSettingsLayoutSessionsAddLazyRouteImport = createFileRoute(
+  '/_status/settings/_layout/sessions/add',
+)()
+const StatusSettingsLayoutSessionsIdLazyRouteImport = createFileRoute(
+  '/_status/settings/_layout/sessions/$id',
+)()
+const StatusSettingsLayoutPresetsAddLazyRouteImport = createFileRoute(
+  '/_status/settings/_layout/presets/add',
+)()
+const StatusSettingsLayoutPresetsIdLazyRouteImport = createFileRoute(
+  '/_status/settings/_layout/presets/$id',
+)()
+const StatusSettingsLayoutPluginsAddLazyRouteImport = createFileRoute(
+  '/_status/settings/_layout/plugins/add',
+)()
+const StatusSettingsLayoutPluginsIdLazyRouteImport = createFileRoute(
+  '/_status/settings/_layout/plugins/$id',
+)()
 
 const SetupRoute = SetupRouteImport.update({
   id: '/setup',
@@ -37,146 +67,211 @@ const LoginRoute = LoginRouteImport.update({
   path: '/login',
   getParentRoute: () => rootRouteImport,
 } as any)
-const LayoutRoute = LayoutRouteImport.update({
-  id: '/_layout',
+const StatusRoute = StatusRouteImport.update({
+  id: '/_status',
   getParentRoute: () => rootRouteImport,
 } as any)
-const LayoutIndexRoute = LayoutIndexRouteImport.update({
+const StatusMainRoute = StatusMainRouteImport.update({
+  id: '/_main',
+  getParentRoute: () => StatusRoute,
+} as any)
+const StatusMainIndexRoute = StatusMainIndexRouteImport.update({
   id: '/',
   path: '/',
-  getParentRoute: () => LayoutRoute,
+  getParentRoute: () => StatusMainRoute,
 } as any)
-const LayoutAddRoute = LayoutAddRouteImport.update({
-  id: '/add',
-  path: '/add',
-  getParentRoute: () => LayoutRoute,
-} as any)
-const LayoutSettingsLayoutRoute = LayoutSettingsLayoutRouteImport.update({
+const StatusSettingsLayoutRoute = StatusSettingsLayoutRouteImport.update({
   id: '/settings/_layout',
   path: '/settings',
-  getParentRoute: () => LayoutRoute,
+  getParentRoute: () => StatusRoute,
 } as any)
-const LayoutSettingsLayoutIndexRoute =
-  LayoutSettingsLayoutIndexRouteImport.update({
+const StatusMainAddRoute = StatusMainAddRouteImport.update({
+  id: '/add',
+  path: '/add',
+  getParentRoute: () => StatusMainRoute,
+} as any)
+const StatusSettingsLayoutIndexLazyRoute =
+  StatusSettingsLayoutIndexLazyRouteImport.update({
     id: '/',
     path: '/',
-    getParentRoute: () => LayoutSettingsLayoutRoute,
-  } as any)
-const LayoutSettingsLayoutWebuiRoute =
-  LayoutSettingsLayoutWebuiRouteImport.update({
-    id: '/webui',
-    path: '/webui',
-    getParentRoute: () => LayoutSettingsLayoutRoute,
-  } as any)
-const LayoutSettingsLayoutViewsRoute =
-  LayoutSettingsLayoutViewsRouteImport.update({
+    getParentRoute: () => StatusSettingsLayoutRoute,
+  } as any).lazy(() =>
+    import('./routes/_status/settings/_layout/index.lazy').then((d) => d.Route),
+  )
+const StatusSettingsLayoutViewsLazyRoute =
+  StatusSettingsLayoutViewsLazyRouteImport.update({
     id: '/views',
     path: '/views',
-    getParentRoute: () => LayoutSettingsLayoutRoute,
-  } as any)
-const LayoutSettingsLayoutMmdbRoute =
-  LayoutSettingsLayoutMmdbRouteImport.update({
+    getParentRoute: () => StatusSettingsLayoutRoute,
+  } as any).lazy(() =>
+    import('./routes/_status/settings/_layout/views.lazy').then((d) => d.Route),
+  )
+const StatusSettingsLayoutMmdbLazyRoute =
+  StatusSettingsLayoutMmdbLazyRouteImport.update({
     id: '/mmdb',
     path: '/mmdb',
-    getParentRoute: () => LayoutSettingsLayoutRoute,
-  } as any)
-const LayoutSettingsLayoutSessionsAddRoute =
-  LayoutSettingsLayoutSessionsAddRouteImport.update({
+    getParentRoute: () => StatusSettingsLayoutRoute,
+  } as any).lazy(() =>
+    import('./routes/_status/settings/_layout/mmdb.lazy').then((d) => d.Route),
+  )
+const StatusSettingsLayoutSessionsIndexLazyRoute =
+  StatusSettingsLayoutSessionsIndexLazyRouteImport.update({
+    id: '/sessions/',
+    path: '/sessions/',
+    getParentRoute: () => StatusSettingsLayoutRoute,
+  } as any).lazy(() =>
+    import('./routes/_status/settings/_layout/sessions/index.lazy').then(
+      (d) => d.Route,
+    ),
+  )
+const StatusSettingsLayoutPresetsIndexLazyRoute =
+  StatusSettingsLayoutPresetsIndexLazyRouteImport.update({
+    id: '/presets/',
+    path: '/presets/',
+    getParentRoute: () => StatusSettingsLayoutRoute,
+  } as any).lazy(() =>
+    import('./routes/_status/settings/_layout/presets/index.lazy').then(
+      (d) => d.Route,
+    ),
+  )
+const StatusSettingsLayoutPluginsIndexLazyRoute =
+  StatusSettingsLayoutPluginsIndexLazyRouteImport.update({
+    id: '/plugins/',
+    path: '/plugins/',
+    getParentRoute: () => StatusSettingsLayoutRoute,
+  } as any).lazy(() =>
+    import('./routes/_status/settings/_layout/plugins/index.lazy').then(
+      (d) => d.Route,
+    ),
+  )
+const StatusSettingsLayoutSessionsAddLazyRoute =
+  StatusSettingsLayoutSessionsAddLazyRouteImport.update({
     id: '/sessions/add',
     path: '/sessions/add',
-    getParentRoute: () => LayoutSettingsLayoutRoute,
-  } as any)
-const LayoutSettingsLayoutSessionsIdRoute =
-  LayoutSettingsLayoutSessionsIdRouteImport.update({
+    getParentRoute: () => StatusSettingsLayoutRoute,
+  } as any).lazy(() =>
+    import('./routes/_status/settings/_layout/sessions/add.lazy').then(
+      (d) => d.Route,
+    ),
+  )
+const StatusSettingsLayoutSessionsIdLazyRoute =
+  StatusSettingsLayoutSessionsIdLazyRouteImport.update({
     id: '/sessions/$id',
     path: '/sessions/$id',
-    getParentRoute: () => LayoutSettingsLayoutRoute,
-  } as any)
-const LayoutSettingsLayoutPresetsAddRoute =
-  LayoutSettingsLayoutPresetsAddRouteImport.update({
+    getParentRoute: () => StatusSettingsLayoutRoute,
+  } as any).lazy(() =>
+    import('./routes/_status/settings/_layout/sessions/$id.lazy').then(
+      (d) => d.Route,
+    ),
+  )
+const StatusSettingsLayoutPresetsAddLazyRoute =
+  StatusSettingsLayoutPresetsAddLazyRouteImport.update({
     id: '/presets/add',
     path: '/presets/add',
-    getParentRoute: () => LayoutSettingsLayoutRoute,
-  } as any)
-const LayoutSettingsLayoutPresetsIdRoute =
-  LayoutSettingsLayoutPresetsIdRouteImport.update({
+    getParentRoute: () => StatusSettingsLayoutRoute,
+  } as any).lazy(() =>
+    import('./routes/_status/settings/_layout/presets/add.lazy').then(
+      (d) => d.Route,
+    ),
+  )
+const StatusSettingsLayoutPresetsIdLazyRoute =
+  StatusSettingsLayoutPresetsIdLazyRouteImport.update({
     id: '/presets/$id',
     path: '/presets/$id',
-    getParentRoute: () => LayoutSettingsLayoutRoute,
-  } as any)
-const LayoutSettingsLayoutPluginsInstallRoute =
-  LayoutSettingsLayoutPluginsInstallRouteImport.update({
-    id: '/plugins/install',
-    path: '/plugins/install',
-    getParentRoute: () => LayoutSettingsLayoutRoute,
-  } as any)
-const LayoutSettingsLayoutPluginsAddRoute =
-  LayoutSettingsLayoutPluginsAddRouteImport.update({
+    getParentRoute: () => StatusSettingsLayoutRoute,
+  } as any).lazy(() =>
+    import('./routes/_status/settings/_layout/presets/$id.lazy').then(
+      (d) => d.Route,
+    ),
+  )
+const StatusSettingsLayoutPluginsAddLazyRoute =
+  StatusSettingsLayoutPluginsAddLazyRouteImport.update({
     id: '/plugins/add',
     path: '/plugins/add',
-    getParentRoute: () => LayoutSettingsLayoutRoute,
-  } as any)
-const LayoutSettingsLayoutPluginsIdRoute =
-  LayoutSettingsLayoutPluginsIdRouteImport.update({
+    getParentRoute: () => StatusSettingsLayoutRoute,
+  } as any).lazy(() =>
+    import('./routes/_status/settings/_layout/plugins/add.lazy').then(
+      (d) => d.Route,
+    ),
+  )
+const StatusSettingsLayoutPluginsIdLazyRoute =
+  StatusSettingsLayoutPluginsIdLazyRouteImport.update({
     id: '/plugins/$id',
     path: '/plugins/$id',
-    getParentRoute: () => LayoutSettingsLayoutRoute,
+    getParentRoute: () => StatusSettingsLayoutRoute,
+  } as any).lazy(() =>
+    import('./routes/_status/settings/_layout/plugins/$id.lazy').then(
+      (d) => d.Route,
+    ),
+  )
+const StatusSettingsLayoutPluginsInstallRoute =
+  StatusSettingsLayoutPluginsInstallRouteImport.update({
+    id: '/plugins/install',
+    path: '/plugins/install',
+    getParentRoute: () => StatusSettingsLayoutRoute,
   } as any)
 
 export interface FileRoutesByFullPath {
-  '/': typeof LayoutIndexRoute
+  '/': typeof StatusMainIndexRoute
   '/login': typeof LoginRoute
   '/setup': typeof SetupRoute
-  '/add': typeof LayoutAddRoute
-  '/settings': typeof LayoutSettingsLayoutRouteWithChildren
-  '/settings/mmdb': typeof LayoutSettingsLayoutMmdbRoute
-  '/settings/views': typeof LayoutSettingsLayoutViewsRoute
-  '/settings/webui': typeof LayoutSettingsLayoutWebuiRoute
-  '/settings/': typeof LayoutSettingsLayoutIndexRoute
-  '/settings/plugins/$id': typeof LayoutSettingsLayoutPluginsIdRoute
-  '/settings/plugins/add': typeof LayoutSettingsLayoutPluginsAddRoute
-  '/settings/plugins/install': typeof LayoutSettingsLayoutPluginsInstallRoute
-  '/settings/presets/$id': typeof LayoutSettingsLayoutPresetsIdRoute
-  '/settings/presets/add': typeof LayoutSettingsLayoutPresetsAddRoute
-  '/settings/sessions/$id': typeof LayoutSettingsLayoutSessionsIdRoute
-  '/settings/sessions/add': typeof LayoutSettingsLayoutSessionsAddRoute
+  '/add': typeof StatusMainAddRoute
+  '/settings': typeof StatusSettingsLayoutRouteWithChildren
+  '/settings/mmdb': typeof StatusSettingsLayoutMmdbLazyRoute
+  '/settings/views': typeof StatusSettingsLayoutViewsLazyRoute
+  '/settings/': typeof StatusSettingsLayoutIndexLazyRoute
+  '/settings/plugins/install': typeof StatusSettingsLayoutPluginsInstallRoute
+  '/settings/plugins/$id': typeof StatusSettingsLayoutPluginsIdLazyRoute
+  '/settings/plugins/add': typeof StatusSettingsLayoutPluginsAddLazyRoute
+  '/settings/presets/$id': typeof StatusSettingsLayoutPresetsIdLazyRoute
+  '/settings/presets/add': typeof StatusSettingsLayoutPresetsAddLazyRoute
+  '/settings/sessions/$id': typeof StatusSettingsLayoutSessionsIdLazyRoute
+  '/settings/sessions/add': typeof StatusSettingsLayoutSessionsAddLazyRoute
+  '/settings/plugins/': typeof StatusSettingsLayoutPluginsIndexLazyRoute
+  '/settings/presets/': typeof StatusSettingsLayoutPresetsIndexLazyRoute
+  '/settings/sessions/': typeof StatusSettingsLayoutSessionsIndexLazyRoute
 }
 export interface FileRoutesByTo {
+  '/': typeof StatusMainIndexRoute
   '/login': typeof LoginRoute
   '/setup': typeof SetupRoute
-  '/add': typeof LayoutAddRoute
-  '/': typeof LayoutIndexRoute
-  '/settings/mmdb': typeof LayoutSettingsLayoutMmdbRoute
-  '/settings/views': typeof LayoutSettingsLayoutViewsRoute
-  '/settings/webui': typeof LayoutSettingsLayoutWebuiRoute
-  '/settings': typeof LayoutSettingsLayoutIndexRoute
-  '/settings/plugins/$id': typeof LayoutSettingsLayoutPluginsIdRoute
-  '/settings/plugins/add': typeof LayoutSettingsLayoutPluginsAddRoute
-  '/settings/plugins/install': typeof LayoutSettingsLayoutPluginsInstallRoute
-  '/settings/presets/$id': typeof LayoutSettingsLayoutPresetsIdRoute
-  '/settings/presets/add': typeof LayoutSettingsLayoutPresetsAddRoute
-  '/settings/sessions/$id': typeof LayoutSettingsLayoutSessionsIdRoute
-  '/settings/sessions/add': typeof LayoutSettingsLayoutSessionsAddRoute
+  '/add': typeof StatusMainAddRoute
+  '/settings/mmdb': typeof StatusSettingsLayoutMmdbLazyRoute
+  '/settings/views': typeof StatusSettingsLayoutViewsLazyRoute
+  '/settings': typeof StatusSettingsLayoutIndexLazyRoute
+  '/settings/plugins/install': typeof StatusSettingsLayoutPluginsInstallRoute
+  '/settings/plugins/$id': typeof StatusSettingsLayoutPluginsIdLazyRoute
+  '/settings/plugins/add': typeof StatusSettingsLayoutPluginsAddLazyRoute
+  '/settings/presets/$id': typeof StatusSettingsLayoutPresetsIdLazyRoute
+  '/settings/presets/add': typeof StatusSettingsLayoutPresetsAddLazyRoute
+  '/settings/sessions/$id': typeof StatusSettingsLayoutSessionsIdLazyRoute
+  '/settings/sessions/add': typeof StatusSettingsLayoutSessionsAddLazyRoute
+  '/settings/plugins': typeof StatusSettingsLayoutPluginsIndexLazyRoute
+  '/settings/presets': typeof StatusSettingsLayoutPresetsIndexLazyRoute
+  '/settings/sessions': typeof StatusSettingsLayoutSessionsIndexLazyRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
-  '/_layout': typeof LayoutRouteWithChildren
+  '/_status': typeof StatusRouteWithChildren
   '/login': typeof LoginRoute
   '/setup': typeof SetupRoute
-  '/_layout/add': typeof LayoutAddRoute
-  '/_layout/': typeof LayoutIndexRoute
-  '/_layout/settings/_layout': typeof LayoutSettingsLayoutRouteWithChildren
-  '/_layout/settings/_layout/mmdb': typeof LayoutSettingsLayoutMmdbRoute
-  '/_layout/settings/_layout/views': typeof LayoutSettingsLayoutViewsRoute
-  '/_layout/settings/_layout/webui': typeof LayoutSettingsLayoutWebuiRoute
-  '/_layout/settings/_layout/': typeof LayoutSettingsLayoutIndexRoute
-  '/_layout/settings/_layout/plugins/$id': typeof LayoutSettingsLayoutPluginsIdRoute
-  '/_layout/settings/_layout/plugins/add': typeof LayoutSettingsLayoutPluginsAddRoute
-  '/_layout/settings/_layout/plugins/install': typeof LayoutSettingsLayoutPluginsInstallRoute
-  '/_layout/settings/_layout/presets/$id': typeof LayoutSettingsLayoutPresetsIdRoute
-  '/_layout/settings/_layout/presets/add': typeof LayoutSettingsLayoutPresetsAddRoute
-  '/_layout/settings/_layout/sessions/$id': typeof LayoutSettingsLayoutSessionsIdRoute
-  '/_layout/settings/_layout/sessions/add': typeof LayoutSettingsLayoutSessionsAddRoute
+  '/_status/_main': typeof StatusMainRouteWithChildren
+  '/_status/_main/add': typeof StatusMainAddRoute
+  '/_status/settings/_layout': typeof StatusSettingsLayoutRouteWithChildren
+  '/_status/_main/': typeof StatusMainIndexRoute
+  '/_status/settings/_layout/mmdb': typeof StatusSettingsLayoutMmdbLazyRoute
+  '/_status/settings/_layout/views': typeof StatusSettingsLayoutViewsLazyRoute
+  '/_status/settings/_layout/': typeof StatusSettingsLayoutIndexLazyRoute
+  '/_status/settings/_layout/plugins/install': typeof StatusSettingsLayoutPluginsInstallRoute
+  '/_status/settings/_layout/plugins/$id': typeof StatusSettingsLayoutPluginsIdLazyRoute
+  '/_status/settings/_layout/plugins/add': typeof StatusSettingsLayoutPluginsAddLazyRoute
+  '/_status/settings/_layout/presets/$id': typeof StatusSettingsLayoutPresetsIdLazyRoute
+  '/_status/settings/_layout/presets/add': typeof StatusSettingsLayoutPresetsAddLazyRoute
+  '/_status/settings/_layout/sessions/$id': typeof StatusSettingsLayoutSessionsIdLazyRoute
+  '/_status/settings/_layout/sessions/add': typeof StatusSettingsLayoutSessionsAddLazyRoute
+  '/_status/settings/_layout/plugins/': typeof StatusSettingsLayoutPluginsIndexLazyRoute
+  '/_status/settings/_layout/presets/': typeof StatusSettingsLayoutPresetsIndexLazyRoute
+  '/_status/settings/_layout/sessions/': typeof StatusSettingsLayoutSessionsIndexLazyRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -188,55 +283,62 @@ export interface FileRouteTypes {
     | '/settings'
     | '/settings/mmdb'
     | '/settings/views'
-    | '/settings/webui'
     | '/settings/'
+    | '/settings/plugins/install'
     | '/settings/plugins/$id'
     | '/settings/plugins/add'
-    | '/settings/plugins/install'
     | '/settings/presets/$id'
     | '/settings/presets/add'
     | '/settings/sessions/$id'
     | '/settings/sessions/add'
+    | '/settings/plugins/'
+    | '/settings/presets/'
+    | '/settings/sessions/'
   fileRoutesByTo: FileRoutesByTo
   to:
+    | '/'
     | '/login'
     | '/setup'
     | '/add'
-    | '/'
     | '/settings/mmdb'
     | '/settings/views'
-    | '/settings/webui'
     | '/settings'
+    | '/settings/plugins/install'
     | '/settings/plugins/$id'
     | '/settings/plugins/add'
-    | '/settings/plugins/install'
     | '/settings/presets/$id'
     | '/settings/presets/add'
     | '/settings/sessions/$id'
     | '/settings/sessions/add'
+    | '/settings/plugins'
+    | '/settings/presets'
+    | '/settings/sessions'
   id:
     | '__root__'
-    | '/_layout'
+    | '/_status'
     | '/login'
     | '/setup'
-    | '/_layout/add'
-    | '/_layout/'
-    | '/_layout/settings/_layout'
-    | '/_layout/settings/_layout/mmdb'
-    | '/_layout/settings/_layout/views'
-    | '/_layout/settings/_layout/webui'
-    | '/_layout/settings/_layout/'
-    | '/_layout/settings/_layout/plugins/$id'
-    | '/_layout/settings/_layout/plugins/add'
-    | '/_layout/settings/_layout/plugins/install'
-    | '/_layout/settings/_layout/presets/$id'
-    | '/_layout/settings/_layout/presets/add'
-    | '/_layout/settings/_layout/sessions/$id'
-    | '/_layout/settings/_layout/sessions/add'
+    | '/_status/_main'
+    | '/_status/_main/add'
+    | '/_status/settings/_layout'
+    | '/_status/_main/'
+    | '/_status/settings/_layout/mmdb'
+    | '/_status/settings/_layout/views'
+    | '/_status/settings/_layout/'
+    | '/_status/settings/_layout/plugins/install'
+    | '/_status/settings/_layout/plugins/$id'
+    | '/_status/settings/_layout/plugins/add'
+    | '/_status/settings/_layout/presets/$id'
+    | '/_status/settings/_layout/presets/add'
+    | '/_status/settings/_layout/sessions/$id'
+    | '/_status/settings/_layout/sessions/add'
+    | '/_status/settings/_layout/plugins/'
+    | '/_status/settings/_layout/presets/'
+    | '/_status/settings/_layout/sessions/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
-  LayoutRoute: typeof LayoutRouteWithChildren
+  StatusRoute: typeof StatusRouteWithChildren
   LoginRoute: typeof LoginRoute
   SetupRoute: typeof SetupRoute
 }
@@ -257,163 +359,209 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LoginRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/_layout': {
-      id: '/_layout'
+    '/_status': {
+      id: '/_status'
       path: ''
       fullPath: '/'
-      preLoaderRoute: typeof LayoutRouteImport
+      preLoaderRoute: typeof StatusRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/_layout/': {
-      id: '/_layout/'
+    '/_status/_main': {
+      id: '/_status/_main'
+      path: ''
+      fullPath: '/'
+      preLoaderRoute: typeof StatusMainRouteImport
+      parentRoute: typeof StatusRoute
+    }
+    '/_status/_main/': {
+      id: '/_status/_main/'
       path: '/'
       fullPath: '/'
-      preLoaderRoute: typeof LayoutIndexRouteImport
-      parentRoute: typeof LayoutRoute
+      preLoaderRoute: typeof StatusMainIndexRouteImport
+      parentRoute: typeof StatusMainRoute
     }
-    '/_layout/add': {
-      id: '/_layout/add'
-      path: '/add'
-      fullPath: '/add'
-      preLoaderRoute: typeof LayoutAddRouteImport
-      parentRoute: typeof LayoutRoute
-    }
-    '/_layout/settings/_layout': {
-      id: '/_layout/settings/_layout'
+    '/_status/settings/_layout': {
+      id: '/_status/settings/_layout'
       path: '/settings'
       fullPath: '/settings'
-      preLoaderRoute: typeof LayoutSettingsLayoutRouteImport
-      parentRoute: typeof LayoutRoute
+      preLoaderRoute: typeof StatusSettingsLayoutRouteImport
+      parentRoute: typeof StatusRoute
     }
-    '/_layout/settings/_layout/': {
-      id: '/_layout/settings/_layout/'
+    '/_status/_main/add': {
+      id: '/_status/_main/add'
+      path: '/add'
+      fullPath: '/add'
+      preLoaderRoute: typeof StatusMainAddRouteImport
+      parentRoute: typeof StatusMainRoute
+    }
+    '/_status/settings/_layout/': {
+      id: '/_status/settings/_layout/'
       path: '/'
       fullPath: '/settings/'
-      preLoaderRoute: typeof LayoutSettingsLayoutIndexRouteImport
-      parentRoute: typeof LayoutSettingsLayoutRoute
+      preLoaderRoute: typeof StatusSettingsLayoutIndexLazyRouteImport
+      parentRoute: typeof StatusSettingsLayoutRoute
     }
-    '/_layout/settings/_layout/webui': {
-      id: '/_layout/settings/_layout/webui'
-      path: '/webui'
-      fullPath: '/settings/webui'
-      preLoaderRoute: typeof LayoutSettingsLayoutWebuiRouteImport
-      parentRoute: typeof LayoutSettingsLayoutRoute
-    }
-    '/_layout/settings/_layout/views': {
-      id: '/_layout/settings/_layout/views'
+    '/_status/settings/_layout/views': {
+      id: '/_status/settings/_layout/views'
       path: '/views'
       fullPath: '/settings/views'
-      preLoaderRoute: typeof LayoutSettingsLayoutViewsRouteImport
-      parentRoute: typeof LayoutSettingsLayoutRoute
+      preLoaderRoute: typeof StatusSettingsLayoutViewsLazyRouteImport
+      parentRoute: typeof StatusSettingsLayoutRoute
     }
-    '/_layout/settings/_layout/mmdb': {
-      id: '/_layout/settings/_layout/mmdb'
+    '/_status/settings/_layout/mmdb': {
+      id: '/_status/settings/_layout/mmdb'
       path: '/mmdb'
       fullPath: '/settings/mmdb'
-      preLoaderRoute: typeof LayoutSettingsLayoutMmdbRouteImport
-      parentRoute: typeof LayoutSettingsLayoutRoute
+      preLoaderRoute: typeof StatusSettingsLayoutMmdbLazyRouteImport
+      parentRoute: typeof StatusSettingsLayoutRoute
     }
-    '/_layout/settings/_layout/sessions/add': {
-      id: '/_layout/settings/_layout/sessions/add'
+    '/_status/settings/_layout/sessions/': {
+      id: '/_status/settings/_layout/sessions/'
+      path: '/sessions'
+      fullPath: '/settings/sessions/'
+      preLoaderRoute: typeof StatusSettingsLayoutSessionsIndexLazyRouteImport
+      parentRoute: typeof StatusSettingsLayoutRoute
+    }
+    '/_status/settings/_layout/presets/': {
+      id: '/_status/settings/_layout/presets/'
+      path: '/presets'
+      fullPath: '/settings/presets/'
+      preLoaderRoute: typeof StatusSettingsLayoutPresetsIndexLazyRouteImport
+      parentRoute: typeof StatusSettingsLayoutRoute
+    }
+    '/_status/settings/_layout/plugins/': {
+      id: '/_status/settings/_layout/plugins/'
+      path: '/plugins'
+      fullPath: '/settings/plugins/'
+      preLoaderRoute: typeof StatusSettingsLayoutPluginsIndexLazyRouteImport
+      parentRoute: typeof StatusSettingsLayoutRoute
+    }
+    '/_status/settings/_layout/sessions/add': {
+      id: '/_status/settings/_layout/sessions/add'
       path: '/sessions/add'
       fullPath: '/settings/sessions/add'
-      preLoaderRoute: typeof LayoutSettingsLayoutSessionsAddRouteImport
-      parentRoute: typeof LayoutSettingsLayoutRoute
+      preLoaderRoute: typeof StatusSettingsLayoutSessionsAddLazyRouteImport
+      parentRoute: typeof StatusSettingsLayoutRoute
     }
-    '/_layout/settings/_layout/sessions/$id': {
-      id: '/_layout/settings/_layout/sessions/$id'
+    '/_status/settings/_layout/sessions/$id': {
+      id: '/_status/settings/_layout/sessions/$id'
       path: '/sessions/$id'
       fullPath: '/settings/sessions/$id'
-      preLoaderRoute: typeof LayoutSettingsLayoutSessionsIdRouteImport
-      parentRoute: typeof LayoutSettingsLayoutRoute
+      preLoaderRoute: typeof StatusSettingsLayoutSessionsIdLazyRouteImport
+      parentRoute: typeof StatusSettingsLayoutRoute
     }
-    '/_layout/settings/_layout/presets/add': {
-      id: '/_layout/settings/_layout/presets/add'
+    '/_status/settings/_layout/presets/add': {
+      id: '/_status/settings/_layout/presets/add'
       path: '/presets/add'
       fullPath: '/settings/presets/add'
-      preLoaderRoute: typeof LayoutSettingsLayoutPresetsAddRouteImport
-      parentRoute: typeof LayoutSettingsLayoutRoute
+      preLoaderRoute: typeof StatusSettingsLayoutPresetsAddLazyRouteImport
+      parentRoute: typeof StatusSettingsLayoutRoute
     }
-    '/_layout/settings/_layout/presets/$id': {
-      id: '/_layout/settings/_layout/presets/$id'
+    '/_status/settings/_layout/presets/$id': {
+      id: '/_status/settings/_layout/presets/$id'
       path: '/presets/$id'
       fullPath: '/settings/presets/$id'
-      preLoaderRoute: typeof LayoutSettingsLayoutPresetsIdRouteImport
-      parentRoute: typeof LayoutSettingsLayoutRoute
+      preLoaderRoute: typeof StatusSettingsLayoutPresetsIdLazyRouteImport
+      parentRoute: typeof StatusSettingsLayoutRoute
     }
-    '/_layout/settings/_layout/plugins/install': {
-      id: '/_layout/settings/_layout/plugins/install'
-      path: '/plugins/install'
-      fullPath: '/settings/plugins/install'
-      preLoaderRoute: typeof LayoutSettingsLayoutPluginsInstallRouteImport
-      parentRoute: typeof LayoutSettingsLayoutRoute
-    }
-    '/_layout/settings/_layout/plugins/add': {
-      id: '/_layout/settings/_layout/plugins/add'
+    '/_status/settings/_layout/plugins/add': {
+      id: '/_status/settings/_layout/plugins/add'
       path: '/plugins/add'
       fullPath: '/settings/plugins/add'
-      preLoaderRoute: typeof LayoutSettingsLayoutPluginsAddRouteImport
-      parentRoute: typeof LayoutSettingsLayoutRoute
+      preLoaderRoute: typeof StatusSettingsLayoutPluginsAddLazyRouteImport
+      parentRoute: typeof StatusSettingsLayoutRoute
     }
-    '/_layout/settings/_layout/plugins/$id': {
-      id: '/_layout/settings/_layout/plugins/$id'
+    '/_status/settings/_layout/plugins/$id': {
+      id: '/_status/settings/_layout/plugins/$id'
       path: '/plugins/$id'
       fullPath: '/settings/plugins/$id'
-      preLoaderRoute: typeof LayoutSettingsLayoutPluginsIdRouteImport
-      parentRoute: typeof LayoutSettingsLayoutRoute
+      preLoaderRoute: typeof StatusSettingsLayoutPluginsIdLazyRouteImport
+      parentRoute: typeof StatusSettingsLayoutRoute
+    }
+    '/_status/settings/_layout/plugins/install': {
+      id: '/_status/settings/_layout/plugins/install'
+      path: '/plugins/install'
+      fullPath: '/settings/plugins/install'
+      preLoaderRoute: typeof StatusSettingsLayoutPluginsInstallRouteImport
+      parentRoute: typeof StatusSettingsLayoutRoute
     }
   }
 }
 
-interface LayoutSettingsLayoutRouteChildren {
-  LayoutSettingsLayoutMmdbRoute: typeof LayoutSettingsLayoutMmdbRoute
-  LayoutSettingsLayoutViewsRoute: typeof LayoutSettingsLayoutViewsRoute
-  LayoutSettingsLayoutWebuiRoute: typeof LayoutSettingsLayoutWebuiRoute
-  LayoutSettingsLayoutIndexRoute: typeof LayoutSettingsLayoutIndexRoute
-  LayoutSettingsLayoutPluginsIdRoute: typeof LayoutSettingsLayoutPluginsIdRoute
-  LayoutSettingsLayoutPluginsAddRoute: typeof LayoutSettingsLayoutPluginsAddRoute
-  LayoutSettingsLayoutPluginsInstallRoute: typeof LayoutSettingsLayoutPluginsInstallRoute
-  LayoutSettingsLayoutPresetsIdRoute: typeof LayoutSettingsLayoutPresetsIdRoute
-  LayoutSettingsLayoutPresetsAddRoute: typeof LayoutSettingsLayoutPresetsAddRoute
-  LayoutSettingsLayoutSessionsIdRoute: typeof LayoutSettingsLayoutSessionsIdRoute
-  LayoutSettingsLayoutSessionsAddRoute: typeof LayoutSettingsLayoutSessionsAddRoute
+interface StatusMainRouteChildren {
+  StatusMainAddRoute: typeof StatusMainAddRoute
+  StatusMainIndexRoute: typeof StatusMainIndexRoute
 }
 
-const LayoutSettingsLayoutRouteChildren: LayoutSettingsLayoutRouteChildren = {
-  LayoutSettingsLayoutMmdbRoute: LayoutSettingsLayoutMmdbRoute,
-  LayoutSettingsLayoutViewsRoute: LayoutSettingsLayoutViewsRoute,
-  LayoutSettingsLayoutWebuiRoute: LayoutSettingsLayoutWebuiRoute,
-  LayoutSettingsLayoutIndexRoute: LayoutSettingsLayoutIndexRoute,
-  LayoutSettingsLayoutPluginsIdRoute: LayoutSettingsLayoutPluginsIdRoute,
-  LayoutSettingsLayoutPluginsAddRoute: LayoutSettingsLayoutPluginsAddRoute,
-  LayoutSettingsLayoutPluginsInstallRoute:
-    LayoutSettingsLayoutPluginsInstallRoute,
-  LayoutSettingsLayoutPresetsIdRoute: LayoutSettingsLayoutPresetsIdRoute,
-  LayoutSettingsLayoutPresetsAddRoute: LayoutSettingsLayoutPresetsAddRoute,
-  LayoutSettingsLayoutSessionsIdRoute: LayoutSettingsLayoutSessionsIdRoute,
-  LayoutSettingsLayoutSessionsAddRoute: LayoutSettingsLayoutSessionsAddRoute,
+const StatusMainRouteChildren: StatusMainRouteChildren = {
+  StatusMainAddRoute: StatusMainAddRoute,
+  StatusMainIndexRoute: StatusMainIndexRoute,
 }
 
-const LayoutSettingsLayoutRouteWithChildren =
-  LayoutSettingsLayoutRoute._addFileChildren(LayoutSettingsLayoutRouteChildren)
+const StatusMainRouteWithChildren = StatusMainRoute._addFileChildren(
+  StatusMainRouteChildren,
+)
 
-interface LayoutRouteChildren {
-  LayoutAddRoute: typeof LayoutAddRoute
-  LayoutIndexRoute: typeof LayoutIndexRoute
-  LayoutSettingsLayoutRoute: typeof LayoutSettingsLayoutRouteWithChildren
+interface StatusSettingsLayoutRouteChildren {
+  StatusSettingsLayoutMmdbLazyRoute: typeof StatusSettingsLayoutMmdbLazyRoute
+  StatusSettingsLayoutViewsLazyRoute: typeof StatusSettingsLayoutViewsLazyRoute
+  StatusSettingsLayoutIndexLazyRoute: typeof StatusSettingsLayoutIndexLazyRoute
+  StatusSettingsLayoutPluginsInstallRoute: typeof StatusSettingsLayoutPluginsInstallRoute
+  StatusSettingsLayoutPluginsIdLazyRoute: typeof StatusSettingsLayoutPluginsIdLazyRoute
+  StatusSettingsLayoutPluginsAddLazyRoute: typeof StatusSettingsLayoutPluginsAddLazyRoute
+  StatusSettingsLayoutPresetsIdLazyRoute: typeof StatusSettingsLayoutPresetsIdLazyRoute
+  StatusSettingsLayoutPresetsAddLazyRoute: typeof StatusSettingsLayoutPresetsAddLazyRoute
+  StatusSettingsLayoutSessionsIdLazyRoute: typeof StatusSettingsLayoutSessionsIdLazyRoute
+  StatusSettingsLayoutSessionsAddLazyRoute: typeof StatusSettingsLayoutSessionsAddLazyRoute
+  StatusSettingsLayoutPluginsIndexLazyRoute: typeof StatusSettingsLayoutPluginsIndexLazyRoute
+  StatusSettingsLayoutPresetsIndexLazyRoute: typeof StatusSettingsLayoutPresetsIndexLazyRoute
+  StatusSettingsLayoutSessionsIndexLazyRoute: typeof StatusSettingsLayoutSessionsIndexLazyRoute
 }
 
-const LayoutRouteChildren: LayoutRouteChildren = {
-  LayoutAddRoute: LayoutAddRoute,
-  LayoutIndexRoute: LayoutIndexRoute,
-  LayoutSettingsLayoutRoute: LayoutSettingsLayoutRouteWithChildren,
+const StatusSettingsLayoutRouteChildren: StatusSettingsLayoutRouteChildren = {
+  StatusSettingsLayoutMmdbLazyRoute: StatusSettingsLayoutMmdbLazyRoute,
+  StatusSettingsLayoutViewsLazyRoute: StatusSettingsLayoutViewsLazyRoute,
+  StatusSettingsLayoutIndexLazyRoute: StatusSettingsLayoutIndexLazyRoute,
+  StatusSettingsLayoutPluginsInstallRoute:
+    StatusSettingsLayoutPluginsInstallRoute,
+  StatusSettingsLayoutPluginsIdLazyRoute:
+    StatusSettingsLayoutPluginsIdLazyRoute,
+  StatusSettingsLayoutPluginsAddLazyRoute:
+    StatusSettingsLayoutPluginsAddLazyRoute,
+  StatusSettingsLayoutPresetsIdLazyRoute:
+    StatusSettingsLayoutPresetsIdLazyRoute,
+  StatusSettingsLayoutPresetsAddLazyRoute:
+    StatusSettingsLayoutPresetsAddLazyRoute,
+  StatusSettingsLayoutSessionsIdLazyRoute:
+    StatusSettingsLayoutSessionsIdLazyRoute,
+  StatusSettingsLayoutSessionsAddLazyRoute:
+    StatusSettingsLayoutSessionsAddLazyRoute,
+  StatusSettingsLayoutPluginsIndexLazyRoute:
+    StatusSettingsLayoutPluginsIndexLazyRoute,
+  StatusSettingsLayoutPresetsIndexLazyRoute:
+    StatusSettingsLayoutPresetsIndexLazyRoute,
+  StatusSettingsLayoutSessionsIndexLazyRoute:
+    StatusSettingsLayoutSessionsIndexLazyRoute,
 }
 
-const LayoutRouteWithChildren =
-  LayoutRoute._addFileChildren(LayoutRouteChildren)
+const StatusSettingsLayoutRouteWithChildren =
+  StatusSettingsLayoutRoute._addFileChildren(StatusSettingsLayoutRouteChildren)
+
+interface StatusRouteChildren {
+  StatusMainRoute: typeof StatusMainRouteWithChildren
+  StatusSettingsLayoutRoute: typeof StatusSettingsLayoutRouteWithChildren
+}
+
+const StatusRouteChildren: StatusRouteChildren = {
+  StatusMainRoute: StatusMainRouteWithChildren,
+  StatusSettingsLayoutRoute: StatusSettingsLayoutRouteWithChildren,
+}
+
+const StatusRouteWithChildren =
+  StatusRoute._addFileChildren(StatusRouteChildren)
 
 const rootRouteChildren: RootRouteChildren = {
-  LayoutRoute: LayoutRouteWithChildren,
+  StatusRoute: StatusRouteWithChildren,
   LoginRoute: LoginRoute,
   SetupRoute: SetupRoute,
 }
