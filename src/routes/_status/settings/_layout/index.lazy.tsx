@@ -5,7 +5,7 @@ import { createLazyFileRoute } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { parse } from "semver";
 
-export const Route = createLazyFileRoute("/settings/_layout/")({
+export const Route = createLazyFileRoute("/_status/settings/_layout/")({
   component: RouteComponent,
 });
 
@@ -119,7 +119,10 @@ function RouteComponent() {
 
               {!sessions.isLoading && sessions.data && (
                 <span>
-                  {sessions.data.sessions.map((s) => s.state?.torrents_total)}
+                  {sessions.data.sessions.reduce(
+                    (sum, s) => sum + (s.state?.torrents_total ?? 0),
+                    0,
+                  )}
                 </span>
               )}
             </div>

@@ -1,9 +1,9 @@
 import { useInvoker, useRPC } from "@/api";
 import { useAppForm } from "@/hooks/form";
-import { createFileRoute } from "@tanstack/react-router";
-import { useState } from "react";
+import { createLazyFileRoute } from "@tanstack/react-router";
+import { Suspense, useState } from "react";
 
-export const Route = createFileRoute("/settings/_layout/mmdb")({
+export const Route = createLazyFileRoute("/_status/settings/_layout/mmdb")({
   component: RouteComponent,
 });
 
@@ -33,26 +33,28 @@ function RouteComponent() {
 
   return (
     <div>
-      <LookupForm />
-      <div className="mt-10">
-        <h1>Set MMDB database path</h1>
-        <form
-          onSubmit={(e) => {
-            e.preventDefault();
-            e.stopPropagation();
-            void form.handleSubmit();
-          }}
-        >
-          <form.AppField
-            name="path"
-            children={(field) => <field.TextField label="MMDB file path" />}
-          />
+      <Suspense fallback={"Loading"}>
+        <LookupForm />
+        <div className="mt-10">
+          <h1>Set MMDB database path</h1>
+          <form
+            onSubmit={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              void form.handleSubmit();
+            }}
+          >
+            <form.AppField
+              name="path"
+              children={(field) => <field.TextField label="MMDB file path" />}
+            />
 
-          <form.AppForm>
-            <form.SubmitButton label="Upload" />
-          </form.AppForm>
-        </form>
-      </div>
+            <form.AppForm>
+              <form.SubmitButton label="Upload" />
+            </form.AppForm>
+          </form>
+        </div>
+      </Suspense>
     </div>
   );
 }

@@ -37,7 +37,7 @@ type TorrentSearch = {
   selected_tab_id?: string;
 };
 
-export const Route = createFileRoute("/_layout/")({
+export const Route = createFileRoute("/_status/_main/")({
   component: RouteComponent,
   validateSearch: (search: Record<string, unknown>): TorrentSearch => {
     return {

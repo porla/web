@@ -5,7 +5,7 @@ import { createLazyFileRoute, Link } from "@tanstack/react-router";
 import { Suspense } from "react";
 import z from "zod";
 
-export const Route = createLazyFileRoute("/settings/_layout/sessions/add")({
+export const Route = createLazyFileRoute("/_status/settings/_layout/sessions/add")({
   component: RouteComponent,
 });
 

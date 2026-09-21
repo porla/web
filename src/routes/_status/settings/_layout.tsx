@@ -7,7 +7,7 @@ import {
 import { createFileRoute, Link, Outlet } from "@tanstack/react-router";
 import { ChevronLeft } from "lucide-react";
 
-export const Route = createFileRoute("/settings/_layout")({
+export const Route = createFileRoute("/_status/settings/_layout")({
   component: RouteComponent,
 });
 
@@ -57,6 +57,16 @@ function RouteComponent() {
             <span className="badge badge-xs badge-info">
               {plugins.isLoading ? "-" : (plugins.data?.plugins.length ?? 0)}
             </span>
+          </Link>
+        </li>
+        <li>
+          <Link to="/settings/mmdb" className="tab">
+            MMDB
+          </Link>
+        </li>
+        <li>
+          <Link to="/settings/views" className="tab">
+            Views
           </Link>
         </li>
       </ul>

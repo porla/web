@@ -1,9 +1,9 @@
 import { type PluginsGet, useInvoker, useRPC } from "@/api";
 import { useAppForm } from "@/hooks/form";
 import { useQueryClient } from "@tanstack/react-query";
-import { createFileRoute } from "@tanstack/react-router";
+import { createLazyFileRoute } from "@tanstack/react-router";
 
-export const Route = createFileRoute("/settings/_layout/plugins/$id")({
+export const Route = createLazyFileRoute("/_status/settings/_layout/plugins/$id")({
   component: RouteComponent,
 });
 

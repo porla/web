@@ -10,25 +10,11 @@ import { feature, featureRange, initializeFeatures } from "@/features";
 import { MessageCircleWarning } from "lucide-react";
 import type { ReactNode } from "react";
 
-export const Route = createFileRoute("/_layout")({
+export const Route = createFileRoute("/_status/_main")({
   component: RouteComponent,
 });
 
 function RouteComponent() {
-  const status = useRPC<SysStatus>("sys.status");
-
-  if (status.isLoading) {
-    return <>Loading</>;
-  }
-
-  if (status.data && status.data.status === "setup") {
-    return <Navigate to="/setup" />;
-  }
-
-  return <SysVersionsLayout />;
-}
-
-function SysVersionsLayout() {
   const versions = useRPC<SysVersions>("sys.versions");
 
   if (versions.isLoading) {

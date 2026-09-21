@@ -14,7 +14,7 @@ import { ChevronDown, SlidersHorizontal } from "lucide-react";
 import { Suspense, useEffect, useState } from "react";
 import z from "zod";
 
-export const Route = createLazyFileRoute("/settings/_layout/sessions/$id")({
+export const Route = createLazyFileRoute("/_status/settings/_layout/sessions/$id")({
   component: RouteComponent,
 });
 

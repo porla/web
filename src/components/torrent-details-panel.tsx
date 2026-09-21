@@ -34,7 +34,7 @@ export default function TorrentDetailsPanel({
   info_hash,
   session_id,
 }: TorrentDetailsPanelProps) {
-  const torrentSearch = useSearch({ from: "/_layout/", shouldThrow: false });
+  const torrentSearch = useSearch({ from: "/_status/_main/", shouldThrow: false });
 
   return (
     <div className="h-90 shrink-0 flex flex-col">
