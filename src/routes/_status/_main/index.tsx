@@ -86,7 +86,7 @@ function RouteComponent() {
         tags: search.tag ? [search.tag] : undefined,
       },
       page: search.page ? search.page - 1 : 0,
-      pageSize,
+      page_size: pageSize
     },
     {
       refetchInterval: 1000,
