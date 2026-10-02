@@ -97,6 +97,17 @@ export type TorrentsPropertiesGet = {
   upload_limit: number;
 };
 
+export type ApiKey = {
+  id: string;
+  name: string;
+  created_at: number;
+  expires_at: number | null;
+};
+
+export type ApiKeysList = {
+  keys: ApiKey[];
+};
+
 export type InfoHash = [string | null, string | null] | string;
 
 export type Bitfield = [number, string];
