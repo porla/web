@@ -38,6 +38,9 @@ const StatusSettingsLayoutPresetsIndexLazyRouteImport = createFileRoute(
 const StatusSettingsLayoutPluginsIndexLazyRouteImport = createFileRoute(
   '/_status/settings/_layout/plugins/',
 )()
+const StatusSettingsLayoutApiKeysIndexLazyRouteImport = createFileRoute(
+  '/_status/settings/_layout/api-keys/',
+)()
 const StatusSettingsLayoutSessionsAddLazyRouteImport = createFileRoute(
   '/_status/settings/_layout/sessions/add',
 )()
@@ -55,6 +58,9 @@ const StatusSettingsLayoutPluginsAddLazyRouteImport = createFileRoute(
 )()
 const StatusSettingsLayoutPluginsIdLazyRouteImport = createFileRoute(
   '/_status/settings/_layout/plugins/$id',
+)()
+const StatusSettingsLayoutApiKeysAddLazyRouteImport = createFileRoute(
+  '/_status/settings/_layout/api-keys/add',
 )()
 
 const SetupRoute = SetupRouteImport.update({
@@ -144,6 +150,16 @@ const StatusSettingsLayoutPluginsIndexLazyRoute =
       (d) => d.Route,
     ),
   )
+const StatusSettingsLayoutApiKeysIndexLazyRoute =
+  StatusSettingsLayoutApiKeysIndexLazyRouteImport.update({
+    id: '/api-keys/',
+    path: '/api-keys/',
+    getParentRoute: () => StatusSettingsLayoutRoute,
+  } as any).lazy(() =>
+    import('./routes/_status/settings/_layout/api-keys/index.lazy').then(
+      (d) => d.Route,
+    ),
+  )
 const StatusSettingsLayoutSessionsAddLazyRoute =
   StatusSettingsLayoutSessionsAddLazyRouteImport.update({
     id: '/sessions/add',
@@ -204,6 +220,16 @@ const StatusSettingsLayoutPluginsIdLazyRoute =
       (d) => d.Route,
     ),
   )
+const StatusSettingsLayoutApiKeysAddLazyRoute =
+  StatusSettingsLayoutApiKeysAddLazyRouteImport.update({
+    id: '/api-keys/add',
+    path: '/api-keys/add',
+    getParentRoute: () => StatusSettingsLayoutRoute,
+  } as any).lazy(() =>
+    import('./routes/_status/settings/_layout/api-keys/add.lazy').then(
+      (d) => d.Route,
+    ),
+  )
 const StatusSettingsLayoutPluginsInstallRoute =
   StatusSettingsLayoutPluginsInstallRouteImport.update({
     id: '/plugins/install',
@@ -221,12 +247,14 @@ export interface FileRoutesByFullPath {
   '/settings/views': typeof StatusSettingsLayoutViewsLazyRoute
   '/settings/': typeof StatusSettingsLayoutIndexLazyRoute
   '/settings/plugins/install': typeof StatusSettingsLayoutPluginsInstallRoute
+  '/settings/api-keys/add': typeof StatusSettingsLayoutApiKeysAddLazyRoute
   '/settings/plugins/$id': typeof StatusSettingsLayoutPluginsIdLazyRoute
   '/settings/plugins/add': typeof StatusSettingsLayoutPluginsAddLazyRoute
   '/settings/presets/$id': typeof StatusSettingsLayoutPresetsIdLazyRoute
   '/settings/presets/add': typeof StatusSettingsLayoutPresetsAddLazyRoute
   '/settings/sessions/$id': typeof StatusSettingsLayoutSessionsIdLazyRoute
   '/settings/sessions/add': typeof StatusSettingsLayoutSessionsAddLazyRoute
+  '/settings/api-keys/': typeof StatusSettingsLayoutApiKeysIndexLazyRoute
   '/settings/plugins/': typeof StatusSettingsLayoutPluginsIndexLazyRoute
   '/settings/presets/': typeof StatusSettingsLayoutPresetsIndexLazyRoute
   '/settings/sessions/': typeof StatusSettingsLayoutSessionsIndexLazyRoute
@@ -240,12 +268,14 @@ export interface FileRoutesByTo {
   '/settings/views': typeof StatusSettingsLayoutViewsLazyRoute
   '/settings': typeof StatusSettingsLayoutIndexLazyRoute
   '/settings/plugins/install': typeof StatusSettingsLayoutPluginsInstallRoute
+  '/settings/api-keys/add': typeof StatusSettingsLayoutApiKeysAddLazyRoute
   '/settings/plugins/$id': typeof StatusSettingsLayoutPluginsIdLazyRoute
   '/settings/plugins/add': typeof StatusSettingsLayoutPluginsAddLazyRoute
   '/settings/presets/$id': typeof StatusSettingsLayoutPresetsIdLazyRoute
   '/settings/presets/add': typeof StatusSettingsLayoutPresetsAddLazyRoute
   '/settings/sessions/$id': typeof StatusSettingsLayoutSessionsIdLazyRoute
   '/settings/sessions/add': typeof StatusSettingsLayoutSessionsAddLazyRoute
+  '/settings/api-keys': typeof StatusSettingsLayoutApiKeysIndexLazyRoute
   '/settings/plugins': typeof StatusSettingsLayoutPluginsIndexLazyRoute
   '/settings/presets': typeof StatusSettingsLayoutPresetsIndexLazyRoute
   '/settings/sessions': typeof StatusSettingsLayoutSessionsIndexLazyRoute
@@ -263,12 +293,14 @@ export interface FileRoutesById {
   '/_status/settings/_layout/views': typeof StatusSettingsLayoutViewsLazyRoute
   '/_status/settings/_layout/': typeof StatusSettingsLayoutIndexLazyRoute
   '/_status/settings/_layout/plugins/install': typeof StatusSettingsLayoutPluginsInstallRoute
+  '/_status/settings/_layout/api-keys/add': typeof StatusSettingsLayoutApiKeysAddLazyRoute
   '/_status/settings/_layout/plugins/$id': typeof StatusSettingsLayoutPluginsIdLazyRoute
   '/_status/settings/_layout/plugins/add': typeof StatusSettingsLayoutPluginsAddLazyRoute
   '/_status/settings/_layout/presets/$id': typeof StatusSettingsLayoutPresetsIdLazyRoute
   '/_status/settings/_layout/presets/add': typeof StatusSettingsLayoutPresetsAddLazyRoute
   '/_status/settings/_layout/sessions/$id': typeof StatusSettingsLayoutSessionsIdLazyRoute
   '/_status/settings/_layout/sessions/add': typeof StatusSettingsLayoutSessionsAddLazyRoute
+  '/_status/settings/_layout/api-keys/': typeof StatusSettingsLayoutApiKeysIndexLazyRoute
   '/_status/settings/_layout/plugins/': typeof StatusSettingsLayoutPluginsIndexLazyRoute
   '/_status/settings/_layout/presets/': typeof StatusSettingsLayoutPresetsIndexLazyRoute
   '/_status/settings/_layout/sessions/': typeof StatusSettingsLayoutSessionsIndexLazyRoute
@@ -285,12 +317,14 @@ export interface FileRouteTypes {
     | '/settings/views'
     | '/settings/'
     | '/settings/plugins/install'
+    | '/settings/api-keys/add'
     | '/settings/plugins/$id'
     | '/settings/plugins/add'
     | '/settings/presets/$id'
     | '/settings/presets/add'
     | '/settings/sessions/$id'
     | '/settings/sessions/add'
+    | '/settings/api-keys/'
     | '/settings/plugins/'
     | '/settings/presets/'
     | '/settings/sessions/'
@@ -304,12 +338,14 @@ export interface FileRouteTypes {
     | '/settings/views'
     | '/settings'
     | '/settings/plugins/install'
+    | '/settings/api-keys/add'
     | '/settings/plugins/$id'
     | '/settings/plugins/add'
     | '/settings/presets/$id'
     | '/settings/presets/add'
     | '/settings/sessions/$id'
     | '/settings/sessions/add'
+    | '/settings/api-keys'
     | '/settings/plugins'
     | '/settings/presets'
     | '/settings/sessions'
@@ -326,12 +362,14 @@ export interface FileRouteTypes {
     | '/_status/settings/_layout/views'
     | '/_status/settings/_layout/'
     | '/_status/settings/_layout/plugins/install'
+    | '/_status/settings/_layout/api-keys/add'
     | '/_status/settings/_layout/plugins/$id'
     | '/_status/settings/_layout/plugins/add'
     | '/_status/settings/_layout/presets/$id'
     | '/_status/settings/_layout/presets/add'
     | '/_status/settings/_layout/sessions/$id'
     | '/_status/settings/_layout/sessions/add'
+    | '/_status/settings/_layout/api-keys/'
     | '/_status/settings/_layout/plugins/'
     | '/_status/settings/_layout/presets/'
     | '/_status/settings/_layout/sessions/'
@@ -436,6 +474,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof StatusSettingsLayoutPluginsIndexLazyRouteImport
       parentRoute: typeof StatusSettingsLayoutRoute
     }
+    '/_status/settings/_layout/api-keys/': {
+      id: '/_status/settings/_layout/api-keys/'
+      path: '/api-keys'
+      fullPath: '/settings/api-keys/'
+      preLoaderRoute: typeof StatusSettingsLayoutApiKeysIndexLazyRouteImport
+      parentRoute: typeof StatusSettingsLayoutRoute
+    }
     '/_status/settings/_layout/sessions/add': {
       id: '/_status/settings/_layout/sessions/add'
       path: '/sessions/add'
@@ -478,6 +523,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof StatusSettingsLayoutPluginsIdLazyRouteImport
       parentRoute: typeof StatusSettingsLayoutRoute
     }
+    '/_status/settings/_layout/api-keys/add': {
+      id: '/_status/settings/_layout/api-keys/add'
+      path: '/api-keys/add'
+      fullPath: '/settings/api-keys/add'
+      preLoaderRoute: typeof StatusSettingsLayoutApiKeysAddLazyRouteImport
+      parentRoute: typeof StatusSettingsLayoutRoute
+    }
     '/_status/settings/_layout/plugins/install': {
       id: '/_status/settings/_layout/plugins/install'
       path: '/plugins/install'
@@ -507,12 +559,14 @@ interface StatusSettingsLayoutRouteChildren {
   StatusSettingsLayoutViewsLazyRoute: typeof StatusSettingsLayoutViewsLazyRoute
   StatusSettingsLayoutIndexLazyRoute: typeof StatusSettingsLayoutIndexLazyRoute
   StatusSettingsLayoutPluginsInstallRoute: typeof StatusSettingsLayoutPluginsInstallRoute
+  StatusSettingsLayoutApiKeysAddLazyRoute: typeof StatusSettingsLayoutApiKeysAddLazyRoute
   StatusSettingsLayoutPluginsIdLazyRoute: typeof StatusSettingsLayoutPluginsIdLazyRoute
   StatusSettingsLayoutPluginsAddLazyRoute: typeof StatusSettingsLayoutPluginsAddLazyRoute
   StatusSettingsLayoutPresetsIdLazyRoute: typeof StatusSettingsLayoutPresetsIdLazyRoute
   StatusSettingsLayoutPresetsAddLazyRoute: typeof StatusSettingsLayoutPresetsAddLazyRoute
   StatusSettingsLayoutSessionsIdLazyRoute: typeof StatusSettingsLayoutSessionsIdLazyRoute
   StatusSettingsLayoutSessionsAddLazyRoute: typeof StatusSettingsLayoutSessionsAddLazyRoute
+  StatusSettingsLayoutApiKeysIndexLazyRoute: typeof StatusSettingsLayoutApiKeysIndexLazyRoute
   StatusSettingsLayoutPluginsIndexLazyRoute: typeof StatusSettingsLayoutPluginsIndexLazyRoute
   StatusSettingsLayoutPresetsIndexLazyRoute: typeof StatusSettingsLayoutPresetsIndexLazyRoute
   StatusSettingsLayoutSessionsIndexLazyRoute: typeof StatusSettingsLayoutSessionsIndexLazyRoute
@@ -524,6 +578,8 @@ const StatusSettingsLayoutRouteChildren: StatusSettingsLayoutRouteChildren = {
   StatusSettingsLayoutIndexLazyRoute: StatusSettingsLayoutIndexLazyRoute,
   StatusSettingsLayoutPluginsInstallRoute:
     StatusSettingsLayoutPluginsInstallRoute,
+  StatusSettingsLayoutApiKeysAddLazyRoute:
+    StatusSettingsLayoutApiKeysAddLazyRoute,
   StatusSettingsLayoutPluginsIdLazyRoute:
     StatusSettingsLayoutPluginsIdLazyRoute,
   StatusSettingsLayoutPluginsAddLazyRoute:
@@ -536,6 +592,8 @@ const StatusSettingsLayoutRouteChildren: StatusSettingsLayoutRouteChildren = {
     StatusSettingsLayoutSessionsIdLazyRoute,
   StatusSettingsLayoutSessionsAddLazyRoute:
     StatusSettingsLayoutSessionsAddLazyRoute,
+  StatusSettingsLayoutApiKeysIndexLazyRoute:
+    StatusSettingsLayoutApiKeysIndexLazyRoute,
   StatusSettingsLayoutPluginsIndexLazyRoute:
     StatusSettingsLayoutPluginsIndexLazyRoute,
   StatusSettingsLayoutPresetsIndexLazyRoute:

@@ -1,9 +1,11 @@
 import {
   useRPC,
+  type ApiKeysList,
   type PluginsList,
   type PresetsList,
   type SessionsList,
 } from "@/api";
+import { feature } from "@/features";
 import { createFileRoute, Link, Outlet } from "@tanstack/react-router";
 import { ChevronLeft } from "lucide-react";
 
@@ -59,6 +61,7 @@ function RouteComponent() {
             </span>
           </Link>
         </li>
+        {feature("api_keys") && <ApiKeyMenuItem />}
         <li>
           <Link to="/settings/mmdb" className="tab">
             MMDB
@@ -75,5 +78,20 @@ function RouteComponent() {
         <Outlet />
       </div>
     </div>
+  );
+}
+
+function ApiKeyMenuItem() {
+  const keys = useRPC<ApiKeysList>("auth.keys.list");
+
+  return (
+    <li>
+      <Link to="/settings/api-keys" className="tab">
+        API keys
+        <span className="badge badge-xs badge-info">
+          {keys.isLoading ? "-" : (keys.data?.keys.length ?? 0)}
+        </span>
+      </Link>
+    </li>
   );
 }

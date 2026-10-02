@@ -10,6 +10,7 @@ const CheckboxField = lazy(
   () => import("@/components/forms/checkbox-field.tsx"),
 );
 const ColorField = lazy(() => import("@/components/forms/color-field.tsx"));
+const DateField = lazy(() => import("@/components/forms/date-field.tsx"));
 const NumberField = lazy(() => import("@/components/forms/number-field.tsx"));
 const SelectField = lazy(() => import("@/components/forms/select-field.tsx"));
 const TextField = lazy(() => import("@/components/forms/text-field.tsx"));
@@ -35,6 +36,7 @@ export const { useAppForm, withForm, withFieldGroup } = createFormHook({
   fieldComponents: {
     CheckboxField,
     ColorField,
+    DateField,
     FileInputField,
     NumberField,
     SelectField,
