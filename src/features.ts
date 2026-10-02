@@ -1,4 +1,4 @@
-import { parse, Range } from "semver";
+import { parse, Range, SemVer } from "semver";
 
 const RANGE_OPTIONS = { includePrerelease: true } as const;
 
@@ -12,12 +12,15 @@ type FeatureSet = Readonly<Record<FeatureName, boolean>>;
 
 const FEATURE_NAMES = Object.keys(FEATURES) as FeatureName[];
 
+let currentVersion: SemVer | null = null;
 let enabled: FeatureSet | null = null;
 let initializedFor: string | null | undefined;
 
 export const NO_FEATURES: FeatureSet = Object.freeze(
   Object.fromEntries(FEATURE_NAMES.map((name) => [name, false])),
 ) as FeatureSet;
+
+export const getCurrentVersion = () => currentVersion;
 
 export function feature(name: FeatureName): boolean {
   if (!enabled) {
@@ -44,6 +47,8 @@ export function initializeFeatures(version: string | null | undefined) {
     enabled = NO_FEATURES;
     return enabled;
   }
+
+  currentVersion = parsed;
 
   enabled = Object.freeze(
     Object.fromEntries(

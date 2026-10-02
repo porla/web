@@ -1,7 +1,6 @@
 import { CatchBoundary, createFileRoute, Outlet } from "@tanstack/react-router";
-import { type SysVersions, useRPC } from "@/api";
 import Sidebar from "@/components/sidebar";
-import { feature, featureRange, initializeFeatures } from "@/features";
+import { feature, featureRange, getCurrentVersion } from "@/features";
 import { MessageCircleWarning } from "lucide-react";
 import type { ReactNode } from "react";
 
@@ -10,13 +9,7 @@ export const Route = createFileRoute("/_status/_main")({
 });
 
 function RouteComponent() {
-  const versions = useRPC<SysVersions>("sys.versions");
-
-  if (versions.isLoading) {
-    return <>loading versions</>;
-  }
-
-  const version = versions.data?.porla.version ?? null;
+  const version = getCurrentVersion();
 
   const boundary = (key: string, children: ReactNode) => (
     <CatchBoundary
@@ -29,17 +22,14 @@ function RouteComponent() {
     </CatchBoundary>
   );
 
-  initializeFeatures(version);
-
   return (
     <div className=" h-full flex flex-col">
       {!feature("base") && (
         <div className="alert alert-warning alert-soft rounded-none">
           <MessageCircleWarning />
           <span>
-            Your version of Porla ({versions.data?.porla.version}) does not
-            fulfill the base version range {featureRange("base")}. Consider
-            updating.
+            Your version of Porla ({version?.toString()}) does not fulfill the
+            base version range {featureRange("base")}. Consider updating.
           </span>
           <a
             className="btn btn-sm"
