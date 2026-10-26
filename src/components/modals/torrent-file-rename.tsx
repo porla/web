@@ -1,6 +1,7 @@
 import { type InfoHash, useInvoker } from "@/api";
 import type { ModalProps } from "@/components/modal";
 import { useAppForm } from "@/hooks/form";
+import z from "zod";
 
 type RenameTorrentFileModalProps = {
   info_hash: InfoHash;
@@ -9,6 +10,10 @@ type RenameTorrentFileModalProps = {
   file_path: string;
 };
 
+const renameSchema = z.object({
+  file_path: z.string().trim().min(1, "Enter a file name"),
+});
+
 export default function RenameTorrentFileModal({
   info_hash,
   session_id,
@@ -16,18 +21,23 @@ export default function RenameTorrentFileModal({
   file_path,
   close,
 }: RenameTorrentFileModalProps & ModalProps<boolean>) {
-  const rename = useInvoker("torrents.files.rename");
+  const rename = useInvoker("torrents.files.rename", {
+    meta: { silent: true },
+  });
 
   const form = useAppForm({
     defaultValues: {
       file_path,
+    },
+    validators: {
+      onChange: renameSchema,
     },
     onSubmit: async ({ value }) => {
       await rename.mutateAsync({
         info_hash,
         session_id,
         file_index,
-        file_path: value.file_path,
+        file_path: renameSchema.parse(value).file_path,
       });
 
       close(true);
@@ -35,29 +45,18 @@ export default function RenameTorrentFileModal({
   });
 
   return (
-    <form
-      onSubmit={(e) => {
-        e.preventDefault();
-        e.stopPropagation();
-        form.handleSubmit();
-      }}
-    >
-      <h3 className="font-bold text-lg">Rename torrent file</h3>
+    <form.AppForm>
+      <form.Form>
+        <h3 className="font-bold text-lg">Rename torrent file</h3>
 
-      <form.AppField
-        name="file_path"
-        children={(field) => <field.TextField label="File name" />}
-      />
+        <form.AppField
+          name="file_path"
+          children={(field) => <field.TextField label="File name" />}
+        />
 
-      <div className="modal-action">
-        <button type="button" className="btn" onClick={() => close(false)}>
-          Cancel
-        </button>
-
-        <form.AppForm>
-          <form.SubmitButton label="Rename" />
-        </form.AppForm>
-      </div>
-    </form>
+        <form.SaveError error={rename.error} />
+        <form.ModalActions submitLabel="Rename" onCancel={() => close(false)} />
+      </form.Form>
+    </form.AppForm>
   );
 }
