@@ -1,4 +1,10 @@
-import { useRPC, type InfoHash, type Torrent, useInvoker } from "@/api";
+import {
+  useRPC,
+  type InfoHash,
+  type Torrent,
+  useInvoker,
+  infoHashKey,
+} from "@/api";
 import { TorrentListColumns } from "@/components/lists/torrents";
 import { useModal } from "@/components/modal";
 import MigrateTorrentModal from "@/components/modals/torrent-migrate";
@@ -231,7 +237,7 @@ function TorrentsTable({ torrents }: TorrentsTableProps) {
       </thead>
       <tbody>
         {torrents.map((t) => (
-          <tr key={`${t.info_hash[0]}`}>
+          <tr key={`${infoHashKey(t.info_hash)}`}>
             {selectedCols.map((col) => (
               <td
                 key={`td_${col}`}
@@ -244,8 +250,8 @@ function TorrentsTable({ torrents }: TorrentsTableProps) {
             <td className="text-right">
               <button
                 className="btn btn-xs btn-square"
-                popoverTarget={`popover_${t.info_hash[0]}`}
-                style={{ anchorName: `--anchor-${t.info_hash[0]}` }}
+                popoverTarget={`popover_${infoHashKey(t.info_hash)}`}
+                style={{ anchorName: `--anchor-${infoHashKey(t.info_hash)}` }}
               >
                 <Menu className="size-4" />
               </button>
@@ -253,8 +259,10 @@ function TorrentsTable({ torrents }: TorrentsTableProps) {
               <ul
                 className="dropdown dropdown-end menu w-52 rounded-box bg-base-100 shadow-sm"
                 popover="auto"
-                id={`popover_${t.info_hash[0]}`}
-                style={{ positionAnchor: `--anchor-${t.info_hash[0]}` }}
+                id={`popover_${infoHashKey(t.info_hash)}`}
+                style={{
+                  positionAnchor: `--anchor-${infoHashKey(t.info_hash)}`,
+                }}
               >
                 {t.flags.includes("paused") ? (
                   <li>

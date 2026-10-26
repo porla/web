@@ -1,4 +1,4 @@
-import type { Torrent } from "@/api";
+import { infoHashKey, type Torrent } from "@/api";
 import { Link, useSearch } from "@tanstack/react-router";
 import { filesize } from "filesize";
 
@@ -34,7 +34,7 @@ export const TorrentListColumns = () => {
           }}
           className="hover:underline"
         >
-          {t.name.length > 0 ? t.name : t.info_hash[0]}
+          {t.name.length > 0 ? t.name : infoHashKey(t.info_hash)}
         </Link>
       ),
     },
