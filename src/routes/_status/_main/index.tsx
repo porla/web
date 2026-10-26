@@ -1,10 +1,4 @@
-import {
-  type TorrentsList,
-  useRPC,
-  type InfoHash,
-  type Torrent,
-  useInvoker,
-} from "@/api";
+import { useRPC, type InfoHash, type Torrent, useInvoker } from "@/api";
 import { TorrentListColumns } from "@/components/lists/torrents";
 import { useModal } from "@/components/modal";
 import MigrateTorrentModal from "@/components/modals/torrent-migrate";
@@ -75,7 +69,7 @@ function RouteComponent() {
     },
   });
 
-  const torrents = useRPC<TorrentsList>(
+  const torrents = useRPC(
     "torrents.list",
     {
       filters: {
@@ -86,7 +80,7 @@ function RouteComponent() {
         tags: search.tag ? [search.tag] : undefined,
       },
       page: search.page ? search.page - 1 : 0,
-      page_size: pageSize
+      page_size: pageSize,
     },
     {
       refetchInterval: 1000,
@@ -198,7 +192,7 @@ function TorrentsTable({ torrents }: TorrentsTableProps) {
 
   const modal = useModal();
 
-  const userColumns = useRPC<any>("kv.get", {
+  const userColumns = useRPC("kv.get", {
     keys: ["webui.lists.torrents.cols"],
   });
 

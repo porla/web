@@ -1,13 +1,15 @@
-import { type SessionsList, useRPC } from "@/api";
+import { useRPC } from "@/api";
 import { createLazyFileRoute, Link } from "@tanstack/react-router";
 import { Star } from "lucide-react";
 
-export const Route = createLazyFileRoute("/_status/settings/_layout/sessions/")({
-  component: RouteComponent,
-});
+export const Route = createLazyFileRoute("/_status/settings/_layout/sessions/")(
+  {
+    component: RouteComponent,
+  },
+);
 
 function RouteComponent() {
-  const sessions = useRPC<SessionsList>("sessions.list");
+  const sessions = useRPC("sessions.list");
 
   return (
     <div className="space-y-6">

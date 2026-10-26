@@ -1,9 +1,4 @@
-import {
-  type TorrentsPeersList,
-  useRPC,
-  type InfoHash,
-  useInvoker,
-} from "@/api";
+import { useRPC, type InfoHash, useInvoker, type Result } from "@/api";
 import { useEffect, useState } from "react";
 
 type PeersTabProps = {
@@ -12,11 +7,12 @@ type PeersTabProps = {
 };
 
 export default function PeersTab({ info_hash, session_id }: PeersTabProps) {
-  const mmdb = useInvoker<any>("mmdb.lookup");
+  const mmdb = useInvoker("mmdb.lookup");
   const [mmdbEnabled, setMmdbEnabled] = useState(false);
-  const [mmdbEndpoints, setMmdbEndpoints] = useState<any>();
+  const [mmdbEndpoints, setMmdbEndpoints] =
+    useState<Result<"mmdb.lookup">["results"]>();
 
-  const peers = useRPC<TorrentsPeersList>(
+  const peers = useRPC(
     "torrents.peers.list",
     {
       info_hash,
@@ -58,7 +54,7 @@ export default function PeersTab({ info_hash, session_id }: PeersTabProps) {
               <td>
                 {p.remote_endpoint[0] in mmdbEndpoints && (
                   <span>
-                    {mmdbEndpoints[p.remote_endpoint[0]].country?.iso_code}
+                    {mmdbEndpoints[p.remote_endpoint[0]]?.country?.iso_code}
                   </span>
                 )}
               </td>

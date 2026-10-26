@@ -1,4 +1,4 @@
-import { useInvoker, useRPC } from "@/api";
+import { useInvoker, useRPC, type Result } from "@/api";
 import { useAppForm } from "@/hooks/form";
 import { createLazyFileRoute } from "@tanstack/react-router";
 import { Suspense, useState } from "react";
@@ -8,7 +8,7 @@ export const Route = createLazyFileRoute("/_status/settings/_layout/mmdb")({
 });
 
 function RouteComponent() {
-  const mmdbSettings = useRPC<any>("kv.get", {
+  const mmdbSettings = useRPC("kv.get", {
     keys: ["porla.mmdb.path"],
   });
 
@@ -61,7 +61,7 @@ function RouteComponent() {
 
 function LookupForm() {
   const lookup = useInvoker("mmdb.lookup");
-  const [result, setResult] = useState<any>();
+  const [result, setResult] = useState<Result<"mmdb.lookup">>();
 
   const form = useAppForm({
     defaultValues: {

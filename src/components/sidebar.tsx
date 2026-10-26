@@ -1,4 +1,4 @@
-import { type SessionsList, type TorrentsCount, useRPC } from "@/api";
+import { useRPC } from "@/api";
 import { Link, useNavigate, useSearch } from "@tanstack/react-router";
 import {
   Archive,
@@ -20,7 +20,7 @@ export default function Sidebar() {
     shouldThrow: false,
   });
 
-  const sessions = useRPC<SessionsList>("sessions.list", null, {
+  const sessions = useRPC("sessions.list", null, {
     refetchInterval: 5000,
   });
 
@@ -115,7 +115,7 @@ function TorrentsList({ session_id }: { session_id?: number }) {
     shouldThrow: false,
   });
 
-  const count = useRPC<TorrentsCount>(
+  const count = useRPC(
     "torrents.count",
     { session_id },
     {

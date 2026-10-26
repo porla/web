@@ -1,4 +1,4 @@
-import { type SessionsList, type SysVersions, useInvoker, useRPC } from "@/api";
+import { useInvoker, useRPC } from "@/api";
 import { prefixPath } from "@/base";
 import { useQuery } from "@tanstack/react-query";
 import { createLazyFileRoute } from "@tanstack/react-router";
@@ -10,15 +10,15 @@ export const Route = createLazyFileRoute("/_status/settings/_layout/")({
 });
 
 function RouteComponent() {
-  const kv = useRPC<any>("kv.get", {
+  const kv = useRPC("kv.get", {
     keys: ["porla.webui.repo"],
   });
 
-  const sessions = useRPC<SessionsList>("sessions.list", null, {
+  const sessions = useRPC("sessions.list", null, {
     refetchInterval: 2000,
   });
 
-  const versions = useRPC<SysVersions>("sys.versions");
+  const versions = useRPC("sys.versions");
 
   const [webVersion, setWebVersion] = useState<string | null>();
 

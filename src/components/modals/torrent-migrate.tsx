@@ -1,10 +1,4 @@
-import {
-  type TorrentsGet,
-  useRPC,
-  type InfoHash,
-  type SessionsList,
-  useInvoker,
-} from "@/api";
+import { useRPC, type InfoHash, useInvoker } from "@/api";
 import type { ModalProps } from "@/components/modal";
 import { useAppForm } from "@/hooks/form";
 
@@ -19,17 +13,21 @@ export default function MigrateTorrentModal({
   close,
 }: MigrateTorrentModalProps & ModalProps<boolean>) {
   const migrate = useInvoker("torrents.migrate");
-  const sessions = useRPC<SessionsList>("sessions.list");
-  const torrent = useRPC<TorrentsGet>("torrents.get", {
+  const sessions = useRPC("sessions.list");
+  const torrent = useRPC("torrents.get", {
     info_hash,
     session_id,
   });
 
   const form = useAppForm({
     defaultValues: {
-      session_id: null as Number | null,
+      session_id: null as number | null,
     },
     onSubmit: async ({ value }) => {
+      if (!value.session_id) {
+        return;
+      }
+
       await migrate.mutateAsync({
         info_hash,
         session_id,

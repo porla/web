@@ -1,4 +1,4 @@
-import { useRPC, type PluginsList } from "@/api";
+import { useRPC } from "@/api";
 import { createLazyFileRoute, Link } from "@tanstack/react-router";
 
 export const Route = createLazyFileRoute("/_status/settings/_layout/plugins/")({
@@ -6,7 +6,7 @@ export const Route = createLazyFileRoute("/_status/settings/_layout/plugins/")({
 });
 
 function RouteComponent() {
-  const plugins = useRPC<PluginsList>("plugins.list");
+  const plugins = useRPC("plugins.list");
 
   return (
     <div className="space-y-6">

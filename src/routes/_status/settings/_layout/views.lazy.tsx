@@ -11,7 +11,7 @@ function RouteComponent() {
   const torrentsColumns = TorrentListColumns();
   const knownCols = new Set(Object.keys(torrentsColumns));
 
-  const userCols = useRPC<any>("kv.get", {
+  const userCols = useRPC("kv.get", {
     keys: ["webui.lists.torrents.cols"],
   });
 

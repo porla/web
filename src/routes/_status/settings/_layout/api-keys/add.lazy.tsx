@@ -28,7 +28,7 @@ function RouteComponent() {
       expires_at: null as number | null,
     },
     onSubmit: async ({ value }) => {
-      const d = (await create.mutateAsync(value)) as any;
+      const d = await create.mutateAsync(value);
 
       await show(ShowApiKeyModal, {
         createdKey: d.key,

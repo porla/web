@@ -1,5 +1,5 @@
 export function readFile(blob: Blob) {
-  return new Promise((resolve, reject) => {
+  return new Promise<string>((resolve, reject) => {
     const reader = new FileReader();
     reader.onload = function () {
       const idx = reader.result?.toString().indexOf("base64,")!;

@@ -3,8 +3,6 @@ import {
   useInvoker,
   useRPC,
   type Preset,
-  type PresetsGet,
-  type SessionsList,
   type TorrentFlag,
 } from "@/api";
 import { useAppForm } from "@/hooks/form";
@@ -12,7 +10,9 @@ import { useQueryClient } from "@tanstack/react-query";
 import { createLazyFileRoute } from "@tanstack/react-router";
 import { Suspense } from "react";
 
-export const Route = createLazyFileRoute("/_status/settings/_layout/presets/$id")({
+export const Route = createLazyFileRoute(
+  "/_status/settings/_layout/presets/$id",
+)({
   component: RouteComponent,
 });
 
@@ -30,7 +30,7 @@ const OPTIONS = ["on", "off", "unchanged"] as const;
 function RouteComponent() {
   const { id } = Route.useParams();
 
-  const preset = useRPC<PresetsGet>("presets.get", { id: parseInt(id, 10) });
+  const preset = useRPC("presets.get", { id: parseInt(id, 10) });
 
   if (preset.isLoading) {
     return <>loading</>;
@@ -65,7 +65,7 @@ function PresetForm({ preset }: PresetFormProps) {
   const queryClient = useQueryClient();
   const navigate = Route.useNavigate();
 
-  const sessions = useRPC<SessionsList>("sessions.list");
+  const sessions = useRPC("sessions.list");
 
   const remove = useInvoker("presets.remove", {
     onSuccess: () =>

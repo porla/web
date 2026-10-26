@@ -1,4 +1,4 @@
-import { useRPC, type PresetsList } from "@/api";
+import { useRPC } from "@/api";
 import { createLazyFileRoute, Link } from "@tanstack/react-router";
 import { Star } from "lucide-react";
 
@@ -7,7 +7,7 @@ export const Route = createLazyFileRoute("/_status/settings/_layout/presets/")({
 });
 
 function RouteComponent() {
-  const presets = useRPC<PresetsList>("presets.list");
+  const presets = useRPC("presets.list");
 
   return (
     <div className="space-y-6">

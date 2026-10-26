@@ -1,10 +1,4 @@
-import {
-  type InfoHash,
-  type TorrentsGet,
-  type TorrentsPropertiesGet,
-  useInvoker,
-  useRPC,
-} from "@/api";
+import { type InfoHash, useInvoker, useRPC } from "@/api";
 import type { ModalProps } from "@/components/modal";
 import { useAppForm } from "@/hooks/form";
 
@@ -18,12 +12,12 @@ export default function TorrentPropertiesModal({
   session_id,
   close,
 }: TorrentPropertiesModalProps & ModalProps<boolean>) {
-  const properties = useRPC<TorrentsPropertiesGet>("torrents.properties.get", {
+  const properties = useRPC("torrents.properties.get", {
     info_hash,
     session_id,
   });
 
-  const torrent = useRPC<TorrentsGet>("torrents.get", {
+  const torrent = useRPC("torrents.get", {
     info_hash,
     session_id,
   });
