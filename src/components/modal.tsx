@@ -15,10 +15,10 @@ export interface ModalProps<Result = void> {
   close: (result: Result) => void;
 }
 
-type ShowFn = <P extends ModalProps<any>>(
+type ShowFn = <P extends ModalProps<never>>(
   Component: ComponentType<P>,
   // props arg is optional when the modal has no required own-props
-  ...args: {} extends Omit<P, "close">
+  ...args: Record<string, never> extends Omit<P, "close">
     ? [props?: Omit<P, "close">]
     : [props: Omit<P, "close">]
 ) => Promise<P extends ModalProps<infer R> ? R | undefined : undefined>;
@@ -29,7 +29,7 @@ const DISMISSED = Symbol("dismissed"); // ESC / backdrop → resolves undefined
 
 interface Instance {
   id: number;
-  Component: ComponentType<any>;
+  Component: ComponentType<ModalProps<never>>;
   props: Record<string, unknown>;
   resolve: (value: unknown) => void;
 }
@@ -40,12 +40,18 @@ export function ModalProvider({ children }: { children: ReactNode }) {
   const [instances, setInstances] = useState<Instance[]>([]);
 
   const show = useCallback<ShowFn>((Component, props?) => {
-    return new Promise((resolve) => {
+    return new Promise<unknown>((resolve) => {
       setInstances((prev) => [
         ...prev,
-        { id: ++counter, Component, props: props ?? {}, resolve },
+        {
+          id: ++counter,
+          // Instances hold modals of every result type side by side
+          Component: Component as ComponentType<ModalProps<never>>,
+          props: props ?? {},
+          resolve,
+        },
       ]);
-    }) as any;
+    }) as Promise<never>;
   }, []);
 
   const remove = useCallback((id: number, result: unknown) => {
@@ -104,6 +110,7 @@ function ModalHost({
   );
 }
 
+// eslint-disable-next-line react-refresh/only-export-components -- the hook belongs with its provider
 export function useModal() {
   const ctx = useContext(ModalContext);
   if (!ctx) throw new Error("useModal must be used inside <ModalProvider>");

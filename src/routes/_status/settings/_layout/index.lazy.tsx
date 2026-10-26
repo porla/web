@@ -34,7 +34,7 @@ function RouteComponent() {
   });
 
   const webRelease = useQuery({
-    queryKey: ["gh.webui.release"],
+    queryKey: ["gh.webui.release", repo],
     queryFn: () =>
       fetch(`https://api.github.com/repos/${repo}/releases/latest`).then((r) =>
         r.json(),
@@ -46,7 +46,7 @@ function RouteComponent() {
     fetch(prefixPath("/version.json"))
       .then((r) => r.json())
       .then((r) => setWebVersion(r.SemVer))
-      .catch((_) => setWebVersion("0.0.0"));
+      .catch(() => setWebVersion("0.0.0"));
   }, []);
 
   return (

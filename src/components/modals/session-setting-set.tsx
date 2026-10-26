@@ -27,7 +27,7 @@ export default function SessionSettingSetModal({
       setting_value,
     },
     onSubmit: async ({ value }) => {
-      let s: Record<string, string | number | boolean> = {};
+      const s: Record<string, string | number | boolean> = {};
       s[setting_name] = value.setting_value;
 
       await setSetting.mutateAsync({

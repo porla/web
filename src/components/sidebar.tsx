@@ -38,7 +38,7 @@ export default function Sidebar() {
         },
       });
     }
-  }, [torrentSearch, sessions]);
+  }, [torrentSearch, sessions, navigate]);
 
   return (
     <div className="flex flex-col h-full">
