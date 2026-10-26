@@ -110,7 +110,7 @@ function SessionForm({ session }: { session: Session }) {
       metadata: session.metadata,
       is_default: session.is_default,
     });
-  }, [session]);
+  }, [session, form]);
 
   return (
     <form

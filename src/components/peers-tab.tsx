@@ -7,7 +7,9 @@ type PeersTabProps = {
 };
 
 export default function PeersTab({ info_hash, session_id }: PeersTabProps) {
-  const mmdb = useInvoker("mmdb.lookup");
+  // mutateAsync is stable; the object useInvoker returns changes every render
+  const { mutateAsync: lookup } = useInvoker("mmdb.lookup");
+
   const [mmdbEnabled, setMmdbEnabled] = useState(false);
   const [mmdbEndpoints, setMmdbEndpoints] =
     useState<Result<"mmdb.lookup">["results"]>();
@@ -24,11 +26,10 @@ export default function PeersTab({ info_hash, session_id }: PeersTabProps) {
   );
 
   useEffect(() => {
-    mmdb
-      .mutateAsync({ values: ["127.0.0.1"] })
+    lookup({ values: ["127.0.0.1"] })
       .then((r) => setMmdbEnabled("results" in r && "127.0.0.1" in r.results))
-      .catch((_) => setMmdbEnabled(false));
-  }, []);
+      .catch(() => setMmdbEnabled(false));
+  }, [lookup]);
 
   useEffect(() => {
     if (!peers.data?.peers || !mmdbEnabled) {
@@ -37,10 +38,8 @@ export default function PeersTab({ info_hash, session_id }: PeersTabProps) {
 
     const endpoints = peers.data.peers.map((p) => p.remote_endpoint[0]);
 
-    mmdb
-      .mutateAsync({ values: endpoints })
-      .then((r) => setMmdbEndpoints(r.results));
-  }, [peers.data?.peers, mmdbEnabled]);
+    lookup({ values: endpoints }).then((r) => setMmdbEndpoints(r.results));
+  }, [lookup, peers.data?.peers, mmdbEnabled]);
 
   return (
     <table className="table table-sm">
