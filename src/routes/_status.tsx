@@ -29,7 +29,7 @@ function VersionedComponent() {
 
   const version = versions.data?.porla.version ?? null;
 
-  initializeFeatures(version);
+  initializeFeatures(version, versions.error);
 
   return <Outlet />;
 }
