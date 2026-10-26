@@ -1,10 +1,4 @@
-import {
-  type Session,
-  type SessionsGet,
-  type SessionsSettingsGet,
-  useInvoker,
-  useRPC,
-} from "@/api";
+import { type Session, useInvoker, useRPC } from "@/api";
 import { useModal } from "@/components/modal";
 import SessionSettingSetModal from "@/components/modals/session-setting-set";
 import { useAppForm } from "@/hooks/form";
@@ -14,14 +8,16 @@ import { ChevronDown, SlidersHorizontal } from "lucide-react";
 import { Suspense, useEffect, useState } from "react";
 import z from "zod";
 
-export const Route = createLazyFileRoute("/_status/settings/_layout/sessions/$id")({
+export const Route = createLazyFileRoute(
+  "/_status/settings/_layout/sessions/$id",
+)({
   component: RouteComponent,
 });
 
 function RouteComponent() {
   const { id } = Route.useParams();
 
-  const session = useRPC<SessionsGet>("sessions.get", { id: parseInt(id, 10) });
+  const session = useRPC("sessions.get", { id: parseInt(id, 10) });
 
   if (session.isLoading) {
     return (
@@ -176,7 +172,7 @@ function SessionForm({ session }: { session: Session }) {
 function SessionSettings({ session }: { session: Session }) {
   const modal = useModal();
 
-  const settings = useRPC<SessionsSettingsGet>("sessions.settings.get", {
+  const settings = useRPC("sessions.settings.get", {
     id: session.id,
   });
 

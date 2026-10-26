@@ -1,10 +1,4 @@
-import {
-  type TorrentsFilesList,
-  useRPC,
-  type InfoHash,
-  type TorrentsFilesPriorities,
-  type TorrentsFilesProgress,
-} from "@/api";
+import { useRPC, type InfoHash } from "@/api";
 import { filesize } from "filesize";
 import { Menu } from "lucide-react";
 import { useModal } from "./modal";
@@ -19,7 +13,7 @@ type FilesTabProps = {
 export default function FilesTab({ info_hash, session_id }: FilesTabProps) {
   const modal = useModal();
 
-  const files = useRPC<TorrentsFilesList>(
+  const files = useRPC(
     "torrents.files.list",
     {
       info_hash,
@@ -30,7 +24,7 @@ export default function FilesTab({ info_hash, session_id }: FilesTabProps) {
     },
   );
 
-  const priorities = useRPC<TorrentsFilesPriorities>(
+  const priorities = useRPC(
     "torrents.files.priorities",
     {
       info_hash,
@@ -41,7 +35,7 @@ export default function FilesTab({ info_hash, session_id }: FilesTabProps) {
     },
   );
 
-  const progress = useRPC<TorrentsFilesProgress>(
+  const progress = useRPC(
     "torrents.files.progress",
     {
       info_hash,

@@ -1,10 +1,4 @@
-import {
-  useRPC,
-  type ApiKeysList,
-  type PluginsList,
-  type PresetsList,
-  type SessionsList,
-} from "@/api";
+import { useRPC } from "@/api";
 import { feature } from "@/features";
 import { createFileRoute, Link, Outlet } from "@tanstack/react-router";
 import { ChevronLeft } from "lucide-react";
@@ -14,9 +8,9 @@ export const Route = createFileRoute("/_status/settings/_layout")({
 });
 
 function RouteComponent() {
-  const plugins = useRPC<PluginsList>("plugins.list");
-  const presets = useRPC<PresetsList>("presets.list");
-  const sessions = useRPC<SessionsList>("sessions.list");
+  const plugins = useRPC("plugins.list");
+  const presets = useRPC("presets.list");
+  const sessions = useRPC("sessions.list");
 
   return (
     <div className="w-6xl max-w-full mx-auto pt-9 px-6 pb-14">
@@ -82,7 +76,7 @@ function RouteComponent() {
 }
 
 function ApiKeyMenuItem() {
-  const keys = useRPC<ApiKeysList>("auth.keys.list");
+  const keys = useRPC("auth.keys.list");
 
   return (
     <li>

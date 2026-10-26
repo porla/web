@@ -1,9 +1,11 @@
-import { type PluginsGet, useInvoker, useRPC } from "@/api";
+import { useInvoker, useRPC } from "@/api";
 import { useAppForm } from "@/hooks/form";
 import { useQueryClient } from "@tanstack/react-query";
 import { createLazyFileRoute } from "@tanstack/react-router";
 
-export const Route = createLazyFileRoute("/_status/settings/_layout/plugins/$id")({
+export const Route = createLazyFileRoute(
+  "/_status/settings/_layout/plugins/$id",
+)({
   component: RouteComponent,
 });
 
@@ -20,7 +22,7 @@ function RouteComponent() {
   });
   const update = useInvoker("plugins.update");
 
-  const plugin = useRPC<PluginsGet>("plugins.get", {
+  const plugin = useRPC("plugins.get", {
     id: parseInt(id, 10),
   });
 
@@ -35,6 +37,7 @@ function RouteComponent() {
         id: parseInt(id, 10),
         path: value.path,
         config: value.config,
+        // @ts-expect-error WEB-22: plugins.update has no metadata
         metadata: value.metadata,
       });
     },

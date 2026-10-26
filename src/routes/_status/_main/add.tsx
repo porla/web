@@ -1,10 +1,4 @@
-import {
-  type PresetsList,
-  RpcError,
-  type SessionsList,
-  useInvoker,
-  useRPC,
-} from "@/api";
+import { RpcError, useInvoker, useRPC } from "@/api";
 import { useAppForm } from "@/hooks/form";
 import { readFile } from "@/utils";
 import { createFileRoute } from "@tanstack/react-router";
@@ -18,8 +12,8 @@ function RouteComponent() {
   const navigate = Route.useNavigate();
 
   const add = useInvoker("torrents.add");
-  const presets = useRPC<PresetsList>("presets.list");
-  const sessions = useRPC<SessionsList>("sessions.list");
+  const presets = useRPC("presets.list");
+  const sessions = useRPC("sessions.list");
   const [error, setError] = useState<string>();
 
   const form = useAppForm({
@@ -48,7 +42,6 @@ function RouteComponent() {
               ti: await readFile(file),
               download_limit: value.download_limit,
               upload_limit: value.upload_limit,
-              http_seeds: value.http_seeds,
               max_connections: value.max_connections,
               max_uploads: value.max_uploads,
               save_path: value.save_path,
@@ -63,7 +56,6 @@ function RouteComponent() {
             magnet_uri: value.magnet_link,
             download_limit: value.download_limit,
             upload_limit: value.upload_limit,
-            http_seeds: value.http_seeds,
             max_connections: value.max_connections,
             max_uploads: value.max_uploads,
             save_path: value.save_path,

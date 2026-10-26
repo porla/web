@@ -1,4 +1,4 @@
-import { type TorrentsGet, useRPC, type InfoHash, useInvoker } from "@/api";
+import { useRPC, type InfoHash, useInvoker } from "@/api";
 import type { ModalProps } from "@/components/modal";
 import { useAppForm } from "@/hooks/form";
 
@@ -14,7 +14,7 @@ export default function RemoveTorrentModal({
 }: RemoveTorrentModalProps & ModalProps<boolean>) {
   const remove = useInvoker("torrents.remove");
 
-  const torrent = useRPC<TorrentsGet>("torrents.get", {
+  const torrent = useRPC("torrents.get", {
     info_hash,
     session_id,
   });

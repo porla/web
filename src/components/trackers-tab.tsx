@@ -1,5 +1,4 @@
 import {
-  type TorrentsTrackersList,
   useRPC,
   type InfoHash,
   type AnnounceEntry,
@@ -71,14 +70,14 @@ function TrackerStatusItem(tr: AnnounceEntry) {
     );
   }
 
-  return <>Unknown</>
+  return <>Unknown</>;
 }
 
 export default function TrackersTab({
   info_hash,
   session_id,
 }: TrackersTabProps) {
-  const trackers = useRPC<TorrentsTrackersList>(
+  const trackers = useRPC(
     "torrents.trackers.list",
     {
       info_hash,

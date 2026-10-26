@@ -1,4 +1,4 @@
-import { type InfoHash, type TorrentsGet, useInvoker, useRPC } from "@/api";
+import { type InfoHash, useInvoker, useRPC } from "@/api";
 import type { ModalProps } from "@/components/modal";
 import { useAppForm } from "@/hooks/form";
 
@@ -14,7 +14,7 @@ export default function MoveTorrentModal({
 }: MoveTorrentModalProps & ModalProps<boolean>) {
   const move = useInvoker("torrents.move");
 
-  const torrent = useRPC<TorrentsGet>("torrents.get", {
+  const torrent = useRPC("torrents.get", {
     info_hash,
     session_id,
   });
@@ -24,6 +24,10 @@ export default function MoveTorrentModal({
       path: torrent.data?.torrent.save_path,
     },
     onSubmit: async ({ value }) => {
+      if (!value.path) {
+        return;
+      }
+
       await move.mutateAsync({
         info_hash,
         session_id,

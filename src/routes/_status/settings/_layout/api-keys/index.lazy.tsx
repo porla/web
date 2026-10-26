@@ -1,4 +1,4 @@
-import { useInvoker, useRPC, type ApiKeysList } from "@/api";
+import { useInvoker, useRPC } from "@/api";
 import { useQueryClient } from "@tanstack/react-query";
 import { createLazyFileRoute, Link } from "@tanstack/react-router";
 import { DateTime } from "luxon";
@@ -12,7 +12,7 @@ export const Route = createLazyFileRoute("/_status/settings/_layout/api-keys/")(
 function RouteComponent() {
   const queryClient = useQueryClient();
 
-  const keys = useRPC<ApiKeysList>("auth.keys.list");
+  const keys = useRPC("auth.keys.list");
   const remove = useInvoker("auth.keys.remove", {
     onSuccess: () =>
       queryClient.invalidateQueries({ queryKey: ["auth.keys.list"] }),

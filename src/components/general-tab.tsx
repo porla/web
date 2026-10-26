@@ -1,9 +1,4 @@
-import {
-  useRPC,
-  type InfoHash,
-  type TorrentsGet,
-  type TorrentsPiecesGet,
-} from "@/api";
+import { useRPC, type InfoHash } from "@/api";
 import PieceProgress from "./pieces-progress";
 
 type GeneralTabProps = {
@@ -12,7 +7,7 @@ type GeneralTabProps = {
 };
 
 export default function GeneralTab({ info_hash, session_id }: GeneralTabProps) {
-  const details = useRPC<TorrentsGet>(
+  const details = useRPC(
     "torrents.get",
     {
       info_hash,
@@ -23,7 +18,7 @@ export default function GeneralTab({ info_hash, session_id }: GeneralTabProps) {
     },
   );
 
-  const pieces = useRPC<TorrentsPiecesGet>(
+  const pieces = useRPC(
     "torrents.pieces.get",
     {
       info_hash,

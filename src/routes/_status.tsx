@@ -1,5 +1,5 @@
 import { createFileRoute, Navigate, Outlet } from "@tanstack/react-router";
-import { useRPC, type SysStatus, type SysVersions } from "@/api";
+import { useRPC } from "@/api";
 import { initializeFeatures } from "@/features";
 
 export const Route = createFileRoute("/_status")({
@@ -7,7 +7,7 @@ export const Route = createFileRoute("/_status")({
 });
 
 function RouteComponent() {
-  const status = useRPC<SysStatus>("sys.status");
+  const status = useRPC("sys.status");
 
   if (status.isLoading) {
     return <>Loading</>;
@@ -21,7 +21,7 @@ function RouteComponent() {
 }
 
 function VersionedComponent() {
-  const versions = useRPC<SysVersions>("sys.versions");
+  const versions = useRPC("sys.versions");
 
   if (versions.isLoading) {
     return <>loading versions</>;
