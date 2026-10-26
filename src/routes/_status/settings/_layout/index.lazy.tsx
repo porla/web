@@ -1,9 +1,9 @@
-import { useInvoker, useRPC } from "@/api";
+import { HttpError, useInvoker, useRPC } from "@/api";
 import { prefixPath } from "@/base";
 import { useQuery } from "@tanstack/react-query";
 import { createLazyFileRoute } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { parse } from "semver";
+import { gt, parse } from "semver";
 
 export const Route = createLazyFileRoute("/_status/settings/_layout/")({
   component: RouteComponent,
@@ -11,7 +11,7 @@ export const Route = createLazyFileRoute("/_status/settings/_layout/")({
 
 function RouteComponent() {
   const kv = useRPC("kv.get", {
-    keys: ["porla.webui.repo"],
+    keys: ["porla.webui.owner", "porla.webui.repository"],
   });
 
   const sessions = useRPC("sessions.list", null, {
@@ -22,23 +22,19 @@ function RouteComponent() {
 
   const [webVersion, setWebVersion] = useState<string | null>();
 
-  const repo = kv.data?.values["porla.webui.repo"] ?? "porla/web";
+  const owner = kv.data?.values["porla.webui.owner"];
+  const repository = kv.data?.values["porla.webui.repository"];
+  const repo = `${typeof owner === "string" ? owner : "porla"}/${typeof repository === "string" ? repository : "web"}`;
 
   const coreRelease = useQuery({
     queryKey: ["gh.core.release"],
-    queryFn: () =>
-      fetch(`https://api.github.com/repos/porla/porla/releases/latest`).then(
-        (r) => r.json(),
-      ),
+    queryFn: () => latestRelease("porla/porla"),
     enabled: false,
   });
 
   const webRelease = useQuery({
     queryKey: ["gh.webui.release", repo],
-    queryFn: () =>
-      fetch(`https://api.github.com/repos/${repo}/releases/latest`).then((r) =>
-        r.json(),
-      ),
+    queryFn: () => latestRelease(repo),
     enabled: false,
   });
 
@@ -165,6 +161,25 @@ function RouteComponent() {
   );
 }
 
+// GitHub's latest release. A non-2xx reply (e.g. the 403 rate limit) throws an
+// HttpError, so the global error handler shows it (4xx without retrying)
+// instead of the badge silently not appearing.
+async function latestRelease(repo: string): Promise<{ tag_name: string }> {
+  const res = await fetch(
+    `https://api.github.com/repos/${repo}/releases/latest`,
+  );
+  const body = await res.json().catch(() => null);
+
+  if (!res.ok) {
+    throw new HttpError(
+      res.status,
+      `Checking ${repo} for updates failed: ${body?.message ?? res.statusText}`,
+    );
+  }
+
+  return body;
+}
+
 type VersionBadgeProps = {
   current: string;
   latest: string;
@@ -178,7 +193,7 @@ function VersionBadge({ current, latest }: VersionBadgeProps) {
     return <></>;
   }
 
-  if (parsed_latest > parsed_current) {
+  if (gt(parsed_latest, parsed_current)) {
     return (
       <span className="badge badge-xs badge-warning">
         {parsed_latest.version} available
@@ -204,20 +219,17 @@ function WebUIVersionAction({ current, latest }: WebUIVersionActionProps) {
     return <></>;
   }
 
-  if (parsed_latest > parsed_current) {
+  if (gt(parsed_latest, parsed_current)) {
     return (
       <button
         className="btn btn-xs btn-info"
         disabled={install.isPending}
-        onClick={async () => {
-          install.mutateAsync({
-            version: latest,
-          });
-
-          // TODO: hacky since the key-update signal is posted to the io thread, so we
-          // need some space for the UI zip to reload
-          setTimeout(() => location.reload(), 1000);
-        }}
+        onClick={() =>
+          install.mutate(
+            { version: latest },
+            { onSuccess: () => location.reload() },
+          )
+        }
       >
         Install {parsed_latest.version}
       </button>
