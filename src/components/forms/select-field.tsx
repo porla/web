@@ -1,5 +1,6 @@
-import { useSelector } from "@tanstack/react-form";
 import { useFieldContext } from "@/hooks/form-context.tsx";
+import { useId } from "react";
+import FieldErrors from "./field-errors";
 
 type SelectItem = {
   value: number;
@@ -15,13 +16,16 @@ export default function SelectField({
 }) {
   const field = useFieldContext<number | null>();
 
-  const errors = useSelector(field.store, (state) => state.meta.errors);
+  const id = useId();
 
   return (
     <div className="fieldset">
-      <label className="label">{label}</label>
+      <label className="label" htmlFor={id}>
+        {label}
+      </label>
 
       <select
+        id={id}
         className="select"
         onBlur={field.handleBlur}
         onChange={(e) => {
@@ -29,7 +33,7 @@ export default function SelectField({
             e.target.value === "" ? null : parseInt(e.target.value),
           );
         }}
-        value={field.state.value ?? undefined}
+        value={field.state.value ?? ""}
       >
         <option value={""}>None</option>
         {items.map((item) => (
@@ -39,11 +43,7 @@ export default function SelectField({
         ))}
       </select>
 
-      {errors.map((error: string) => (
-        <div key={error} style={{ color: "red" }}>
-          {error}
-        </div>
-      ))}
+      <FieldErrors />
     </div>
   );
 }
