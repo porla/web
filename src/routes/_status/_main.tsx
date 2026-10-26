@@ -1,6 +1,11 @@
 import { CatchBoundary, createFileRoute, Outlet } from "@tanstack/react-router";
 import Sidebar from "@/components/sidebar";
-import { feature, featureRange, getCurrentVersion } from "@/features";
+import {
+  feature,
+  featureRange,
+  getCurrentVersion,
+  getVersionError,
+} from "@/features";
 import { MessageCircleWarning } from "lucide-react";
 import type { ReactNode } from "react";
 
@@ -10,6 +15,7 @@ export const Route = createFileRoute("/_status/_main")({
 
 function RouteComponent() {
   const version = getCurrentVersion();
+  const versionError = getVersionError();
 
   const boundary = (key: string, children: ReactNode) => (
     <CatchBoundary
@@ -24,7 +30,18 @@ function RouteComponent() {
 
   return (
     <div className=" h-full flex flex-col">
-      {!feature("base") && (
+      {versionError && (
+        <div className="alert alert-error alert-soft rounded-none">
+          <MessageCircleWarning />
+          <span>
+            Couldn't read the Porla version
+            {versionError.message ? ` (${versionError.message})` : ""}, so
+            features that depend on it are turned off.
+          </span>
+        </div>
+      )}
+
+      {!versionError && !feature("base") && (
         <div className="alert alert-warning alert-soft rounded-none">
           <MessageCircleWarning />
           <span>
