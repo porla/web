@@ -1,16 +1,20 @@
-import { useSelector } from "@tanstack/react-form";
 import { useFieldContext } from "@/hooks/form-context.tsx";
+import { useId } from "react";
+import FieldErrors from "./field-errors";
 
-export default function TextField({ label }: { label: string }) {
+export default function ColorField({ label }: { label: string }) {
   const field = useFieldContext<string>();
 
-  const errors = useSelector(field.store, (state) => state.meta.errors);
+  const id = useId();
 
   return (
     <div className="fieldset">
-      <label className="label">{label}</label>
+      <label className="label" htmlFor={id}>
+        {label}
+      </label>
 
       <input
+        id={id}
         type={"color"}
         className="size-8 rounded-md cursor-pointer outline-0 border-0"
         value={field.state.value ?? ""}
@@ -18,11 +22,7 @@ export default function TextField({ label }: { label: string }) {
         onBlur={field.handleBlur}
       />
 
-      {errors.map((error: string) => (
-        <div key={error} style={{ color: "red" }}>
-          {error}
-        </div>
-      ))}
+      <FieldErrors />
     </div>
   );
 }

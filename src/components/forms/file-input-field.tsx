@@ -1,16 +1,20 @@
-import { useSelector } from "@tanstack/react-form";
 import { useFieldContext } from "@/hooks/form-context.tsx";
+import { useId } from "react";
+import FieldErrors from "./field-errors";
 
 export default function FileInputField({ label }: { label: string }) {
   const field = useFieldContext<FileList | null>();
 
-  const errors = useSelector(field.store, (state) => state.meta.errors);
+  const id = useId();
 
   return (
     <div className="fieldset">
-      <label className="label">{label}</label>
+      <label className="label" htmlFor={id}>
+        {label}
+      </label>
 
       <input
+        id={id}
         type="file"
         className="file-input"
         onBlur={field.handleBlur}
@@ -22,11 +26,7 @@ export default function FileInputField({ label }: { label: string }) {
         multiple
       />
 
-      {errors.map((error: string) => (
-        <div key={error} style={{ color: "red" }}>
-          {error}
-        </div>
-      ))}
+      <FieldErrors />
     </div>
   );
 }

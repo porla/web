@@ -1,6 +1,6 @@
-import { useSelector } from "@tanstack/react-form";
 import { useFieldContext } from "@/hooks/form-context.tsx";
-import type { HTMLInputTypeAttribute } from "react";
+import { useId, type HTMLInputTypeAttribute } from "react";
+import FieldErrors from "./field-errors";
 
 export default function TextField({
   label,
@@ -13,14 +13,16 @@ export default function TextField({
 }) {
   const field = useFieldContext<string>();
 
-  const errors = useSelector(field.store, (state) => state.meta.errors);
-  const isTouched = useSelector(field.store, (state) => state.meta.isTouched);
+  const id = useId();
 
   return (
     <div className="fieldset">
-      <label className="label">{label}</label>
+      <label className="label" htmlFor={id}>
+        {label}
+      </label>
 
       <input
+        id={id}
         type={type ?? "text"}
         className="input"
         value={field.state.value ?? ""}
@@ -30,12 +32,7 @@ export default function TextField({
 
       {description && <div className="text-base-content">{description}</div>}
 
-      {isTouched &&
-        errors.map((error, i) => (
-          <div key={i} className="text-red-400">
-            {typeof error === "string" ? error : error?.message}
-          </div>
-        ))}
+      <FieldErrors />
     </div>
   );
 }

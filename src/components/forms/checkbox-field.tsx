@@ -1,16 +1,20 @@
-import { useSelector } from "@tanstack/react-form";
 import { useFieldContext } from "@/hooks/form-context.tsx";
+import { useId } from "react";
+import FieldErrors from "./field-errors";
 
 export default function CheckboxField({ label }: { label: string }) {
   const field = useFieldContext<boolean>();
 
-  const errors = useSelector(field.store, (state) => state.meta.errors);
+  const id = useId();
 
   return (
     <div className="fieldset">
-      <label className="label">{label}</label>
+      <label className="label" htmlFor={id}>
+        {label}
+      </label>
 
       <input
+        id={id}
         type={"checkbox"}
         className="checkbox"
         checked={field.state.value}
@@ -18,11 +22,7 @@ export default function CheckboxField({ label }: { label: string }) {
         onBlur={field.handleBlur}
       />
 
-      {errors.map((error: string) => (
-        <div key={error} style={{ color: "red" }}>
-          {error}
-        </div>
-      ))}
+      <FieldErrors />
     </div>
   );
 }
