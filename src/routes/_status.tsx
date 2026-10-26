@@ -21,7 +21,7 @@ function RouteComponent() {
 }
 
 function VersionedComponent() {
-  const versions = useRPC("sys.versions");
+  const versions = useRPC("sys.versions", null, { meta: { silent: true } });
 
   if (versions.isLoading) {
     return <>loading versions</>;

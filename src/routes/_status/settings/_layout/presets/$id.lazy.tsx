@@ -30,7 +30,11 @@ const OPTIONS = ["on", "off", "unchanged"] as const;
 function RouteComponent() {
   const { id } = Route.useParams();
 
-  const preset = useRPC("presets.get", { id: parseInt(id, 10) });
+  const preset = useRPC(
+    "presets.get",
+    { id: parseInt(id, 10) },
+    { meta: { silent: true } },
+  );
 
   if (preset.isLoading) {
     return <>loading</>;

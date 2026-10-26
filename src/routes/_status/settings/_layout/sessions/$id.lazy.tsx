@@ -17,7 +17,11 @@ export const Route = createLazyFileRoute(
 function RouteComponent() {
   const { id } = Route.useParams();
 
-  const session = useRPC("sessions.get", { id: parseInt(id, 10) });
+  const session = useRPC(
+    "sessions.get",
+    { id: parseInt(id, 10) },
+    { meta: { silent: true } },
+  );
 
   if (session.isLoading) {
     return (
