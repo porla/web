@@ -11,7 +11,7 @@ import { AuthError } from "@/api";
 import { ModalProvider } from "./components/modal";
 
 // Create a new router instance
-const router = createRouter({ routeTree });
+const router = createRouter({ routeTree, basepath: window.porla.base_path });
 
 // Register the router instance for type safety
 declare module "@tanstack/react-router" {

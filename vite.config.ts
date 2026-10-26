@@ -19,6 +19,13 @@ export default defineConfig({
       "@": path.resolve(__dirname, "./src"),
     },
   },
+  experimental: {
+    // porla serves the UI under --http-base-path; make the preload URLs that
+    // Vite writes into JS relative so they follow wherever the chunk was loaded.
+    renderBuiltUrl(_filename, { hostType }) {
+      return hostType === "js" ? { relative: true } : undefined;
+    },
+  },
   server: {
     proxy: {
       "/api": process.env.PORLA_HOST ?? "http://localhost:1337",
