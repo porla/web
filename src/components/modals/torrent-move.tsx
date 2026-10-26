@@ -1,18 +1,28 @@
 import { type InfoHash, useInvoker, useRPC } from "@/api";
 import type { ModalProps } from "@/components/modal";
 import { useAppForm } from "@/hooks/form";
+import z from "zod";
 
 type MoveTorrentModalProps = {
   info_hash: InfoHash;
   session_id: number;
 };
 
+// Save paths must be absolute
+const moveSchema = z.object({
+  path: z
+    .string()
+    .trim()
+    .min(1, { error: "Enter a path", abort: true })
+    .regex(/^(\/|[A-Za-z]:[\\/])/, "Use an absolute path, like /downloads"),
+});
+
 export default function MoveTorrentModal({
   info_hash,
   session_id,
   close,
 }: MoveTorrentModalProps & ModalProps<boolean>) {
-  const move = useInvoker("torrents.move");
+  const move = useInvoker("torrents.move", { meta: { silent: true } });
 
   const torrent = useRPC("torrents.get", {
     info_hash,
@@ -21,17 +31,16 @@ export default function MoveTorrentModal({
 
   const form = useAppForm({
     defaultValues: {
-      path: torrent.data?.torrent.save_path,
+      path: torrent.data?.torrent.save_path ?? "",
+    },
+    validators: {
+      onChange: moveSchema,
     },
     onSubmit: async ({ value }) => {
-      if (!value.path) {
-        return;
-      }
-
       await move.mutateAsync({
         info_hash,
         session_id,
-        path: value.path,
+        path: moveSchema.parse(value).path,
       });
 
       close(true);
@@ -43,29 +52,18 @@ export default function MoveTorrentModal({
   }
 
   return (
-    <form
-      onSubmit={(e) => {
-        e.preventDefault();
-        e.stopPropagation();
-        form.handleSubmit();
-      }}
-    >
-      <h3 className="font-bold text-lg">Move torrent</h3>
+    <form.AppForm>
+      <form.Form>
+        <h3 className="font-bold text-lg">Move torrent</h3>
 
-      <form.AppField
-        name="path"
-        children={(field) => <field.TextField label="Path" />}
-      />
+        <form.AppField
+          name="path"
+          children={(field) => <field.TextField label="Path" />}
+        />
 
-      <div className="modal-action">
-        <button type="button" className="btn" onClick={() => close(false)}>
-          Cancel
-        </button>
-
-        <form.AppForm>
-          <form.SubmitButton label="Move" />
-        </form.AppForm>
-      </div>
-    </form>
+        <form.SaveError error={move.error} />
+        <form.ModalActions submitLabel="Move" onCancel={() => close(false)} />
+      </form.Form>
+    </form.AppForm>
   );
 }

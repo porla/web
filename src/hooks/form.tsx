@@ -1,5 +1,5 @@
 import { createFormHook } from "@tanstack/react-form";
-import { lazy } from "react";
+import { lazy, type ReactNode } from "react";
 import { fieldContext, formContext, useFormContext } from "./form-context";
 
 const FileInputField = lazy(
@@ -32,6 +32,54 @@ function SubmitButton({ label }: { label: string }) {
   );
 }
 
+// The <form> element: submits through TanStack Form. handleSubmit re-throws a
+// failed save; the error is shown from the mutation (<form.SaveError>), so
+// it's caught here.
+function Form({ children }: { children: ReactNode }) {
+  const form = useFormContext();
+  return (
+    <form
+      onSubmit={(e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        form.handleSubmit().catch(() => {});
+      }}
+    >
+      {children}
+    </form>
+  );
+}
+
+function SaveError({ error }: { error: Error | null }) {
+  if (!error) {
+    return null;
+  }
+
+  return (
+    <div role="alert" className="alert alert-error alert-soft">
+      {error.message || "Request failed"}
+    </div>
+  );
+}
+
+function ModalActions({
+  submitLabel,
+  onCancel,
+}: {
+  submitLabel: string;
+  onCancel: () => void;
+}) {
+  return (
+    <div className="modal-action">
+      <button type="button" className="btn" onClick={onCancel}>
+        Cancel
+      </button>
+
+      <SubmitButton label={submitLabel} />
+    </div>
+  );
+}
+
 export const { useAppForm, withForm, withFieldGroup } = createFormHook({
   fieldComponents: {
     CheckboxField,
@@ -43,6 +91,9 @@ export const { useAppForm, withForm, withFieldGroup } = createFormHook({
     TextField,
   },
   formComponents: {
+    Form,
+    ModalActions,
+    SaveError,
     SubmitButton,
   },
   fieldContext,

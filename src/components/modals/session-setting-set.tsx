@@ -2,11 +2,30 @@ import { useInvoker } from "@/api";
 import type { ModalProps } from "@/components/modal";
 import { useAppForm } from "@/hooks/form";
 import { useQueryClient } from "@tanstack/react-query";
+import z from "zod";
 
 type SessionSettingSetModalProps = {
   session_id: number;
   setting_name: string;
   setting_value: string | number | boolean;
+};
+
+// libtorrent settings are bools, ints or strings. The backend skips a value of
+// the wrong type and still reports success, so it's checked here.
+const settingSchemas: Record<
+  "boolean" | "number" | "string",
+  z.ZodType<
+    { setting_value: string | number | boolean },
+    { setting_value: string | number | boolean | null }
+  >
+> = {
+  boolean: z.object({ setting_value: z.boolean() }),
+  number: z.object({
+    setting_value: z
+      .number({ error: "Enter a whole number" })
+      .int("Enter a whole number"),
+  }),
+  string: z.object({ setting_value: z.string() }),
 };
 
 export default function SessionSettingSetModal({
@@ -18,21 +37,27 @@ export default function SessionSettingSetModal({
   const queryClient = useQueryClient();
 
   const setSetting = useInvoker("sessions.settings.set", {
+    meta: { silent: true },
     onSuccess: () =>
       queryClient.invalidateQueries({ queryKey: ["sessions.settings.get"] }),
   });
 
+  // From the prop, not the live value: clearing a number gives null, which
+  // must not change which input is shown.
+  const kind = typeof setting_value as keyof typeof settingSchemas;
+  const schema = settingSchemas[kind];
+
   const form = useAppForm({
     defaultValues: {
-      setting_value,
+      setting_value: setting_value as string | number | boolean | null,
+    },
+    validators: {
+      onChange: schema,
     },
     onSubmit: async ({ value }) => {
-      const s: Record<string, string | number | boolean> = {};
-      s[setting_name] = value.setting_value;
-
       await setSetting.mutateAsync({
         id: session_id,
-        settings: s,
+        settings: { [setting_name]: schema.parse(value).setting_value },
       });
 
       close(true);
@@ -40,43 +65,28 @@ export default function SessionSettingSetModal({
   });
 
   return (
-    <form
-      onSubmit={(e) => {
-        e.preventDefault();
-        e.stopPropagation();
-        form.handleSubmit();
-      }}
-    >
-      <h3 className="font-bold text-lg">Update session setting</h3>
+    <form.AppForm>
+      <form.Form>
+        <h3 className="font-bold text-lg">Update session setting</h3>
 
-      <form.AppField
-        name="setting_value"
-        children={(field) => (
-          <>
-            {typeof field.state.value === "boolean" && (
-              <field.CheckboxField label={setting_name} />
-            )}
+        <form.AppField
+          name="setting_value"
+          children={(field) => (
+            <>
+              {kind === "boolean" && (
+                <field.CheckboxField label={setting_name} />
+              )}
 
-            {typeof field.state.value === "number" && (
-              <field.NumberField label={setting_name} />
-            )}
+              {kind === "number" && <field.NumberField label={setting_name} />}
 
-            {typeof field.state.value === "string" && (
-              <field.TextField label={setting_name} />
-            )}
-          </>
-        )}
-      />
+              {kind === "string" && <field.TextField label={setting_name} />}
+            </>
+          )}
+        />
 
-      <div className="modal-action">
-        <button type="button" className="btn" onClick={() => close(false)}>
-          Cancel
-        </button>
-
-        <form.AppForm>
-          <form.SubmitButton label="Update" />
-        </form.AppForm>
-      </div>
-    </form>
+        <form.SaveError error={setSetting.error} />
+        <form.ModalActions submitLabel="Update" onCancel={() => close(false)} />
+      </form.Form>
+    </form.AppForm>
   );
 }
