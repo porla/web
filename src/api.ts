@@ -7,6 +7,12 @@ import {
 
 import { prefixPath } from "@/base";
 
+// One string per torrent for React keys and DOM ids: the v1 hash, or the v2
+// hash for v2-only torrents (where the v1 half is null).
+export function infoHashKey(ih: InfoHash) {
+  return typeof ih === "string" ? ih : (ih[0] ?? ih[1] ?? "");
+}
+
 export function isBitSet(num: number, bit: number) {
   return (num & (1 << bit)) !== 0;
 }
