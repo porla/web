@@ -4,7 +4,7 @@ import SessionSettingSetModal from "@/components/modals/session-setting-set";
 import { useAppForm } from "@/hooks/form";
 import { useQueryClient } from "@tanstack/react-query";
 import { createLazyFileRoute } from "@tanstack/react-router";
-import { ChevronDown, SlidersHorizontal } from "lucide-react";
+import { ChevronDown, Lock, SlidersHorizontal } from "lucide-react";
 import { Suspense, useEffect, useState } from "react";
 import z from "zod";
 
@@ -13,6 +13,13 @@ export const Route = createLazyFileRoute(
 )({
   component: RouteComponent,
 });
+
+// settings that cannot be changed
+const STATIC_SETTINGS = new Set([
+  "alert_mask",
+  "peer_fingerprint",
+  "user_agent",
+]);
 
 function RouteComponent() {
   const { id } = Route.useParams();
@@ -202,6 +209,12 @@ function SessionSettings({ session }: { session: Session }) {
         </span>
       </summary>
       <div className="collapse-content text-sm">
+        {!session.state && (
+          <div role="alert" className="alert alert-info alert-soft">
+            This session isn't loaded, so its settings can't be changed.
+          </div>
+        )}
+
         <table className="table">
           <thead>
             <tr>
@@ -219,19 +232,28 @@ function SessionSettings({ session }: { session: Session }) {
               <tr key={k}>
                 <td>{k}</td>
                 <td>{settings.data.settings[k].toString()}</td>
-                <td>
-                  <button
-                    className="btn btn-xs btn-neutral btn-square"
-                    onClick={async () => {
-                      await modal.show(SessionSettingSetModal, {
-                        session_id: session.id,
-                        setting_name: k,
-                        setting_value: settings.data.settings[k],
-                      });
-                    }}
-                  >
-                    <SlidersHorizontal className="size-4 text-white" />
-                  </button>
+                <td className="flex justify-end">
+                  {STATIC_SETTINGS.has(k) ? (
+                    <span className="btn btn-disabled btn-xs btn-neutral btn-square">
+                      <Lock className="size-4 text-white" />
+                    </span>
+                  ) : (
+                    session.state && (
+                      <button
+                        className="btn btn-xs btn-neutral btn-square"
+                        aria-label={`Edit ${k}`}
+                        onClick={async () => {
+                          await modal.show(SessionSettingSetModal, {
+                            session_id: session.id,
+                            setting_name: k,
+                            setting_value: settings.data.settings[k],
+                          });
+                        }}
+                      >
+                        <SlidersHorizontal className="size-4 text-white" />
+                      </button>
+                    )
+                  )}
                 </td>
               </tr>
             ))}
