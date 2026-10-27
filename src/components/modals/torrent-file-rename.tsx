@@ -51,7 +51,7 @@ export default function RenameTorrentFileModal({
 
         <form.AppField
           name="file_path"
-          children={(field) => <field.TextField label="File name" />}
+          children={(field) => <field.TextField label="File name" autoFocus />}
         />
 
         <form.SaveError error={rename.error} />

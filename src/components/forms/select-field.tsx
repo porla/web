@@ -8,9 +8,11 @@ type SelectItem = {
 };
 
 export default function SelectField({
+  autoFocus,
   label,
   items,
 }: {
+  autoFocus?: boolean;
   label: string;
   items: SelectItem[];
 }) {
@@ -25,6 +27,7 @@ export default function SelectField({
       </label>
 
       <select
+        autoFocus={autoFocus}
         id={id}
         className="select"
         onBlur={field.handleBlur}

@@ -2,7 +2,13 @@ import { useFieldContext } from "@/hooks/form-context.tsx";
 import { useId } from "react";
 import FieldErrors from "./field-errors";
 
-export default function CheckboxField({ label }: { label: string }) {
+export default function CheckboxField({
+  autoFocus,
+  label,
+}: {
+  autoFocus?: boolean;
+  label: string;
+}) {
   const field = useFieldContext<boolean>();
 
   const id = useId();
@@ -15,6 +21,7 @@ export default function CheckboxField({ label }: { label: string }) {
 
       <input
         id={id}
+        autoFocus={autoFocus}
         type={"checkbox"}
         className="checkbox"
         checked={field.state.value}

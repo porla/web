@@ -2,7 +2,13 @@ import { useFieldContext } from "@/hooks/form-context.tsx";
 import { useId } from "react";
 import FieldErrors from "./field-errors";
 
-export default function NumberField({ label }: { label: string }) {
+export default function NumberField({
+  autoFocus,
+  label,
+}: {
+  autoFocus?: boolean;
+  label: string;
+}) {
   const field = useFieldContext<number | null>();
 
   const id = useId();
@@ -15,6 +21,7 @@ export default function NumberField({ label }: { label: string }) {
 
       <input
         id={id}
+        autoFocus={autoFocus}
         type="number"
         className="input"
         value={field.state.value ?? ""}

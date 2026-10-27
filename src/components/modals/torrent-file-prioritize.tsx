@@ -66,7 +66,9 @@ export default function PrioritizeTorrentFileModal({
 
         <form.AppField
           name="file_priority"
-          children={(field) => <field.NumberField label="Priority (0-7)" />}
+          children={(field) => (
+            <field.NumberField label="Priority (0-7)" autoFocus />
+          )}
         />
 
         <form.SaveError error={prioritize.error} />

@@ -74,12 +74,16 @@ export default function SessionSettingSetModal({
           children={(field) => (
             <>
               {kind === "boolean" && (
-                <field.CheckboxField label={setting_name} />
+                <field.CheckboxField label={setting_name} autoFocus />
               )}
 
-              {kind === "number" && <field.NumberField label={setting_name} />}
+              {kind === "number" && (
+                <field.NumberField label={setting_name} autoFocus />
+              )}
 
-              {kind === "string" && <field.TextField label={setting_name} />}
+              {kind === "string" && (
+                <field.TextField label={setting_name} autoFocus />
+              )}
             </>
           )}
         />
