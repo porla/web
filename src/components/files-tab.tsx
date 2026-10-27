@@ -1,9 +1,14 @@
-import { useRPC, type InfoHash } from "@/api";
+import { RpcError, useRPC, type InfoHash } from "@/api";
 import { filesize } from "filesize";
 import { Menu } from "lucide-react";
 import { useModal } from "./modal";
 import RenameTorrentFileModal from "./modals/torrent-file-rename";
 import PrioritizeTorrentFileModal from "./modals/torrent-file-prioritize";
+
+// file_progress reports bytes, not a fraction.
+function percent(done: number, size: number) {
+  return size > 0 ? `${((done / size) * 100).toFixed(1)}%` : "100.0%";
+}
 
 type FilesTabProps = {
   info_hash: InfoHash;
@@ -20,7 +25,11 @@ export default function FilesTab({ info_hash, session_id }: FilesTabProps) {
       session_id,
     },
     {
-      refetchInterval: 2000,
+      // The list only changes when metadata arrives or a file is renamed (which
+      // refetches it), so it's polled only while it fails, e.g. on a magnet
+      // without metadata yet. That error is shown below, not as a toast.
+      refetchInterval: (query) => (query.state.error ? 2000 : false),
+      meta: { silent: true },
     },
   );
 
@@ -46,23 +55,49 @@ export default function FilesTab({ info_hash, session_id }: FilesTabProps) {
     },
   );
 
+  // libtorrent's alignment padding, not files anyone downloads
+  const visibleFiles = files.data?.files.filter(
+    (f) => !f.flags.includes("pad_file"),
+  );
+
+  if (files.error) {
+    return (
+      <p className="p-3 text-sm opacity-70">
+        {files.error instanceof RpcError && files.error.code === -4
+          ? "Torrent has no metadata. The file list appears once it has been downloaded."
+          : files.error.message}
+      </p>
+    );
+  }
+
   return (
     <table className="table table-sm">
+      <thead>
+        <tr>
+          <th>Path</th>
+          <th>Size</th>
+          <th>Symlink</th>
+          <th>Flags</th>
+          <th>Progress</th>
+          <th>Priority</th>
+          <th></th>
+        </tr>
+      </thead>
       <tbody>
-        {files.data?.files.map((f) => (
-          <tr key={`file_${f.path}`}>
+        {visibleFiles?.map((f) => (
+          <tr key={`file_${f.index}`}>
             <td>{f.path}</td>
             <td>{filesize(f.size)}</td>
             <td>{f.symlink ? "symlink" : "-"}</td>
             <td>{f.flags.join(",")}</td>
             <td>
-              {progress.data && progress.data.progress.length >= f.index && (
-                <>{progress.data.progress[f.index]}</>
+              {progress.data && progress.data.progress.length > f.index && (
+                <>{percent(progress.data.progress[f.index], f.size)}</>
               )}
             </td>
             <td>
               {priorities.data &&
-                priorities.data.priorities.length >= f.index && (
+                priorities.data.priorities.length > f.index && (
                   <>{priorities.data.priorities[f.index]}</>
                 )}
             </td>
@@ -98,7 +133,7 @@ export default function FilesTab({ info_hash, session_id }: FilesTabProps) {
                   </button>
                 </li>
                 {priorities.data &&
-                  priorities.data.priorities.length >= f.index && (
+                  priorities.data.priorities.length > f.index && (
                     <li>
                       <button
                         onClick={async () => {
