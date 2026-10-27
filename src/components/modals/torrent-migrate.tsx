@@ -5,7 +5,7 @@ import z from "zod";
 
 type MigrateTorrentModalProps = {
   info_hash: InfoHash;
-  session_id: number;
+  session_id?: number;
 };
 
 const migrateSchema = z.object({
@@ -50,6 +50,29 @@ export default function MigrateTorrentModal({
     return <>Not found</>;
   }
 
+  // No session_id means the default session (Sessions::Resolve). The backend
+  // refuses the torrent's own session and sessions that aren't loaded.
+  const sourceSessionId =
+    session_id ?? sessions.data.sessions.find((s) => s.is_default)?.id;
+  const targets = sessions.data.sessions.filter(
+    (s) => s.state !== null && s.id !== sourceSessionId,
+  );
+
+  if (targets.length === 0) {
+    return (
+      <div>
+        <h3 className="font-bold text-lg">Migrate torrent</h3>
+        <p>{torrent.data.torrent.name}</p>
+        <p className="mt-3">There is no other loaded session to migrate to.</p>
+        <div className="modal-action">
+          <button type="button" className="btn" onClick={() => close(false)}>
+            Close
+          </button>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <form.AppForm>
       <form.Form>
@@ -61,16 +84,7 @@ export default function MigrateTorrentModal({
           children={(field) => (
             <field.SelectField
               label="Target session"
-              items={
-                sessions.data.sessions
-                  .filter((s) => s.id !== session_id)
-                  .map((s) => {
-                    return {
-                      value: s.id,
-                      label: s.name,
-                    };
-                  }) ?? []
-              }
+              items={targets.map((s) => ({ value: s.id, label: s.name }))}
               autoFocus
             />
           )}
