@@ -308,7 +308,7 @@ function TorrentsTable({ torrents }: TorrentsTableProps) {
                     onClick={async () => {
                       await modal.show(MigrateTorrentModal, {
                         info_hash: t.info_hash,
-                        session_id: search.session_id!,
+                        session_id: search.session_id,
                       });
                     }}
                   >
