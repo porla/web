@@ -89,7 +89,9 @@ export default function TorrentPropertiesModal({
 
         <form.AppField
           name="download_limit"
-          children={(field) => <field.NumberField label="Download limit" />}
+          children={(field) => (
+            <field.NumberField label="Download limit" autoFocus />
+          )}
         />
 
         <form.AppField

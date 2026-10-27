@@ -1,5 +1,6 @@
-import { createFormHook } from "@tanstack/react-form";
+import { createFormHook, useSelector } from "@tanstack/react-form";
 import { lazy, type ReactNode } from "react";
+import { useModalDismissible } from "@/components/modal";
 import { fieldContext, formContext, useFormContext } from "./form-context";
 
 const FileInputField = lazy(
@@ -69,9 +70,20 @@ function ModalActions({
   submitLabel: string;
   onCancel: () => void;
 }) {
+  const form = useFormContext();
+  const isSubmitting = useSelector(form.store, (state) => state.isSubmitting);
+
+  // Closing while the save runs would lose its result and any error.
+  useModalDismissible(!isSubmitting);
+
   return (
     <div className="modal-action">
-      <button type="button" className="btn" onClick={onCancel}>
+      <button
+        type="button"
+        className="btn"
+        disabled={isSubmitting}
+        onClick={onCancel}
+      >
         Cancel
       </button>
 

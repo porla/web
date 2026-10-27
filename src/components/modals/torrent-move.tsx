@@ -58,7 +58,7 @@ export default function MoveTorrentModal({
 
         <form.AppField
           name="path"
-          children={(field) => <field.TextField label="Path" />}
+          children={(field) => <field.TextField label="Path" autoFocus />}
         />
 
         <form.SaveError error={move.error} />

@@ -3,12 +3,14 @@ import { useId, type HTMLInputTypeAttribute } from "react";
 import FieldErrors from "./field-errors";
 
 export default function TextField({
-  label,
+  autoFocus,
   description,
+  label,
   type,
 }: {
-  label: string;
+  autoFocus?: boolean;
   description?: string;
+  label: string;
   type?: HTMLInputTypeAttribute;
 }) {
   const field = useFieldContext<string>();
@@ -22,6 +24,7 @@ export default function TextField({
       </label>
 
       <input
+        autoFocus={autoFocus}
         id={id}
         type={type ?? "text"}
         className="input"
