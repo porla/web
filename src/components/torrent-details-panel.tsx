@@ -1,10 +1,13 @@
-import { type InfoHash } from "@/api";
-import { Link, useSearch } from "@tanstack/react-router";
+import { RpcError, useRPC, type InfoHash } from "@/api";
+import { Link, useNavigate, useSearch } from "@tanstack/react-router";
 import { X } from "lucide-react";
 import GeneralTab from "./general-tab";
 import FilesTab from "./files-tab";
 import PeersTab from "./peers-tab";
 import TrackersTab from "./trackers-tab";
+import { useEffect } from "react";
+import { toast } from "@/toast";
+import clsx from "clsx";
 
 type TorrentDetailsPanelProps = {
   info_hash: InfoHash;
@@ -34,7 +37,42 @@ export default function TorrentDetailsPanel({
   info_hash,
   session_id,
 }: TorrentDetailsPanelProps) {
-  const torrentSearch = useSearch({ from: "/_status/_main/", shouldThrow: false });
+  const torrentSearch = useSearch({
+    from: "/_status/_main/",
+    shouldThrow: false,
+  });
+
+  const navigate = useNavigate();
+  const selectedTab = torrentSearch?.selected_tab_id ?? "general";
+
+  const torrent = useRPC(
+    "torrents.get",
+    { info_hash, session_id },
+    { refetchInterval: 2000, meta: { silent: true } },
+  );
+
+  // Removed or migrated elsewhere, or its session was removed or unloaded:
+  // close the panel, saying why, instead of polling and showing stale data.
+  const gone =
+    torrent.error instanceof RpcError &&
+    [-1, -2, -3].includes(torrent.error.code)
+      ? torrent.error.message
+      : null;
+
+  useEffect(() => {
+    if (gone) {
+      toast(gone);
+      navigate({
+        to: "/",
+        search: (prev) => ({
+          ...prev,
+          selected_info_hash: undefined,
+          selected_session_id: undefined,
+          selected_tab_id: undefined,
+        }),
+      });
+    }
+  }, [gone, navigate]);
 
   return (
     <div className="h-90 shrink-0 flex flex-col">
@@ -45,13 +83,10 @@ export default function TorrentDetailsPanel({
               key={t.id}
               to="/"
               role="tab"
-              className="tab"
+              className={clsx("tab", t.id === selectedTab && "tab-active")}
               search={{
                 ...torrentSearch,
                 selected_tab_id: t.id,
-              }}
-              activeProps={{
-                className: "tab-active",
               }}
             >
               {t.name}
@@ -75,19 +110,23 @@ export default function TorrentDetailsPanel({
       </div>
 
       <div className="flex-1 min-h-0 min-w-0 overflow-auto">
-        {torrentSearch?.selected_tab_id === "general" && (
-          <GeneralTab info_hash={info_hash} session_id={session_id} />
+        {selectedTab === "general" && (
+          <GeneralTab
+            info_hash={info_hash}
+            session_id={session_id}
+            torrent={torrent.data?.torrent}
+          />
         )}
 
-        {torrentSearch?.selected_tab_id === "files" && (
+        {selectedTab === "files" && (
           <FilesTab info_hash={info_hash} session_id={session_id} />
         )}
 
-        {torrentSearch?.selected_tab_id === "peers" && (
+        {selectedTab === "peers" && (
           <PeersTab info_hash={info_hash} session_id={session_id} />
         )}
 
-        {torrentSearch?.selected_tab_id === "trackers" && (
+        {selectedTab === "trackers" && (
           <TrackersTab info_hash={info_hash} session_id={session_id} />
         )}
       </div>

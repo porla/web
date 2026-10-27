@@ -204,6 +204,28 @@ function TorrentsTable({ torrents }: TorrentsTableProps) {
 
   const torrentsColumns = TorrentListColumns();
 
+  // Closes the details panel if it shows this torrent, which just left the
+  // session (removed or migrated).
+  const deselect = async (t: Torrent) => {
+    if (
+      search.selected_info_hash &&
+      search.selected_session_id &&
+      search.selected_info_hash[0] == t.info_hash[0] &&
+      search.selected_info_hash[1] == t.info_hash[1] &&
+      search.selected_session_id == search.session_id
+    ) {
+      await navigate({
+        to: "/",
+        search: {
+          ...search,
+          selected_info_hash: undefined,
+          selected_session_id: undefined,
+          selected_tab_id: undefined,
+        },
+      });
+    }
+  };
+
   if (userColumns.isLoading || !userColumns.data) {
     return <>loading</>;
   }
@@ -306,10 +328,14 @@ function TorrentsTable({ torrents }: TorrentsTableProps) {
                 <li>
                   <button
                     onClick={async () => {
-                      await modal.show(MigrateTorrentModal, {
+                      const didMigrate = await modal.show(MigrateTorrentModal, {
                         info_hash: t.info_hash,
                         session_id: search.session_id,
                       });
+
+                      if (didMigrate) {
+                        await deselect(t);
+                      }
                     }}
                   >
                     Migrate
@@ -392,23 +418,8 @@ function TorrentsTable({ torrents }: TorrentsTableProps) {
                         session_id: search.session_id!,
                       });
 
-                      if (
-                        didRemove &&
-                        search.selected_info_hash &&
-                        search.selected_session_id &&
-                        search.selected_info_hash[0] == t.info_hash[0] &&
-                        search.selected_info_hash[1] == t.info_hash[1] &&
-                        search.selected_session_id == search.session_id
-                      ) {
-                        await navigate({
-                          to: "/",
-                          search: {
-                            ...search,
-                            selected_info_hash: undefined,
-                            selected_session_id: undefined,
-                            selected_tab_id: undefined,
-                          },
-                        });
+                      if (didRemove) {
+                        await deselect(t);
                       }
                     }}
                   >
