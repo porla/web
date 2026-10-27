@@ -109,7 +109,7 @@ export default function FilesTab({ info_hash, session_id }: FilesTabProps) {
                             file_priority: priorities.data.priorities[f.index],
                           });
 
-                          files.refetch();
+                          priorities.refetch();
                         }}
                       >
                         Set priority
