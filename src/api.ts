@@ -130,19 +130,27 @@ export type Torrent = {
   all_time_download: number;
   all_time_upload: number;
   completed_time: number;
+  connections_limit: number;
   current_tracker: string;
+  distributed_copies: number; // availability, -1 when not known
   download_payload_rate: number;
   download_rate: number;
   errc: ErrC | null;
   finished_duration: number;
   flags: TorrentFlag[];
+  has_metadata: boolean;
   info_hash: InfoHash;
-  last_download: number;
-  last_upload: number;
+  last_download: number; // seconds ago, -1 = never
+  last_seen_complete: number;
+  last_upload: number; // seconds ago, -1 = never
   list_peers: number;
   list_seeds: number;
   moving_storage: boolean;
   name: string;
+  next_announce: number; // seconds from now
+  num_complete: number; // seeds in the swarm per the tracker, -1 if unknown
+  num_connections: number;
+  num_incomplete: number; // peers in the swarm per the tracker, -1 if unknown
   num_peers: number;
   num_seeds: number;
   progress: number;
@@ -151,15 +159,29 @@ export type Torrent = {
   ratio_real: number;
   save_path: string;
   seeding_duration: number;
-  state: number;
+  state: TorrentState;
+  storage_mode: "allocate" | "sparse";
   tags: string[];
   total: number;
   total_done: number;
+  total_failed_bytes: number;
+  total_payload_download: number; // this session
+  total_payload_upload: number; // this session
+  total_redundant_bytes: number;
   total_wanted: number;
   total_wanted_done: number;
   upload_payload_rate: number;
   upload_rate: number;
+  uploads_limit: number;
 };
+
+export type TorrentState =
+  | "checking_files"
+  | "downloading_metadata"
+  | "downloading"
+  | "finished"
+  | "seeding"
+  | "checking_resume_data";
 
 export type PluginsGet = {
   plugin: {
