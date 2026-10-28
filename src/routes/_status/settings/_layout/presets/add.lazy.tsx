@@ -1,23 +1,34 @@
-import { useInvoker } from "@/api";
+import { useInvoker, useRPC } from "@/api";
 import { useAppForm } from "@/hooks/form";
 import { useQueryClient } from "@tanstack/react-query";
 import { createLazyFileRoute, Link } from "@tanstack/react-router";
 import { Suspense } from "react";
 import z from "zod";
 
-export const Route = createLazyFileRoute("/_status/settings/_layout/presets/add")({
+export const Route = createLazyFileRoute(
+  "/_status/settings/_layout/presets/add",
+)({
   component: RouteComponent,
 });
 
-const addSchema = z.object({
-  name: z.string().min(1, "Preset name is required"),
-});
+const addSchema = (taken: string[]) =>
+  z.object({
+    name: z
+      .string()
+      .trim()
+      .min(1, "Preset name is required")
+      .refine((n) => !taken.includes(n), "Preset name taken"),
+  });
 
 function RouteComponent() {
   const navigate = Route.useNavigate();
   const queryClient = useQueryClient();
 
+  const presets = useRPC("presets.list");
+  const taken = (presets.data?.presets ?? []).map((p) => p.name);
+
   const add = useInvoker("presets.add", {
+    meta: { silent: true },
     onSuccess: () =>
       queryClient.invalidateQueries({ queryKey: ["presets.list"] }),
   });
@@ -27,11 +38,11 @@ function RouteComponent() {
       name: "",
     },
     validators: {
-      onMount: addSchema,
-      onChange: addSchema,
+      onMount: addSchema(taken),
+      onChange: addSchema(taken),
     },
     onSubmit: async ({ value }) => {
-      const result = await add.mutateAsync(value);
+      const result = await add.mutateAsync({ name: value.name.trim() });
 
       if (
         !!result &&
@@ -59,23 +70,17 @@ function RouteComponent() {
       <div className="card bg-base-200 shadow-sm w-full">
         <div className="card-body">
           <Suspense>
-            <form
-              className="space-y-4"
-              onSubmit={(e) => {
-                e.preventDefault();
-                e.stopPropagation();
-                form.handleSubmit();
-              }}
-            >
-              <form.AppField
-                name="name"
-                children={(field) => <field.TextField label="Name" />}
-              />
+            <form.AppForm>
+              <form.Form>
+                <form.AppField
+                  name="name"
+                  children={(field) => <field.TextField label="Name" />}
+                />
 
-              <form.AppForm>
+                <form.SaveError error={add.error} />
                 <form.SubmitButton label="Add preset" />
-              </form.AppForm>
-            </form>
+              </form.Form>
+            </form.AppForm>
           </Suspense>
         </div>
       </div>
