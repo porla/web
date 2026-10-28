@@ -16,7 +16,10 @@ import {
   type LucideIcon,
 } from "lucide-react";
 import { useEffect, type ReactNode } from "react";
-import type { TorrentFilterStatus } from "@/routes/_status/_main/index";
+import type {
+  PageSize,
+  TorrentFilterStatus,
+} from "@/routes/_status/_main/index";
 import clsx from "clsx";
 import { getCurrentVersion } from "@/features";
 import { useWebVersion } from "@/version";
@@ -86,7 +89,7 @@ function Item({
   alert,
   onNavigate,
 }: {
-  search: Filter & { session_id?: number };
+  search: Filter & { session_id?: number; page_size?: PageSize };
   active: boolean;
   icon: ReactNode;
   label: string;
@@ -157,10 +160,11 @@ export default function Sidebar({ onNavigate }: { onNavigate?: () => void }) {
     { enabled: !!session_id, refetchInterval: 1000 },
   ).data;
 
-  // A filter replaces the others, the search and the page; the session and
-  // an open details panel stay.
+  // A filter replaces the others, the search and the page; the session, the
+  // page size and an open details panel stay.
   const filterSearch = (filter: Filter) => ({
     session_id,
+    page_size: search.page_size,
     selected_info_hash: search.selected_info_hash,
     selected_session_id: search.selected_session_id,
     selected_tab_id: search.selected_tab_id,
@@ -229,7 +233,11 @@ export default function Sidebar({ onNavigate }: { onNavigate?: () => void }) {
             {list.map((s) => (
               <Item
                 key={s.id}
-                search={{ session_id: s.id, status: search.status }}
+                search={{
+                  session_id: s.id,
+                  status: search.status,
+                  page_size: search.page_size,
+                }}
                 active={s.id === session_id}
                 icon={
                   <span
