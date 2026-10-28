@@ -1,26 +1,13 @@
 import { type InfoHash, useInvoker, useRPC } from "@/api";
 import type { ModalProps } from "@/components/modal";
 import { useAppForm } from "@/hooks/form";
+import { peerLimit, rateLimit } from "@/limits";
 import z from "zod";
 
 type TorrentPropertiesModalProps = {
   info_hash: InfoHash;
   session_id: number;
 };
-
-// The backend's rules (utils/limits.hpp). An empty field sends null, which
-// leaves the value unchanged.
-const rateLimit = z
-  .number()
-  .int("Enter a whole number")
-  .min(-1, "Use -1 for unlimited")
-  .nullable();
-
-const peerLimit = z
-  .number()
-  .int("Enter a whole number")
-  .refine((n) => n === -1 || n === 0 || n >= 2, "Use -1 for unlimited, or 2+")
-  .nullable();
 
 const propertiesSchema = z.object({
   category: z.string(),
