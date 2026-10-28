@@ -1,4 +1,6 @@
 import { useInvoker, useRPC } from "@/api";
+import { useModal } from "@/components/modal";
+import ConfirmModal from "@/components/modals/confirm";
 import { useQueryClient } from "@tanstack/react-query";
 import { createLazyFileRoute, Link } from "@tanstack/react-router";
 import { DateTime } from "luxon";
@@ -9,14 +11,21 @@ export const Route = createLazyFileRoute("/_status/settings/_layout/api-keys/")(
   },
 );
 
+const when = (seconds: number) =>
+  DateTime.fromSeconds(seconds).toFormat("yyyy-MM-dd HH:mm");
+
 function RouteComponent() {
   const queryClient = useQueryClient();
+  const modal = useModal();
 
   const keys = useRPC("auth.keys.list");
   const remove = useInvoker("auth.keys.remove", {
-    onSuccess: () =>
+    meta: { silent: true },
+    onSettled: () =>
       queryClient.invalidateQueries({ queryKey: ["auth.keys.list"] }),
   });
+
+  const now = DateTime.now().toUnixInteger();
 
   return (
     <div className="space-y-6">
@@ -34,6 +43,7 @@ function RouteComponent() {
               <th>Name</th>
               <th>Created at</th>
               <th>Expires at</th>
+              <th>Last used</th>
               <th></th>
             </tr>
           </thead>
@@ -45,28 +55,39 @@ function RouteComponent() {
                     <span className="font-semibold">{k.name}</span>
                   </div>
                 </td>
+                <td>{when(k.created_at)}</td>
                 <td>
-                  {DateTime.fromSeconds(k.created_at).toFormat(
-                    "yyyy-MM-dd HH:mm",
+                  {k.expires_at === null ? (
+                    <span className="opacity-60">Never</span>
+                  ) : (
+                    <span className="flex items-center gap-2">
+                      {when(k.expires_at)}
+                      {k.expires_at <= now && (
+                        <span className="badge badge-error badge-soft badge-sm">
+                          Expired
+                        </span>
+                      )}
+                    </span>
                   )}
                 </td>
                 <td>
-                  {k.expires_at && (
-                    <>
-                      {DateTime.fromSeconds(k.expires_at).toFormat(
-                        "yyyy-MM-dd HH:mm:ss",
-                      )}
-                    </>
+                  {k.last_used_at === null ? (
+                    <span className="opacity-60">Never</span>
+                  ) : (
+                    when(k.last_used_at)
                   )}
                 </td>
                 <td className="flex justify-end">
                   <button
                     className="btn btn-warning btn-xs"
-                    onClick={async () => {
-                      await remove.mutateAsync({
-                        id: k.id,
-                      });
-                    }}
+                    onClick={() =>
+                      modal.show(ConfirmModal, {
+                        title: "Revoke API key",
+                        message: `Revoke "${k.name}"?`,
+                        confirmLabel: "Revoke",
+                        action: () => remove.mutateAsync({ id: k.id }),
+                      })
+                    }
                   >
                     Revoke
                   </button>
