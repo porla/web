@@ -1,34 +1,55 @@
-import { useInvoker } from "@/api";
+import { useInvoker, useRPC } from "@/api";
 import { useAppForm } from "@/hooks/form";
 import { useQueryClient } from "@tanstack/react-query";
 import { createLazyFileRoute, Link } from "@tanstack/react-router";
 import { Suspense } from "react";
 import z from "zod";
 
-export const Route = createLazyFileRoute("/_status/settings/_layout/sessions/add")({
+export const Route = createLazyFileRoute(
+  "/_status/settings/_layout/sessions/add",
+)({
   component: RouteComponent,
 });
 
-const schema = z.object({
-  name: z.string().min(1, "Session name is required."),
-  settings_base: z.enum([
-    "default",
-    "min_memory_usage",
-    "high_performance_seed",
-  ]),
-  timer_dht_stats: z.number(),
-  timer_save_state: z.number(),
-  timer_session_stats: z.number(),
-  timer_torrent_updates: z.number(),
-});
+const timer = z
+  .number()
+  .int("Enter a whole number of milliseconds")
+  .min(10, "At least 10 ms")
+  .max(2147483647, "Too large");
 
-type Settings = z.infer<typeof schema>["settings_base"];
+const settingsBase = z.enum([
+  "default",
+  "min_memory_usage",
+  "high_performance_seed",
+]);
+
+// Names are unique in porla; a duplicate would come back as a bare SQLite
+// error, so it's caught here.
+const schema = (taken: string[]) =>
+  z.object({
+    name: z
+      .string()
+      .trim()
+      .min(1, "Session name is required.")
+      .refine((n) => !taken.includes(n), "Session name taken"),
+    settings_base: settingsBase,
+    timer_dht_stats: timer,
+    timer_save_state: timer,
+    timer_session_stats: timer,
+    timer_torrent_updates: timer,
+  });
+
+type Settings = z.infer<typeof settingsBase>;
 
 function RouteComponent() {
   const navigate = Route.useNavigate();
   const queryClient = useQueryClient();
 
+  const sessions = useRPC("sessions.list");
+  const taken = (sessions.data?.sessions ?? []).map((s) => s.name);
+
   const add = useInvoker("sessions.add", {
+    meta: { silent: true },
     onSuccess: () =>
       queryClient.invalidateQueries({ queryKey: ["sessions.list"] }),
   });
@@ -43,11 +64,14 @@ function RouteComponent() {
       timer_torrent_updates: 1000,
     },
     validators: {
-      onMount: schema,
-      onChange: schema,
+      onMount: schema(taken),
+      onChange: schema(taken),
     },
     onSubmit: async ({ value }) => {
-      const result = await add.mutateAsync(value);
+      const result = await add.mutateAsync({
+        ...value,
+        name: value.name.trim(),
+      });
 
       if (
         !!result &&
@@ -75,87 +99,81 @@ function RouteComponent() {
       <div className="card bg-base-200 shadow-sm w-full">
         <div className="card-body">
           <Suspense>
-            <form
-              className="space-y-4"
-              onSubmit={(e) => {
-                e.preventDefault();
-                e.stopPropagation();
-                form.handleSubmit();
-              }}
-            >
-              <form.AppField
-                name="name"
-                children={(field) => <field.TextField label="Name" />}
-              />
+            <form.AppForm>
+              <form.Form>
+                <form.AppField
+                  name="name"
+                  children={(field) => <field.TextField label="Name" />}
+                />
 
-              <form.AppField
-                name="settings_base"
-                children={(field) => (
-                  <div className="fieldset">
-                    <label className="label">Settings base</label>
+                <form.AppField
+                  name="settings_base"
+                  children={(field) => (
+                    <div className="fieldset">
+                      <label className="label">Settings base</label>
 
-                    <select
-                      className="select"
-                      onBlur={field.handleBlur}
-                      onChange={(e) => {
-                        field.handleChange(e.target.value as Settings);
-                      }}
-                      value={field.state.value}
-                    >
-                      <option value={"default"}>Default</option>
-                      <option value={"min_memory_usage"}>
-                        Min. memory usage
-                      </option>
-                      <option value={"high_performance_seed"}>
-                        High performance seed
-                      </option>
-                    </select>
+                      <select
+                        className="select"
+                        onBlur={field.handleBlur}
+                        onChange={(e) => {
+                          field.handleChange(e.target.value as Settings);
+                        }}
+                        value={field.state.value}
+                      >
+                        <option value={"default"}>Default</option>
+                        <option value={"min_memory_usage"}>
+                          Min. memory usage
+                        </option>
+                        <option value={"high_performance_seed"}>
+                          High performance seed
+                        </option>
+                      </select>
+                    </div>
+                  )}
+                />
+
+                <details
+                  className="collapse bg-base-100 border border-base-300"
+                  name="settings-advanced"
+                >
+                  <summary className="collapse-title font-semibold">
+                    Advanced
+                  </summary>
+                  <div className="collapse-content text-sm">
+                    <form.AppField
+                      name="timer_dht_stats"
+                      children={(field) => (
+                        <field.NumberField label="DHT stats interval (ms)" />
+                      )}
+                    />
+
+                    <form.AppField
+                      name="timer_save_state"
+                      children={(field) => (
+                        <field.NumberField label="Save state interval (ms)" />
+                      )}
+                    />
+
+                    <form.AppField
+                      name="timer_session_stats"
+                      children={(field) => (
+                        <field.NumberField label="Session stats interval (ms)" />
+                      )}
+                    />
+
+                    <form.AppField
+                      name="timer_torrent_updates"
+                      children={(field) => (
+                        <field.NumberField label="Torrent update interval (ms)" />
+                      )}
+                    />
                   </div>
-                )}
-              />
+                </details>
 
-              <details
-                className="collapse bg-base-100 border border-base-300"
-                name="settings-advanced"
-              >
-                <summary className="collapse-title font-semibold">
-                  Advanced
-                </summary>
-                <div className="collapse-content text-sm">
-                  <form.AppField
-                    name="timer_dht_stats"
-                    children={(field) => (
-                      <field.NumberField label="DHT stats interval (ms)" />
-                    )}
-                  />
-
-                  <form.AppField
-                    name="timer_save_state"
-                    children={(field) => (
-                      <field.NumberField label="Save state interval (ms)" />
-                    )}
-                  />
-
-                  <form.AppField
-                    name="timer_session_stats"
-                    children={(field) => (
-                      <field.NumberField label="Session stats interval (ms)" />
-                    )}
-                  />
-
-                  <form.AppField
-                    name="timer_torrent_updates"
-                    children={(field) => (
-                      <field.NumberField label="Torrent update interval (ms)" />
-                    )}
-                  />
-                </div>
-              </details>
-
-              <form.AppForm>
+                <form.SaveError error={add.error} />
                 <form.SubmitButton label="Add session" />
-              </form.AppForm>
-            </form>
+              </form.Form>
+            </form.AppForm>
           </Suspense>
         </div>
       </div>
