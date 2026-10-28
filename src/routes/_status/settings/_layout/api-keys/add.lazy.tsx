@@ -5,11 +5,27 @@ import { useAppForm } from "@/hooks/form";
 import { useQueryClient } from "@tanstack/react-query";
 import { createLazyFileRoute } from "@tanstack/react-router";
 import { Suspense } from "react";
+import z from "zod";
 
 export const Route = createLazyFileRoute(
   "/_status/settings/_layout/api-keys/add",
 )({
   component: RouteComponent,
+});
+
+const addSchema = z.object({
+  name: z
+    .string()
+    .trim()
+    .min(1, { error: "Enter a name", abort: true })
+    .refine(
+      (n) => new TextEncoder().encode(n).length <= 1024,
+      "At most 1024 bytes",
+    ),
+  expires_at: z
+    .number()
+    .refine((t) => t > Date.now() / 1000, "Expiry must be in the future")
+    .nullable(),
 });
 
 function RouteComponent() {
@@ -18,6 +34,7 @@ function RouteComponent() {
   const queryClient = useQueryClient();
 
   const create = useInvoker("auth.keys.create", {
+    meta: { silent: true },
     onSuccess: () =>
       queryClient.invalidateQueries({ queryKey: ["auth.keys.list"] }),
   });
@@ -27,8 +44,12 @@ function RouteComponent() {
       name: "",
       expires_at: null as number | null,
     },
+    validators: {
+      onMount: addSchema,
+      onChange: addSchema,
+    },
     onSubmit: async ({ value }) => {
-      const d = await create.mutateAsync(value);
+      const d = await create.mutateAsync(addSchema.parse(value));
 
       await show(ShowApiKeyModal, {
         createdKey: d.key,
@@ -47,30 +68,24 @@ function RouteComponent() {
       <div className="card bg-base-200 shadow-sm w-full">
         <div className="card-body">
           <Suspense>
-            <form
-              className="space-y-4"
-              onSubmit={(e) => {
-                e.preventDefault();
-                e.stopPropagation();
-                form.handleSubmit();
-              }}
-            >
-              <form.AppField
-                name="name"
-                children={(field) => <field.TextField label="Name" />}
-              />
+            <form.AppForm>
+              <form.Form>
+                <form.AppField
+                  name="name"
+                  children={(field) => <field.TextField label="Name" />}
+                />
 
-              <form.AppField
-                name="expires_at"
-                children={(field) => (
-                  <field.DateField label="Expires at (optional, inclusive)" />
-                )}
-              />
+                <form.AppField
+                  name="expires_at"
+                  children={(field) => (
+                    <field.DateField label="Expires at (optional, inclusive)" />
+                  )}
+                />
 
-              <form.AppForm>
+                <form.SaveError error={create.error} />
                 <form.SubmitButton label="Add API key" />
-              </form.AppForm>
-            </form>
+              </form.Form>
+            </form.AppForm>
           </Suspense>
         </div>
       </div>
