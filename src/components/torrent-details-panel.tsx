@@ -131,7 +131,11 @@ export default function TorrentDetailsPanel({
         )}
 
         {selectedTab === "trackers" && (
-          <TrackersTab info_hash={info_hash} session_id={session_id} />
+          <TrackersTab
+            info_hash={info_hash}
+            session_id={session_id}
+            torrent={torrent.data?.torrent}
+          />
         )}
       </div>
     </div>

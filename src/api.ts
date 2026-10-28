@@ -299,8 +299,12 @@ export type AnnounceInfohash = {
   complete_sent: boolean;
   fails: number;
   last_error: null | ErrC;
+  message: string; // the tracker's warning or failure text
   min_announce: number;
   next_announce: number;
+  scrape_complete: number;
+  scrape_downloaded: number;
+  scrape_incomplete: number;
   start_sent: boolean;
   updating: boolean;
 };
