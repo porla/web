@@ -117,6 +117,9 @@ function base(l: Leaf): Verdict {
 function verdictOf(ls: Leaf[], bases: Verdict[]): Verdict {
   const on = bases.filter((b) => b !== "disabled");
   const n = (v: Verdict) => on.filter((b) => b === v).length;
+  // No endpoints yet: libtorrent hasn't announced to it (a lower tier while a
+  // higher one works, or anything right after a restart).
+  if (ls.length === 0) return "not_contacted";
   if (on.length === 0) return "disabled";
   if (n("working") > 0) return "working";
   if (n("tracker_error") > 0) return "tracker_error";

@@ -538,6 +538,13 @@ function TorrentsTable({ torrents }: TorrentsTableProps) {
                 className="dropdown dropdown-end menu w-52 rounded-box bg-base-100 shadow-sm"
                 popover="auto"
                 id={`popover_${infoHashKey(t.info_hash)}`}
+                // A click inside a popover doesn't dismiss it: close the menu
+                // once an action (or a dialog's opener) is clicked.
+                onClick={(e) => {
+                  if ((e.target as Element).closest("button")) {
+                    e.currentTarget.hidePopover();
+                  }
+                }}
                 style={{
                   positionAnchor: `--anchor-${infoHashKey(t.info_hash)}`,
                 }}

@@ -94,7 +94,10 @@ export default function TorrentDetailsPanel({
 
   // Removed or migrated elsewhere, or its session was removed or unloaded:
   // close the panel, saying why, instead of polling and showing stale data.
+  // Not while fetching: a remounted panel first sees the error cached from
+  // the last time this torrent left (it may have come back since).
   const gone =
+    !torrent.isFetching &&
     torrent.error instanceof RpcError &&
     [-1, -2, -3].includes(torrent.error.code)
       ? torrent.error.message
