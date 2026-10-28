@@ -4,6 +4,7 @@ import {
   type Torrent,
   useInvoker,
   infoHashKey,
+  RpcError,
 } from "@/api";
 import { TorrentListColumns } from "@/components/lists/torrents";
 import { useModal } from "@/components/modal";
@@ -13,17 +14,32 @@ import TorrentPropertiesModal from "@/components/modals/torrent-properties";
 import RemoveTorrentModal from "@/components/modals/torrent-remove";
 import TorrentDetailsPanel from "@/components/torrent-details-panel";
 import { useForm } from "@tanstack/react-form";
-import { createFileRoute } from "@tanstack/react-router";
-import { Menu, SearchIcon } from "lucide-react";
+import { keepPreviousData, useQueryClient } from "@tanstack/react-query";
+import { createFileRoute, Link } from "@tanstack/react-router";
+import clsx from "clsx";
+import {
+  Inbox,
+  Menu,
+  SearchIcon,
+  SearchX,
+  TriangleAlert,
+  X,
+  type LucideIcon,
+} from "lucide-react";
+import { useEffect, type ReactNode } from "react";
+import z from "zod";
 
-export type TorrentFilterStatus =
-  | "downloading"
-  | "downloading_queued"
-  | "finished"
-  | "seeding"
-  | "seeding_queued"
-  | "paused"
-  | "error";
+const statuses = [
+  "downloading",
+  "downloading_queued",
+  "finished",
+  "seeding",
+  "seeding_queued",
+  "paused",
+  "error",
+] as const;
+
+export type TorrentFilterStatus = (typeof statuses)[number];
 
 type TorrentSearch = {
   page?: number;
@@ -34,21 +50,43 @@ type TorrentSearch = {
   status?: TorrentFilterStatus[];
   selected_info_hash?: InfoHash;
   selected_session_id?: number;
-  selected_tab_id?: string;
+  selected_tab_id?: "general" | "files" | "peers" | "trackers";
 };
+
+// Hand-edited or stale URLs: a value that doesn't fit is dropped instead of
+// reaching the backend (a bare ?status=paused used to fail to deserialize).
+const id = z.coerce.number().int().min(1).optional().catch(undefined);
+const text = z.string().min(1).optional().catch(undefined);
+const searchSchema = z.object({
+  page: id,
+  query: text,
+  session_id: id,
+  category: text,
+  tag: text,
+  status: z
+    .preprocess(
+      (v) => (typeof v === "string" ? [v] : v),
+      z.array(z.enum(statuses)).optional(),
+    )
+    .catch(undefined),
+  selected_info_hash: z
+    .union([
+      z.tuple([z.string().nullable(), z.string().nullable()]),
+      z.string(),
+    ])
+    .optional()
+    .catch(undefined),
+  selected_session_id: id,
+  selected_tab_id: z
+    .enum(["general", "files", "peers", "trackers"])
+    .optional()
+    .catch(undefined),
+});
 
 export const Route = createFileRoute("/_status/_main/")({
   component: RouteComponent,
-  validateSearch: (search: Record<string, unknown>): TorrentSearch => {
-    return {
-      page: search.page ? Number(search.page) : undefined,
-      session_id: search.session_id ? Number(search.session_id) : undefined,
-      status:
-        typeof search.status === "undefined"
-          ? undefined
-          : (search.status as TorrentFilterStatus[]),
-    };
-  },
+  validateSearch: (search: Record<string, unknown>): TorrentSearch =>
+    searchSchema.parse(search),
 });
 
 function RouteComponent() {
@@ -59,21 +97,28 @@ function RouteComponent() {
 
   const searchForm = useForm({
     defaultValues: {
-      query: search.query,
+      query: search.query ?? "",
     },
     onSubmit: async ({ value }) => {
       await navigate({
         to: "/",
         search: {
           session_id: search.session_id,
-          query: !value.query?.length ? undefined : value.query,
-          page: undefined,
+          query: value.query.trim() || undefined,
           selected_info_hash: search.selected_info_hash,
           selected_session_id: search.selected_session_id,
+          selected_tab_id: search.selected_tab_id,
         },
       });
     },
   });
+
+  // The box follows the URL, e.g. when a sidebar filter clears the query.
+  useEffect(() => {
+    searchForm.reset({ query: search.query ?? "" });
+  }, [search.query, searchForm]);
+
+  const filtered = !!(search.status || search.category || search.tag);
 
   const torrents = useRPC(
     "torrents.list",
@@ -89,7 +134,9 @@ function RouteComponent() {
       page_size: pageSize,
     },
     {
-      refetchInterval: 1000,
+      meta: { silent: true },
+      refetchInterval: (q) => (q.state.error ? false : 1000),
+      placeholderData: keepPreviousData,
     },
   );
 
@@ -111,10 +158,29 @@ function RouteComponent() {
                 <input
                   className="grow font-mono"
                   placeholder="Search"
-                  value={field.state.value ?? ""}
+                  value={field.state.value}
                   onChange={(e) => field.handleChange(e.target.value)}
                   onBlur={field.handleBlur}
                 />
+                {(field.state.value || search.query) && (
+                  <button
+                    type="button"
+                    className="btn btn-ghost btn-xs btn-circle"
+                    aria-label="Clear the search"
+                    onClick={() =>
+                      navigate({
+                        to: "/",
+                        search: {
+                          ...search,
+                          query: undefined,
+                          page: undefined,
+                        },
+                      })
+                    }
+                  >
+                    <X className="size-4" />
+                  </button>
+                )}
               </label>
             )}
           />
@@ -122,13 +188,47 @@ function RouteComponent() {
       </div>
 
       <div className="flex-1 overflow-y-auto px-3 bg-base-300">
-        <TorrentsTable torrents={torrents.data?.torrents ?? []} />
+        {torrents.error ? (
+          <ListError error={torrents.error} query={search.query} />
+        ) : torrents.data?.torrents.length === 0 ? (
+          search.query || filtered ? (
+            <ListState icon={SearchX} title="No torrents match">
+              {search.query ? (
+                <button
+                  className="btn btn-sm mt-3"
+                  onClick={() =>
+                    navigate({
+                      to: "/",
+                      search: { ...search, query: undefined, page: undefined },
+                    })
+                  }
+                >
+                  Clear the search
+                </button>
+              ) : (
+                "Nothing in this session matches the filter."
+              )}
+            </ListState>
+          ) : (
+            <ListState icon={Inbox} title="No torrents yet">
+              <Link
+                to="/add"
+                search={{ session_id: search.session_id }}
+                className="btn btn-sm btn-primary mt-3"
+              >
+                Add torrents
+              </Link>
+            </ListState>
+          )
+        ) : (
+          <TorrentsTable torrents={torrents.data?.torrents ?? []} />
+        )}
       </div>
 
       <div className="bg-base-300 p-3 flex justify-between">
         <div></div>
 
-        {torrents.data && (
+        {!torrents.error && !!torrents.data?.torrents.length && (
           <Pager
             currentPage={search.page ?? 1}
             onPageChange={(page) =>
@@ -147,6 +247,65 @@ function RouteComponent() {
         />
       )}
     </div>
+  );
+}
+
+// Takes the place of the table (headers too) when there's nothing to list.
+function ListState({
+  icon: Icon,
+  title,
+  children,
+}: {
+  icon: LucideIcon;
+  title: string;
+  children?: ReactNode;
+}) {
+  return (
+    <div className="flex h-full items-center justify-center p-6">
+      <div className="w-full max-w-xl rounded-box border border-base-300 bg-base-200 px-6 py-5 text-center">
+        <Icon className="mx-auto mb-2 size-6 opacity-50" />
+        <div className="font-semibold">{title}</div>
+        {children && <div className="mt-1 text-sm opacity-80">{children}</div>}
+      </div>
+    </div>
+  );
+}
+
+// A PQL error points at the part of the query porla couldn't read (it sends
+// its span as data.start/end); anything else is shown as it came.
+function ListError({ error, query }: { error: Error; query?: string }) {
+  const span =
+    error instanceof RpcError && error.code === -1000 && query
+      ? (error.data as { start?: number; end?: number } | null)
+      : null;
+
+  if (!span || !query) {
+    return (
+      <ListState icon={TriangleAlert} title="Couldn't load the torrents">
+        {error.message}
+      </ListState>
+    );
+  }
+
+  const start = span.start ?? 0;
+  const end = Math.max(span.end ?? 0, start + 1);
+
+  return (
+    <ListState icon={TriangleAlert} title="Failed to parse PQL">
+      <pre
+        role="alert"
+        className="mt-3 rounded bg-base-300 px-3 py-2 text-left font-mono text-sm whitespace-pre-wrap"
+      >
+        {query.slice(0, start)}
+        <span className="rounded-sm bg-error/20 underline decoration-error/80 decoration-wavy underline-offset-4">
+          {query.slice(start, end) || " "}
+        </span>
+        {query.slice(end)}
+      </pre>
+      <div className="mt-2 font-mono text-left text-xs opacity-70">
+        {error.message}
+      </div>
+    </ListState>
   );
 }
 
@@ -180,6 +339,10 @@ function Pager({
   );
 }
 
+// What's left of the table on narrow screens; every column is a fixed width
+// except the name, which would otherwise be squeezed to nothing.
+const narrowCols = new Set(["queue_position", "name", "status"]);
+
 type TorrentsTableProps = {
   torrents: Torrent[];
 };
@@ -188,13 +351,22 @@ function TorrentsTable({ torrents }: TorrentsTableProps) {
   const navigate = Route.useNavigate();
   const search = Route.useSearch();
 
-  const pause = useInvoker("torrents.pause");
-  const resume = useInvoker("torrents.resume");
-  const recheck = useInvoker("torrents.recheck");
-  const queueTop = useInvoker("torrents.queue.top");
-  const queueUp = useInvoker("torrents.queue.up");
-  const queueDown = useInvoker("torrents.queue.down");
-  const queueBottom = useInvoker("torrents.queue.bottom");
+  const queryClient = useQueryClient();
+
+  const refresh = {
+    onSuccess: () =>
+      queryClient.invalidateQueries({
+        predicate: (q) => String(q.queryKey[0]).startsWith("torrents."),
+      }),
+  };
+
+  const pause = useInvoker("torrents.pause", refresh);
+  const resume = useInvoker("torrents.resume", refresh);
+  const recheck = useInvoker("torrents.recheck", refresh);
+  const queueTop = useInvoker("torrents.queue.top", refresh);
+  const queueUp = useInvoker("torrents.queue.up", refresh);
+  const queueDown = useInvoker("torrents.queue.down", refresh);
+  const queueBottom = useInvoker("torrents.queue.bottom", refresh);
 
   const modal = useModal();
 
@@ -226,7 +398,7 @@ function TorrentsTable({ torrents }: TorrentsTableProps) {
     }
   };
 
-  if (userColumns.isLoading || !userColumns.data) {
+  if (userColumns.isLoading) {
     return <>loading</>;
   }
 
@@ -234,7 +406,7 @@ function TorrentsTable({ torrents }: TorrentsTableProps) {
     Array.isArray(v) && v.every((x) => typeof x === "string");
 
   const knownCols = new Set(Object.keys(torrentsColumns));
-  const raw = userColumns.data.values["webui.lists.torrents.cols"];
+  const raw = userColumns.data?.values["webui.lists.torrents.cols"];
 
   const selectedCols: (keyof typeof torrentsColumns)[] =
     isStringArray(raw) && raw.length
@@ -250,7 +422,13 @@ function TorrentsTable({ torrents }: TorrentsTableProps) {
       <thead>
         <tr>
           {selectedCols.map((col) => (
-            <th key={col} className={torrentsColumns[col].headerClassNames}>
+            <th
+              key={col}
+              className={clsx(
+                torrentsColumns[col].headerClassNames,
+                !narrowCols.has(col) && "max-md:hidden",
+              )}
+            >
               {torrentsColumns[col].title}
             </th>
           ))}
@@ -263,7 +441,10 @@ function TorrentsTable({ torrents }: TorrentsTableProps) {
             {selectedCols.map((col) => (
               <td
                 key={`td_${col}`}
-                className={torrentsColumns[col].columnClassNames}
+                className={clsx(
+                  torrentsColumns[col].columnClassNames,
+                  !narrowCols.has(col) && "max-md:hidden",
+                )}
               >
                 {torrentsColumns[col].data(t)}
               </td>
@@ -290,7 +471,7 @@ function TorrentsTable({ torrents }: TorrentsTableProps) {
                   <li>
                     <button
                       onClick={() =>
-                        resume.mutateAsync({
+                        resume.mutate({
                           session_id: search.session_id!,
                           info_hash: t.info_hash,
                         })
@@ -303,7 +484,7 @@ function TorrentsTable({ torrents }: TorrentsTableProps) {
                   <li>
                     <button
                       onClick={() =>
-                        pause.mutateAsync({
+                        pause.mutate({
                           session_id: search.session_id!,
                           info_hash: t.info_hash,
                         })
@@ -316,7 +497,7 @@ function TorrentsTable({ torrents }: TorrentsTableProps) {
                 <li>
                   <button
                     onClick={() =>
-                      recheck.mutateAsync({
+                      recheck.mutate({
                         session_id: search.session_id!,
                         info_hash: t.info_hash,
                       })
@@ -361,7 +542,7 @@ function TorrentsTable({ torrents }: TorrentsTableProps) {
                         <li>
                           <button
                             onClick={() =>
-                              queueTop.mutateAsync({
+                              queueTop.mutate({
                                 info_hash: t.info_hash,
                                 session_id: search.session_id!,
                               })
@@ -373,7 +554,7 @@ function TorrentsTable({ torrents }: TorrentsTableProps) {
                         <li>
                           <button
                             onClick={() =>
-                              queueUp.mutateAsync({
+                              queueUp.mutate({
                                 info_hash: t.info_hash,
                                 session_id: search.session_id!,
                               })
@@ -385,7 +566,7 @@ function TorrentsTable({ torrents }: TorrentsTableProps) {
                         <li>
                           <button
                             onClick={() =>
-                              queueDown.mutateAsync({
+                              queueDown.mutate({
                                 info_hash: t.info_hash,
                                 session_id: search.session_id!,
                               })
@@ -397,7 +578,7 @@ function TorrentsTable({ torrents }: TorrentsTableProps) {
                         <li>
                           <button
                             onClick={() =>
-                              queueBottom.mutateAsync({
+                              queueBottom.mutate({
                                 info_hash: t.info_hash,
                                 session_id: search.session_id!,
                               })
