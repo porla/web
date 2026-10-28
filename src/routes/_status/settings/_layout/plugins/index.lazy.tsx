@@ -29,7 +29,21 @@ function RouteComponent() {
           <tbody>
             {plugins.data?.plugins.map((p) => (
               <tr key={`plugin_${p.id}`}>
-                <td className="">{p.name}</td>
+                <td className="">
+                  <div className="flex items-center gap-2">
+                    <span className="font-semibold">
+                      {p.name ?? p.path.split(/[\\/]/).pop()}
+                    </span>
+                    {p.version && (
+                      <span className="text-xs opacity-60">{p.version}</span>
+                    )}
+                    {!p.is_loaded && (
+                      <span className="badge badge-error badge-soft badge-sm">
+                        Not loaded
+                      </span>
+                    )}
+                  </div>
+                </td>
                 <td className="">{p.path}</td>
                 <td className="flex justify-end">
                   <Link
