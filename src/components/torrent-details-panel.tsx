@@ -123,7 +123,11 @@ export default function TorrentDetailsPanel({
         )}
 
         {selectedTab === "peers" && (
-          <PeersTab info_hash={info_hash} session_id={session_id} />
+          <PeersTab
+            info_hash={info_hash}
+            session_id={session_id}
+            torrent={torrent.data?.torrent}
+          />
         )}
 
         {selectedTab === "trackers" && (

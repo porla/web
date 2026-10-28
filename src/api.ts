@@ -267,11 +267,23 @@ export type TorrentsFilesProgress = {
 };
 
 export type Peer = {
+  busy_requests: number;
   client: string;
-  connection_type: string;
+  connection_type: "standard_bittorrent" | "web_seed" | "http_seed";
+  down_speed: number; // bytes/s
+  download_queue_length: number; // block requests outstanding
+  download_queue_time: number; // s
   flags: string[];
+  last_active: number; // s ago
+  last_request: number; // s ago
+  local_endpoint: [string, number];
+  progress: number; // 0..1
   remote_endpoint: [string, number];
+  rtt: number; // ms
   source: string[];
+  total_download: number; // from this peer, this connection
+  total_upload: number;
+  up_speed: number;
 };
 
 export type TorrentsPeersList = {
@@ -366,7 +378,7 @@ type TorrentRef = {
 type NoParams = Record<string, never>;
 
 export type MmdbEntry = {
-  country?: { iso_code?: string };
+  country?: { iso_code?: string; names?: Record<string, string> };
 };
 
 // Optional backend fields accept both an absent key and null.
