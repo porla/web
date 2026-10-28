@@ -6,6 +6,7 @@ import {
   infoHashKey,
   RpcError,
 } from "@/api";
+import DockBar from "@/components/dock-bar";
 import ListState from "@/components/list-state";
 import { TorrentListColumns } from "@/components/lists/torrents";
 import { useModal } from "@/components/modal";
@@ -13,6 +14,7 @@ import MigrateTorrentModal from "@/components/modals/torrent-migrate";
 import MoveTorrentModal from "@/components/modals/torrent-move";
 import TorrentPropertiesModal from "@/components/modals/torrent-properties";
 import RemoveTorrentModal from "@/components/modals/torrent-remove";
+import Pager from "@/components/pager";
 import TorrentDetailsPanel from "@/components/torrent-details-panel";
 import { useForm } from "@tanstack/react-form";
 import { keepPreviousData, useQueryClient } from "@tanstack/react-query";
@@ -41,8 +43,11 @@ const statuses = [
 
 export type TorrentFilterStatus = (typeof statuses)[number];
 
+const pageSizes = [25, 50, 100, 200] as const;
+
 type TorrentSearch = {
   page?: number;
+  page_size?: (typeof pageSizes)[number];
   query?: string;
   session_id?: number;
   category?: string;
@@ -59,6 +64,11 @@ const id = z.coerce.number().int().min(1).optional().catch(undefined);
 const text = z.string().min(1).optional().catch(undefined);
 const searchSchema = z.object({
   page: id,
+  page_size: z.coerce
+    .number()
+    .pipe(z.union(pageSizes.map((n) => z.literal(n))))
+    .optional()
+    .catch(undefined),
   query: text,
   session_id: id,
   category: text,
@@ -93,7 +103,7 @@ function RouteComponent() {
   const navigate = Route.useNavigate();
   const search = Route.useSearch();
 
-  const pageSize = 50;
+  const pageSize = search.page_size ?? 50;
 
   const searchForm = useForm({
     defaultValues: {
@@ -140,9 +150,29 @@ function RouteComponent() {
     },
   );
 
+  const pager = !torrents.error && !!torrents.data?.torrents_total && (
+    <Pager
+      page={search.page ?? 1}
+      size={pageSize}
+      sizes={pageSizes}
+      total={torrents.data.torrents_total}
+      onChange={(page, size) =>
+        navigate({
+          to: "/",
+          search: {
+            ...search,
+            page: page > 1 ? page : undefined,
+            page_size:
+              size === 50 ? undefined : (size as TorrentSearch["page_size"]),
+          },
+        })
+      }
+    />
+  );
+
   return (
-    <div className="flex flex-col h-full">
-      <div className="bg-base-300 p-3">
+    <div className="flex h-full flex-col bg-base-200">
+      <div className="p-3">
         <form
           onSubmit={(e) => {
             e.preventDefault();
@@ -187,7 +217,7 @@ function RouteComponent() {
         </form>
       </div>
 
-      <div className="flex-1 overflow-y-auto px-3 bg-base-300">
+      <div className="mx-3 min-h-0 flex-1 overflow-y-auto rounded-box border border-base-300 bg-base-100">
         {torrents.error ? (
           <ListError error={torrents.error} query={search.query} />
         ) : torrents.data?.torrents.length === 0 ? (
@@ -225,26 +255,17 @@ function RouteComponent() {
         )}
       </div>
 
-      <div className="bg-base-300 p-3 flex justify-between">
-        <div></div>
-
-        {!torrents.error && !!torrents.data?.torrents.length && (
-          <Pager
-            currentPage={search.page ?? 1}
-            onPageChange={(page) =>
-              navigate({ to: "/", search: { ...search, page } })
-            }
-            pageSize={pageSize}
-            totalItems={torrents.data.torrents_total}
-          />
-        )}
-      </div>
-
-      {search.selected_info_hash && search.selected_session_id && (
+      {search.selected_info_hash && search.selected_session_id ? (
         <TorrentDetailsPanel
           info_hash={search.selected_info_hash}
           session_id={search.selected_session_id}
+          pager={pager}
         />
+      ) : (
+        <DockBar>
+          <span></span>
+          {pager && <div className="ml-auto">{pager}</div>}
+        </DockBar>
       )}
     </div>
   );
@@ -288,36 +309,6 @@ function ListError({ error, query }: { error: Error; query?: string }) {
   );
 }
 
-type PagerProps = {
-  totalItems: number;
-  pageSize: number;
-  currentPage: number;
-  onPageChange: (page: number) => void;
-};
-
-function Pager({
-  currentPage,
-  onPageChange,
-  pageSize,
-  totalItems,
-}: PagerProps) {
-  const pageCount = Math.ceil(totalItems / pageSize);
-
-  return (
-    <div className="join">
-      {Array.from({ length: pageCount }, (_, i) => i + 1).map((page) => (
-        <button
-          key={page}
-          className={`join-item btn ${page === currentPage ? "btn-active" : ""}`}
-          onClick={() => onPageChange(page)}
-        >
-          {page}
-        </button>
-      ))}
-    </div>
-  );
-}
-
 // What's left of the table on narrow screens; every column is a fixed width
 // except the name, which would otherwise be squeezed to nothing.
 const narrowCols = new Set(["queue_position", "name", "status"]);
@@ -354,6 +345,63 @@ function TorrentsTable({ torrents }: TorrentsTableProps) {
   });
 
   const torrentsColumns = TorrentListColumns();
+
+  const isSelected = (t: Torrent) =>
+    !!search.selected_info_hash &&
+    infoHashKey(search.selected_info_hash) === infoHashKey(t.info_hash) &&
+    search.selected_session_id === search.session_id;
+
+  // Selecting a row opens its details; stepping with the arrow keys replaces
+  // the history entry rather than adding one per step.
+  const select = (t: Torrent, replace = false) =>
+    navigate({
+      to: "/",
+      replace,
+      search: {
+        ...search,
+        selected_info_hash: t.info_hash,
+        selected_session_id: search.session_id,
+        selected_tab_id: search.selected_tab_id ?? "general",
+      },
+    });
+
+  // up/down move the selection through this page, esc closes the details; not
+  // while typing, or with a dialog or a row menu open.
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (e.altKey || e.ctrlKey || e.metaKey || e.shiftKey) return;
+      const target = e.target as HTMLElement;
+      if (target.closest("input, textarea, select, [contenteditable]")) return;
+      if (document.querySelector("dialog[open], :popover-open")) return;
+
+      if (e.key === "Escape" && search.selected_info_hash) {
+        e.preventDefault();
+        void navigate({
+          to: "/",
+          search: {
+            ...search,
+            selected_info_hash: undefined,
+            selected_session_id: undefined,
+            selected_tab_id: undefined,
+          },
+        });
+        return;
+      }
+      if (e.key !== "ArrowDown" && e.key !== "ArrowUp") return;
+      const i = torrents.findIndex(isSelected);
+      const next =
+        e.key === "ArrowDown" ? i + 1 : i < 0 ? torrents.length - 1 : i - 1;
+      const t = torrents[next];
+      if (!t) return;
+      e.preventDefault();
+      void select(t, true);
+      document
+        .querySelector(`[data-row="${infoHashKey(t.info_hash)}"]`)
+        ?.scrollIntoView({ block: "nearest" });
+    };
+    document.addEventListener("keydown", onKey);
+    return () => document.removeEventListener("keydown", onKey);
+  });
 
   // Closes the details panel if it shows this torrent, which just left the
   // session (removed or migrated).
@@ -397,7 +445,7 @@ function TorrentsTable({ torrents }: TorrentsTableProps) {
         ).filter((c) => torrentsColumns[c].default);
 
   return (
-    <table className="table table-zebra table-fixed">
+    <table className="table table-sm table-fixed">
       <thead>
         <tr>
           {selectedCols.map((col) => (
@@ -416,7 +464,23 @@ function TorrentsTable({ torrents }: TorrentsTableProps) {
       </thead>
       <tbody>
         {torrents.map((t) => (
-          <tr key={`${infoHashKey(t.info_hash)}`}>
+          <tr
+            key={`${infoHashKey(t.info_hash)}`}
+            data-row={infoHashKey(t.info_hash)}
+            className={clsx(
+              // table-sm's padding with the normal text size
+              "group cursor-pointer text-sm",
+              isSelected(t)
+                ? "bg-primary/15 shadow-[inset_3px_0_0_var(--color-primary)]"
+                : "hover:bg-base-200/70",
+            )}
+            // The name link and the row menu do their own thing.
+            onClick={(e) => {
+              if (!(e.target as HTMLElement).closest("a, button, [popover]")) {
+                void select(t);
+              }
+            }}
+          >
             {selectedCols.map((col) => (
               <td
                 key={`td_${col}`}
@@ -429,9 +493,13 @@ function TorrentsTable({ torrents }: TorrentsTableProps) {
               </td>
             ))}
 
-            <td className="text-right">
+            <td className="py-0 text-right">
               <button
-                className="btn btn-xs btn-square"
+                className={clsx(
+                  "btn btn-ghost btn-xs btn-square focus-visible:opacity-100 group-hover:opacity-100",
+                  !isSelected(t) && "[@media(hover:hover)]:opacity-0",
+                )}
+                aria-label={`Actions for ${t.name}`}
                 popoverTarget={`popover_${infoHashKey(t.info_hash)}`}
                 style={{ anchorName: `--anchor-${infoHashKey(t.info_hash)}` }}
               >

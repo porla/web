@@ -93,7 +93,7 @@ function RouteComponent() {
           className="drawer-overlay"
           aria-label="Close the sidebar"
         />
-        <aside className="h-full w-64 border-r border-base-300 bg-base-200">
+        <aside className="h-full w-64 bg-base-200">
           {boundary(
             "sidebar",
             <Sidebar onNavigate={() => setDrawerOpen(false)} />,

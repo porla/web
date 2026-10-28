@@ -13,6 +13,7 @@ import { RadioTower, TriangleAlert } from "lucide-react";
 import { useEffect, useState, type ReactNode } from "react";
 import CopyButton from "./copy-button";
 import ListState from "./list-state";
+import Dash from "./dash";
 
 type TrackersTabProps = {
   info_hash: InfoHash;
@@ -239,9 +240,7 @@ function rowOf(t: AnnounceEntry, vs: (1 | 2)[]): Row {
   };
 }
 
-const dash = <span className="opacity-40">–</span>;
-
-const count = (n: number) => (n >= 0 ? n.toLocaleString() : dash);
+const count = (n: number) => (n >= 0 ? n.toLocaleString() : <Dash />);
 
 type View = { now: number };
 
@@ -288,12 +287,10 @@ const columns: Column[] = [
     label: "Tracker",
     title: "Hover a tracker for its tier and where it came from",
     cell: (r) => (
-      <span className="flex items-center gap-1">
-        <span className="min-w-0 flex-1">
-          {/* Wraps where the message column is folded under it, so the whole
-              URL can be read on a phone. */}
+      <span className="block">
+        <span className="flex items-center gap-1">
           <span
-            className="block truncate @max-[46rem]:whitespace-normal @max-[46rem]:wrap-anywhere"
+            className="min-w-0 truncate @max-[46rem]:whitespace-normal @max-[46rem]:wrap-anywhere"
             title={[
               r.t.url,
               `Tier ${r.t.tier}`,
@@ -305,17 +302,15 @@ const columns: Column[] = [
           >
             <Url url={r.t.url} />
           </span>
-          {r.message && (
-            <span className="block text-xs @min-[46rem]:hidden">
-              <MessageText m={r.message} />
-            </span>
-          )}
+          <span className="-my-1 shrink-0 opacity-0 group-hover:opacity-100 focus-within:opacity-100 @max-md:hidden">
+            <CopyButton text={r.t.url} label="tracker URL" />
+          </span>
         </span>
-        {/* Shown on hover; left out on a phone, where the URL is in full
-            anyway and the slot is dear. */}
-        <span className="shrink-0 opacity-0 group-hover:opacity-100 focus-within:opacity-100 @max-md:hidden">
-          <CopyButton text={r.t.url} label="tracker URL" />
-        </span>
+        {r.message && (
+          <span className="block text-xs @min-[46rem]:hidden">
+            <MessageText m={r.message} />
+          </span>
+        )}
       </span>
     ),
   },
@@ -394,7 +389,7 @@ const columns: Column[] = [
     // libtorrent skips has one perpetually) reads as nothing scheduled.
     cell: (r, { now }) => {
       if (r.announcing) return <span className="opacity-60">announcing…</span>;
-      if (r.next === null || r.next <= now) return dash;
+      if (r.next === null || r.next <= now) return <Dash />;
       return (
         <span title={`Scheduled for ${date(r.next)}`}>
           in {duration(r.next - now)}

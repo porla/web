@@ -1,14 +1,32 @@
-import { RpcError, useRPC, type InfoHash } from "@/api";
-import { filesize } from "filesize";
-import { Menu } from "lucide-react";
+import { RpcError, useRPC, type InfoHash, type TorrentFile } from "@/api";
+import { FolderTree, Menu, TriangleAlert } from "lucide-react";
 import { useModal } from "./modal";
 import RenameTorrentFileModal from "./modals/torrent-file-rename";
 import PrioritizeTorrentFileModal from "./modals/torrent-file-prioritize";
+import ListState from "./list-state";
+import clsx from "clsx";
+import Dash from "./dash";
+import { bytes } from "@/format";
 
-// file_progress reports bytes, not a fraction.
-function percent(done: number, size: number) {
-  return size > 0 ? `${((done / size) * 100).toFixed(1)}%` : "100.0%";
-}
+const fraction = (done: number, size: number) => (size > 0 ? done / size : 1);
+
+// libtorrent's named priorities; the ones between are shown as numbers.
+const priorityNames: Record<number, string> = {
+  0: "Skip",
+  1: "Low",
+  4: "Normal",
+  7: "High",
+};
+
+// Dropped below a panel width, like the Peers and Trackers columns.
+const tiers = {
+  flags: "@max-[37rem]:hidden",
+};
+
+// The flags anyone cares about (pad files aren't listed), in a fixed order:
+// porla sends them as a set.
+const flagNames = ["executable", "hidden", "symlink"];
+const flags = (f: TorrentFile) => flagNames.filter((n) => f.flags.includes(n));
 
 type FilesTabProps = {
   info_hash: InfoHash;
@@ -55,107 +73,150 @@ export default function FilesTab({ info_hash, session_id }: FilesTabProps) {
     },
   );
 
-  // libtorrent's alignment padding, not files anyone downloads
-  const visibleFiles = files.data?.files.filter(
-    (f) => !f.flags.includes("pad_file"),
-  );
+  const visibleFiles =
+    files.data?.files.filter((f) => !f.flags.includes("pad_file")) ?? [];
+
+  if (files.isLoading) {
+    return <span className="loading loading-spinner m-3" />;
+  }
 
   if (files.error) {
-    return (
-      <p className="p-3 text-sm opacity-70">
-        {files.error instanceof RpcError && files.error.code === -4
-          ? "Torrent has no metadata. The file list appears once it has been downloaded."
-          : files.error.message}
-      </p>
+    return files.error instanceof RpcError && files.error.code === -4 ? (
+      <ListState icon={FolderTree} title="No file list yet">
+        The torrent has no metadata yet. Its files show once that's downloaded.
+      </ListState>
+    ) : (
+      <ListState icon={TriangleAlert} title="Couldn't load the files">
+        {files.error.message}
+      </ListState>
     );
   }
 
   return (
-    <table className="table table-sm">
-      <thead>
-        <tr>
-          <th>Path</th>
-          <th>Size</th>
-          <th>Symlink</th>
-          <th>Flags</th>
-          <th>Progress</th>
-          <th>Priority</th>
-          <th></th>
-        </tr>
-      </thead>
-      <tbody>
-        {visibleFiles?.map((f) => (
-          <tr key={`file_${f.index}`}>
-            <td>{f.path}</td>
-            <td>{filesize(f.size)}</td>
-            <td>{f.symlink ? "symlink" : "-"}</td>
-            <td>{f.flags.join(",")}</td>
-            <td>
-              {progress.data && progress.data.progress.length > f.index && (
-                <>{percent(progress.data.progress[f.index], f.size)}</>
-              )}
-            </td>
-            <td>
-              {priorities.data &&
-                priorities.data.priorities.length > f.index && (
-                  <>{priorities.data.priorities[f.index]}</>
-                )}
-            </td>
-            <td>
-              <button
-                className="btn btn-xs btn-square"
-                popoverTarget={`popover_file_${f.index}`}
-                style={{ anchorName: `--anchor-file-${f.index}` }}
+    <div className="@container">
+      <table className="table table-sm table-pin-rows">
+        <thead>
+          <tr>
+            <th className="px-2 text-xs">Path</th>
+            <th className="px-2 text-right text-xs">Size</th>
+            <th className="px-2 text-right text-xs">Progress</th>
+            <th className="px-2 text-xs" title="Download priority">
+              Priority
+            </th>
+            <th className={clsx("px-2 text-xs", tiers.flags)}>Flags</th>
+            <th className="px-2" />
+          </tr>
+        </thead>
+        <tbody>
+          {visibleFiles.map((f) => {
+            const done = progress.data?.progress[f.index];
+            const priority = priorities.data?.priorities[f.index];
+            const slash = f.path.lastIndexOf("/") + 1;
+            return (
+              <tr
+                key={`file_${f.index}`}
+                className="group hover:bg-base-200/60"
               >
-                <Menu className="size-4" />
-              </button>
-
-              <ul
-                className="dropdown menu w-52 rounded-box bg-base-100 shadow-sm"
-                popover="auto"
-                id={`popover_file_${f.index}`}
-                style={{ positionAnchor: `--anchor-file-${f.index}` }}
-              >
-                <li>
+                {/* Takes what the others leave; the folders are muted. */}
+                <td className="w-full max-w-0 px-2">
+                  <span className="block truncate" title={f.path}>
+                    <span className="opacity-60">{f.path.slice(0, slash)}</span>
+                    {f.path.slice(slash)}
+                  </span>
+                </td>
+                <td className="px-2 text-right tabular-nums whitespace-nowrap">
+                  {bytes(f.size)}
+                </td>
+                <td className="px-2 text-right tabular-nums whitespace-nowrap">
+                  {done !== undefined && (
+                    <span className="inline-flex items-center gap-2">
+                      <progress
+                        className={clsx(
+                          "progress h-1.5 w-8",
+                          fraction(done, f.size) >= 1
+                            ? "progress-success"
+                            : "progress-primary",
+                        )}
+                        value={fraction(done, f.size)}
+                        max={1}
+                        aria-label="File progress"
+                      />
+                      <span className="w-12">
+                        {(fraction(done, f.size) * 100).toFixed(1)}%
+                      </span>
+                    </span>
+                  )}
+                </td>
+                <td
+                  className={clsx(
+                    "px-2 whitespace-nowrap",
+                    priority === 0 && "opacity-60",
+                  )}
+                >
+                  {priority !== undefined &&
+                    (priorityNames[priority] ?? priority)}
+                </td>
+                <td className={clsx("px-2 text-xs opacity-70", tiers.flags)}>
+                  {flags(f).join(", ") || <Dash />}
+                </td>
+                <td className="px-2 py-0 text-right">
                   <button
-                    onClick={async () => {
-                      await modal.show(RenameTorrentFileModal, {
-                        info_hash,
-                        session_id,
-                        file_index: f.index,
-                        file_path: f.path,
-                      });
-
-                      files.refetch();
-                    }}
+                    className="btn btn-ghost btn-xs btn-square focus-visible:opacity-100 group-hover:opacity-100 [@media(hover:hover)]:opacity-0"
+                    aria-label={`Actions for ${f.path}`}
+                    popoverTarget={`popover_file_${f.index}`}
+                    style={{ anchorName: `--anchor-file-${f.index}` }}
                   >
-                    Rename
+                    <Menu className="size-4" />
                   </button>
-                </li>
-                {priorities.data &&
-                  priorities.data.priorities.length > f.index && (
+
+                  <ul
+                    className="dropdown dropdown-end menu w-52 rounded-box bg-base-100 shadow-sm"
+                    popover="auto"
+                    id={`popover_file_${f.index}`}
+                    style={{ positionAnchor: `--anchor-file-${f.index}` }}
+                  >
                     <li>
                       <button
                         onClick={async () => {
-                          await modal.show(PrioritizeTorrentFileModal, {
+                          await modal.show(RenameTorrentFileModal, {
                             info_hash,
                             session_id,
                             file_index: f.index,
-                            file_priority: priorities.data.priorities[f.index],
+                            file_path: f.path,
                           });
 
-                          priorities.refetch();
+                          files.refetch();
                         }}
                       >
-                        Set priority
+                        Rename
                       </button>
                     </li>
-                  )}
-              </ul>
-            </td>
-          </tr>
-        ))}
-      </tbody>
-    </table>
+
+                    {priority !== undefined && (
+                      <li>
+                        <button
+                          onClick={async () => {
+                            await modal.show(PrioritizeTorrentFileModal, {
+                              info_hash,
+                              session_id,
+                              file_index: f.index,
+                              file_priority: priority,
+                            });
+
+                            priorities.refetch();
+                          }}
+                        >
+                          Set priority
+                        </button>
+                      </li>
+                    )}
+                  </ul>
+                </td>
+              </tr>
+            );
+          })}
+        </tbody>
+      </table>
+    </div>
   );
 }

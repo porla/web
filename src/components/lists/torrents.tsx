@@ -1,6 +1,20 @@
 import { infoHashKey, type Torrent } from "@/api";
+import { torrentStatus, type Tone } from "@/torrent-status";
 import { Link, useSearch } from "@tanstack/react-router";
+import clsx from "clsx";
 import { filesize } from "filesize";
+import Dash from "../dash";
+
+// The sidebar's status colors (its icons use the same shades), so a row reads
+// like the filter it's in.
+const bars: Record<Tone, string> = {
+  downloading: "bg-green-600 dark:bg-green-300",
+  seeding: "bg-blue-600 dark:bg-blue-300",
+  finished: "bg-purple-600 dark:bg-purple-300",
+  paused: "bg-orange-600 dark:bg-orange-300",
+  error: "bg-red-600 dark:bg-red-300",
+  other: "bg-base-content/40",
+};
 
 export const TorrentListColumns = () => {
   const torrentSearch = useSearch({
@@ -12,10 +26,10 @@ export const TorrentListColumns = () => {
     queue_position: {
       default: true,
       headerClassNames: "text-right w-4",
-      columnClassNames: "text-gray-300",
+      columnClassNames: "text-base-content/60",
       title: "#",
       data: (t: Torrent) => (
-        <>{t.queue_position < 0 ? "-" : t.queue_position + 1}</>
+        <>{t.queue_position < 0 ? <Dash /> : t.queue_position + 1}</>
       ),
     },
     name: {
@@ -41,22 +55,31 @@ export const TorrentListColumns = () => {
     size: {
       default: true,
       headerClassNames: "w-32",
-      columnClassNames: "text-gray-300",
+      columnClassNames: "text-base-content/60",
       title: "Size",
       data: (t: Torrent) => <>{filesize(t.total)}</>,
     },
     status: {
       default: true,
-      headerClassNames: "w-32",
+      headerClassNames: "w-40",
       columnClassNames: "",
       title: "Status",
-      data: (t: Torrent) => (
-        <progress
-          className="progress w-full"
-          value={t.progress}
-          max={1}
-        ></progress>
-      ),
+      data: (t: Torrent) => {
+        const { label, tone } = torrentStatus(t);
+        return (
+          <span className="flex items-center gap-2" title={label}>
+            <span className="h-1.5 flex-1 overflow-hidden rounded-full bg-base-content/10">
+              <span
+                className={clsx("block h-full rounded-full", bars[tone])}
+                style={{ width: `${t.progress * 100}%` }}
+              />
+            </span>
+            <span className="w-10 text-right text-xs tabular-nums opacity-70">
+              {Math.floor(t.progress * 100)}%
+            </span>
+          </span>
+        );
+      },
     },
     download_payload_rate: {
       default: true,
@@ -64,9 +87,11 @@ export const TorrentListColumns = () => {
       columnClassNames: "text-right",
       title: "DL",
       data: (t: Torrent) =>
-        t.download_payload_rate > 0
-          ? `${filesize(t.download_payload_rate)}/s`
-          : "-",
+        t.download_payload_rate > 0 ? (
+          `${filesize(t.download_payload_rate)}/s`
+        ) : (
+          <Dash />
+        ),
     },
     upload_payload_rate: {
       default: true,
@@ -74,9 +99,11 @@ export const TorrentListColumns = () => {
       columnClassNames: "text-right",
       title: "UL",
       data: (t: Torrent) =>
-        t.upload_payload_rate > 0
-          ? `${filesize(t.upload_payload_rate)}/s`
-          : "-",
+        t.upload_payload_rate > 0 ? (
+          `${filesize(t.upload_payload_rate)}/s`
+        ) : (
+          <Dash />
+        ),
     },
     peers: {
       default: false,

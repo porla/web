@@ -3,6 +3,8 @@ import PieceProgress from "./pieces-progress";
 import { binaryBytes, bytes, date, duration, rate } from "@/format";
 import { Fragment, type ReactNode } from "react";
 import CopyButton from "./copy-button";
+import { torrentStatus, type Tone } from "@/torrent-status";
+import Dash from "./dash";
 
 type GeneralTabProps = {
   info_hash: InfoHash;
@@ -13,7 +15,9 @@ type GeneralTabProps = {
 // libtorrent reports "no limit" as -1, 0 or 2^24 - 1 depending on the field.
 const limited = (n: number) => n > 0 && n < 16777215;
 
-const colors = {
+// The sidebar filters' colors, solid so they read in light and dark mode.
+// Class names are spelled out for Tailwind.
+const badges: Record<Tone, string> = {
   downloading: "bg-green-300 border-green-300 text-green-950",
   seeding: "bg-blue-300 border-blue-300 text-blue-950",
   finished: "bg-purple-300 border-purple-300 text-purple-950",
@@ -21,39 +25,6 @@ const colors = {
   error: "bg-red-300 border-red-300 text-red-950",
   other: "badge-ghost",
 };
-
-// What a user would call the torrent's state (an error's message is added
-// where it's shown), labeled and colored like the sidebar filter that lists
-// it: porla's torrents.list status rules. libtorrent keeps "downloading" or
-// "seeding" while paused; paused + auto-managed is waiting in the queue.
-function status(t: Torrent): { label: string; badge: string } {
-  const paused = t.flags.includes("paused");
-  const queued = paused && t.flags.includes("auto_managed");
-  if (t.errc) return { label: "Error", badge: colors.error };
-  if (t.moving_storage) return { label: "Moving files", badge: colors.other };
-
-  switch (t.state) {
-    case "checking_files":
-    case "checking_resume_data":
-      return {
-        label: queued ? "Queued" : paused ? "Paused" : "Checking",
-        badge: colors.other,
-      };
-    case "downloading_metadata":
-    case "downloading":
-      if (queued) return { label: "Queued", badge: colors.downloading };
-      if (paused) return { label: "Paused", badge: colors.paused };
-      return t.state === "downloading"
-        ? { label: "Downloading", badge: colors.downloading }
-        : { label: "Fetching metadata", badge: colors.downloading };
-    // "finished" is complete except for skipped files; both still upload.
-    case "finished":
-    case "seeding":
-      if (queued) return { label: "Queued", badge: colors.seeding };
-      if (paused) return { label: "Finished", badge: colors.finished };
-      return { label: "Seeding", badge: colors.seeding };
-  }
-}
 
 // Same rule as the backend's Utils::ETA: what's left of the selected files at
 // the current payload rate.
@@ -176,7 +147,9 @@ export default function GeneralTab({
     return <span className="loading loading-spinner m-3" />;
   }
 
-  const s = status(t);
+  const st = torrentStatus(t);
+  const s = { label: st.label, badge: badges[st.tone] };
+
   const left = eta(t);
   const pieceCount = pieces.data.pieces[0];
   const lastActivity = [t.last_download, t.last_upload].filter((n) => n >= 0);
@@ -222,7 +195,7 @@ export default function GeneralTab({
         />
       )}
 
-      <div className="grid gap-x-6 gap-y-4 md:grid-cols-2 xl:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_minmax(0,1fr)_minmax(0,1.4fr)]">
+      <div className="grid gap-x-6 gap-y-4 md:grid-cols-2 xl:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_minmax(max-content,1fr)_minmax(0,1.4fr)]">
         <Section title="Transfer">
           {/* The all-time counters are updated on a tick and can briefly lag
               this session's. */}
@@ -283,18 +256,20 @@ export default function GeneralTab({
             {limited(t.connections_limit) && <> of {t.connections_limit} max</>}
           </Row>
           <Row name="Availability">
-            {t.has_metadata && t.distributed_copies >= 0
-              ? t.distributed_copies.toFixed(2)
-              : "—"}
+            {t.has_metadata && t.distributed_copies >= 0 ? (
+              t.distributed_copies.toFixed(2)
+            ) : (
+              <Dash />
+            )}
           </Row>
           <Row name="Tracker">
             {/* The host; the Trackers tab has the rest. */}
             <span title={t.current_tracker} className="wrap-anywhere">
-              {trackerHost(t.current_tracker) || "—"}
+              {trackerHost(t.current_tracker) || <Dash />}
             </span>
           </Row>
           <Row name="Next announce">
-            {t.next_announce > 0 ? `in ${duration(t.next_announce)}` : "—"}
+            {t.next_announce > 0 ? `in ${duration(t.next_announce)}` : <Dash />}
           </Row>
         </Section>
 
@@ -327,7 +302,7 @@ export default function GeneralTab({
 
         <Section title="Information">
           <Row name="Size">
-            {t.has_metadata ? bytes(t.total_wanted) : "—"}
+            {t.has_metadata ? bytes(t.total_wanted) : <Dash />}
             {t.total_wanted !== t.total && (
               <span className="opacity-60"> selected of {bytes(t.total)}</span>
             )}
