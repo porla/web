@@ -5,6 +5,7 @@ import clsx from "clsx";
 import { ArrowDownLeft, Lock, TriangleAlert, Users } from "lucide-react";
 import { type ReactNode } from "react";
 import ListState from "./list-state";
+import Dash from "./dash";
 
 type PeersTabProps = {
   info_hash: InfoHash;
@@ -198,8 +199,6 @@ function encryption(p: Peer) {
   return null;
 }
 
-const dash = <span className="opacity-40">–</span>;
-
 // null: a database is loaded but has nothing for this address (private or
 // unknown); undefined: no database.
 type Country = { code?: string; name?: string } | null | undefined;
@@ -272,7 +271,7 @@ const columns: Column[] = [
     cell: ({ p }) => (
       <span className="block max-w-28 truncate" title={p.client}>
         {p.client ||
-          (p.connection_type === "standard_bittorrent" ? dash : "Web seed")}
+          (p.connection_type === "standard_bittorrent" ? <Dash /> : "Web seed")}
       </span>
     ),
   },
@@ -323,7 +322,7 @@ const columns: Column[] = [
     title: "Round-trip time to the peer",
     hide: tiers.connection,
     numeric: true,
-    cell: ({ p }) => (p.rtt > 0 ? `${p.rtt} ms` : dash),
+    cell: ({ p }) => (p.rtt > 0 ? `${p.rtt} ms` : <Dash />),
   },
   {
     key: "state",
@@ -389,14 +388,14 @@ const columns: Column[] = [
     label: "Down",
     title: "Download speed from the peer",
     numeric: true,
-    cell: ({ p }) => (p.down_speed > 0 ? rate(p.down_speed) : dash),
+    cell: ({ p }) => (p.down_speed > 0 ? rate(p.down_speed) : <Dash />),
   },
   {
     key: "up",
     label: "Up",
     title: "Upload speed to the peer",
     numeric: true,
-    cell: ({ p }) => (p.up_speed > 0 ? rate(p.up_speed) : dash),
+    cell: ({ p }) => (p.up_speed > 0 ? rate(p.up_speed) : <Dash />),
   },
   {
     key: "downloaded",
@@ -404,7 +403,8 @@ const columns: Column[] = [
     title: "Received from the peer over this connection",
     numeric: true,
     hide: tiers.totals,
-    cell: ({ p }) => (p.total_download > 0 ? bytes(p.total_download) : dash),
+    cell: ({ p }) =>
+      p.total_download > 0 ? bytes(p.total_download) : <Dash />,
   },
   {
     key: "uploaded",
@@ -412,7 +412,7 @@ const columns: Column[] = [
     title: "Sent to the peer over this connection",
     numeric: true,
     hide: tiers.totals,
-    cell: ({ p }) => (p.total_upload > 0 ? bytes(p.total_upload) : dash),
+    cell: ({ p }) => (p.total_upload > 0 ? bytes(p.total_upload) : <Dash />),
   },
 ];
 
