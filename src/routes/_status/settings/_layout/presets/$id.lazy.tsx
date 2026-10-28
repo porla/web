@@ -5,10 +5,14 @@ import {
   type Preset,
   type TorrentFlag,
 } from "@/api";
+import { useModal } from "@/components/modal";
+import ConfirmModal from "@/components/modals/confirm";
 import { useAppForm } from "@/hooks/form";
+import { peerLimit, rateLimit } from "@/limits";
 import { useQueryClient } from "@tanstack/react-query";
 import { createLazyFileRoute } from "@tanstack/react-router";
 import { Suspense } from "react";
+import z from "zod";
 
 export const Route = createLazyFileRoute(
   "/_status/settings/_layout/presets/$id",
@@ -65,40 +69,88 @@ type PresetFormProps = {
   preset: Preset;
 };
 
+// An empty field is "not set" (null), so the default preset's value applies;
+// an empty string would override it with "".
+const orNull = (s: string) => s.trim() || null;
+
+const presetSchema = (taken: string[]) =>
+  z
+    .object({
+      name: z
+        .string()
+        .trim()
+        .min(1, "Enter a name")
+        .refine((n) => !taken.includes(n), "Preset name taken"),
+      is_default: z.boolean(),
+      category: z.string().transform(orNull),
+      save_path: z.string().transform(orNull),
+      session_id: z.number().nullable(),
+      download_limit: rateLimit,
+      upload_limit: rateLimit,
+      max_connections: peerLimit,
+      max_uploads: peerLimit,
+      tags: z.string().transform((t) =>
+        t
+          .split(",")
+          .map((s) => s.trim())
+          .filter(Boolean),
+      ),
+      flags: z.array(z.custom<TorrentFlag>()),
+      flags_mask: z.array(z.custom<TorrentFlag>()),
+    })
+    // Only flags in the mask mean anything.
+    .transform((v) => ({
+      ...v,
+      flags: v.flags.filter((f) => v.flags_mask.includes(f)),
+    }));
+
 function PresetForm({ preset }: PresetFormProps) {
   const queryClient = useQueryClient();
   const navigate = Route.useNavigate();
+  const modal = useModal();
 
   const sessions = useRPC("sessions.list");
+  const presets = useRPC("presets.list");
 
-  const remove = useInvoker("presets.remove", {
-    onSuccess: () =>
-      queryClient.invalidateQueries({ queryKey: ["presets.list"] }),
-  });
+  const taken = (presets.data?.presets ?? [])
+    .filter((p) => p.id !== preset.id)
+    .map((p) => p.name);
+
+  const remove = useInvoker("presets.remove", { meta: { silent: true } });
 
   const update = useInvoker("presets.update", {
+    meta: { silent: true },
     onSuccess: () =>
-      queryClient.invalidateQueries({ queryKey: ["presets.list"] }),
+      Promise.all([
+        queryClient.invalidateQueries({ queryKey: ["presets.list"] }),
+        queryClient.invalidateQueries({ queryKey: ["presets.get"] }),
+      ]),
   });
 
   const form = useAppForm({
     defaultValues: {
-      ...preset,
-      flags: (preset.flags ?? []).filter((f) =>
-        (preset.flags_mask ?? []).includes(f),
-      ),
-      flags_mask: preset.flags_mask ?? [],
+      name: preset.name,
+      is_default: preset.is_default,
+      category: preset.category ?? "",
+      save_path: preset.save_path ?? "",
+      session_id: preset.session_id,
+      download_limit: preset.download_limit,
+      upload_limit: preset.upload_limit,
+      max_connections: preset.max_connections,
+      max_uploads: preset.max_uploads,
       tags: preset.tags.join(", "),
+      flags: preset.flags ?? [],
+      flags_mask: preset.flags_mask ?? [],
+    },
+    validators: {
+      onChange: presetSchema(taken),
     },
     onSubmit: async ({ value }) => {
       await update.mutateAsync({
-        ...value,
-        flags: value.flags.filter((f) => value.flags_mask.includes(f)),
+        ...presetSchema(taken).parse(value),
         id: preset.id,
-        tags: value.tags
-          ?.split(",")
-          .map((s) => s.trim())
-          .filter(Boolean),
+        metadata: preset.metadata,
+        storage_mode: preset.storage_mode,
       });
     },
   });
@@ -108,7 +160,7 @@ function PresetForm({ preset }: PresetFormProps) {
       onSubmit={(e) => {
         e.preventDefault();
         e.stopPropagation();
-        form.handleSubmit();
+        form.handleSubmit().catch(() => {});
       }}
     >
       <form.AppField
@@ -252,16 +304,33 @@ function PresetForm({ preset }: PresetFormProps) {
       </div>
 
       <form.AppForm>
+        <form.SaveError error={update.error} />
         <form.SubmitButton label="Update" />
       </form.AppForm>
 
       <button
         type="button"
         disabled={preset.is_default}
+        title={
+          preset.is_default ? "Cannot remove the default preset" : undefined
+        }
         className="btn btn-warning ml-3"
         onClick={async () => {
-          await remove.mutateAsync({ id: preset.id });
-          await navigate({ to: "/settings" });
+          const removed = await modal.show(ConfirmModal, {
+            title: "Remove preset",
+            message: `Remove the preset "${preset.name}"?`,
+            confirmLabel: "Remove",
+            action: () => remove.mutateAsync({ id: preset.id }),
+          });
+
+          if (removed) {
+            queryClient.removeQueries({
+              queryKey: ["presets.get", { id: preset.id }],
+            });
+
+            await queryClient.invalidateQueries({ queryKey: ["presets.list"] });
+            await navigate({ to: "/settings/presets" });
+          }
         }}
       >
         Remove
