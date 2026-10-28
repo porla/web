@@ -22,16 +22,55 @@ export default function MoveTorrentModal({
   session_id,
   close,
 }: MoveTorrentModalProps & ModalProps<boolean>) {
-  const move = useInvoker("torrents.move", { meta: { silent: true } });
+  const torrent = useRPC(
+    "torrents.get",
+    {
+      info_hash,
+      session_id,
+    },
+    { meta: { silent: true } },
+  );
 
-  const torrent = useRPC("torrents.get", {
-    info_hash,
-    session_id,
-  });
+  if (torrent.isLoading) {
+    return <span className="loading loading-spinner"></span>;
+  }
+
+  // Removed or migrated while the menu was open: there's nothing to move.
+  if (!torrent.data) {
+    return (
+      <>
+        <h3 className="font-bold text-lg">Move torrent</h3>
+        <p className="py-2">{torrent.error?.message ?? "Torrent not found"}</p>
+        <div className="modal-action">
+          <button type="button" className="btn" onClick={() => close(false)}>
+            Close
+          </button>
+        </div>
+      </>
+    );
+  }
+
+  return (
+    <MoveForm
+      info_hash={info_hash}
+      session_id={session_id}
+      save_path={torrent.data.torrent.save_path}
+      close={close}
+    />
+  );
+}
+
+function MoveForm({
+  info_hash,
+  session_id,
+  save_path,
+  close,
+}: MoveTorrentModalProps & { save_path: string } & ModalProps<boolean>) {
+  const move = useInvoker("torrents.move", { meta: { silent: true } });
 
   const form = useAppForm({
     defaultValues: {
-      path: torrent.data?.torrent.save_path ?? "",
+      path: save_path,
     },
     validators: {
       onChange: moveSchema,
@@ -46,10 +85,6 @@ export default function MoveTorrentModal({
       close(true);
     },
   });
-
-  if (torrent.isLoading) {
-    return <>loading</>;
-  }
 
   return (
     <form.AppForm>
