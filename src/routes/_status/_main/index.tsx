@@ -16,7 +16,7 @@ import { useForm } from "@tanstack/react-form";
 import { createFileRoute } from "@tanstack/react-router";
 import { Menu, SearchIcon } from "lucide-react";
 
-type TorrentFilterStatus =
+export type TorrentFilterStatus =
   | "downloading"
   | "downloading_queued"
   | "finished"

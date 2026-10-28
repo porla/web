@@ -1,8 +1,7 @@
 import { HttpError, useInvoker, useRPC } from "@/api";
-import { prefixPath } from "@/base";
+import { useWebVersion } from "@/version";
 import { useQuery } from "@tanstack/react-query";
 import { createLazyFileRoute } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
 import { gt, parse } from "semver";
 
 export const Route = createLazyFileRoute("/_status/settings/_layout/")({
@@ -19,8 +18,7 @@ function RouteComponent() {
   });
 
   const versions = useRPC("sys.versions");
-
-  const [webVersion, setWebVersion] = useState<string | null>();
+  const webVersion = useWebVersion();
 
   const owner = kv.data?.values["porla.webui.owner"];
   const repository = kv.data?.values["porla.webui.repository"];
@@ -37,13 +35,6 @@ function RouteComponent() {
     queryFn: () => latestRelease(repo),
     enabled: false,
   });
-
-  useEffect(() => {
-    fetch(prefixPath("/version.json"))
-      .then((r) => r.json())
-      .then((r) => setWebVersion(r.SemVer))
-      .catch(() => setWebVersion("0.0.0"));
-  }, []);
 
   return (
     <div className="space-y-6">
