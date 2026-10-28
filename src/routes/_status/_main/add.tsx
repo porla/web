@@ -1,6 +1,17 @@
-import { RpcError, useInvoker, useRPC } from "@/api";
+import { AuthError, useInvoker, useRPC, type InfoHash } from "@/api";
+import { ItemCard, type Choices } from "@/components/add/item-card";
+import {
+  addError,
+  addParams,
+  emptyOptions,
+  fileItem,
+  magnetItem,
+  readTorrent,
+  type Item,
+} from "@/components/add/items";
+import Sources from "@/components/add/sources";
 import { useAppForm } from "@/hooks/form";
-import { readFile } from "@/utils";
+import { useSelector } from "@tanstack/react-form";
 import { createFileRoute } from "@tanstack/react-router";
 import { Suspense, useState } from "react";
 
@@ -11,204 +22,164 @@ export const Route = createFileRoute("/_status/_main/add")({
 function RouteComponent() {
   const navigate = Route.useNavigate();
 
-  const add = useInvoker("torrents.add");
+  const add = useInvoker("torrents.add", { meta: { silent: true } });
   const presets = useRPC("presets.list");
   const sessions = useRPC("sessions.list");
-  const [error, setError] = useState<string>();
+
+  const [openId, setOpenId] = useState<number>();
 
   const form = useAppForm({
     defaultValues: {
-      type: "torrent" as "torrent" | "magnet",
-      files: null as FileList | null,
-      magnet_link: null as string | null,
-      download_limit: null as number | null,
-      upload_limit: null as number | null,
-      http_seeds: null as string[] | null,
-      max_connections: null as number | null,
-      max_uploads: null as number | null,
-      save_path: "",
-      trackers: null as string[] | null,
-      url_seeds: null as string[] | null,
-      preset_id: null as number | null,
-      session_id: null as number | null,
+      items: [] as Item[],
     },
     onSubmit: async ({ value }) => {
-      setError(undefined);
+      // One at a time keeps the order and continues past failures. Each
+      // added torrent leaves the list, so a retry only sends what's left.
+      let added = 0;
+      let last: { info_hash: InfoHash; session_id: number } | undefined;
+      for (const item of value.items) {
+        update(item.id, { adding: true, error: undefined });
+        try {
+          const source = item.file
+            ? { ti: await readTorrent(item.file) }
+            : { magnet_uri: item.uri };
 
-      try {
-        if (value.type === "torrent" && value.files && value.files.length > 0) {
-          for (const file of value.files) {
-            await add.mutateAsync({
-              ti: await readFile(file),
-              download_limit: value.download_limit,
-              upload_limit: value.upload_limit,
-              max_connections: value.max_connections,
-              max_uploads: value.max_uploads,
-              save_path: value.save_path,
-              trackers: value.trackers,
-              url_seeds: value.url_seeds,
-              preset_id: value.preset_id,
-              session_id: value.session_id,
-            });
-          }
-        } else if (value.type === "magnet" && value.magnet_link) {
-          await add.mutateAsync({
-            magnet_uri: value.magnet_link,
-            download_limit: value.download_limit,
-            upload_limit: value.upload_limit,
-            max_connections: value.max_connections,
-            max_uploads: value.max_uploads,
-            save_path: value.save_path,
-            trackers: value.trackers,
-            url_seeds: value.url_seeds,
-            preset_id: value.preset_id,
-            session_id: value.session_id,
+          const r = await add.mutateAsync({
+            ...source,
+            ...addParams(item.options),
           });
-        }
-      } catch (err) {
-        if (err instanceof RpcError) {
-          setError(err.message);
-        }
 
-        return;
+          last = r;
+          added++;
+
+          remove(item.id);
+        } catch (err) {
+          update(item.id, { adding: false, error: addError(err) });
+          // The global handler is already on its way to the login page.
+          if (err instanceof AuthError) return;
+        }
       }
 
-      await navigate({ to: "/" });
+      if (added === value.items.length) {
+        // One torrent opens in the list; several show their session.
+        await navigate({
+          to: "/",
+          search:
+            added === 1 && last
+              ? {
+                  session_id: last.session_id,
+                  selected_info_hash: last.info_hash,
+                  selected_session_id: last.session_id,
+                  selected_tab_id: "general",
+                }
+              : { session_id: last?.session_id },
+        });
+      }
     },
   });
 
+  const items = useSelector(form.store, (s) => s.values.items);
+  const busy = useSelector(form.store, (s) => s.isSubmitting);
+
+  const update = (id: number, patch: Partial<Item>) =>
+    form.setFieldValue("items", (cur) =>
+      cur.map((i) => (i.id === id ? { ...i, ...patch } : i)),
+    );
+
+  // removeFieldValue also moves the field state of the torrents after it.
+  const remove = (id: number) => {
+    const index = form.getFieldValue("items").findIndex((i) => i.id === id);
+    if (index >= 0) void form.removeFieldValue("items", index);
+  };
+
+  // New torrents start with the options of the last one in the list.
+  function append(make: (options: Item["options"]) => Item[]) {
+    const cur = form.getFieldValue("items");
+    const fresh = make({ ...(cur.at(-1)?.options ?? emptyOptions) });
+    for (const item of fresh) form.pushFieldValue("items", item);
+    if (cur.length === 0 && fresh.length === 1) setOpenId(fresh[0].id);
+  }
+
+  const addFiles = (files: File[]) =>
+    append((options) => files.map((f) => fileItem(f, { ...options })));
+
+  const addMagnets = (text: string) =>
+    append((options) =>
+      text
+        .split("\n")
+        .map((l) => l.trim())
+        .filter(Boolean)
+        .map((uri) => magnetItem(uri, { ...options })),
+    );
+
+  const copyToAll = (from: Item) =>
+    form.setFieldValue("items", (cur) =>
+      cur.map((i) => ({ ...i, options: { ...from.options } })),
+    );
+
+  const choices: Choices = {
+    presets: presets.data?.presets ?? [],
+    sessions: sessions.data?.sessions ?? [],
+  };
+
   return (
-    <div className="m-5">
-      <h1>Add torrent</h1>
+    <div
+      className="m-5 max-w-5xl"
+      onDragOver={(e) => e.preventDefault()}
+      onDrop={(e) => {
+        e.preventDefault();
+        if (busy) return;
+        if (e.dataTransfer.files.length) {
+          addFiles(Array.from(e.dataTransfer.files));
+        } else {
+          addMagnets(e.dataTransfer.getData("text/plain"));
+        }
+      }}
+    >
       <Suspense>
-        <form
-          onSubmit={(e) => {
-            e.preventDefault();
-            e.stopPropagation();
-            form.handleSubmit();
-          }}
-        >
-          <form.AppField
-            name="type"
-            children={(field) => (
-              <div className="flex items-center space-x-5">
-                <label className="label">
-                  <input
-                    type="radio"
-                    name="add_type"
-                    className="radio radio-xs"
-                    checked={field.state.value === "torrent"}
-                    onChange={() => field.handleChange("torrent")}
-                  />
-                  Torrent file
-                </label>
-                <label className="label">
-                  <input
-                    type="radio"
-                    name="add_type"
-                    className="radio radio-xs"
-                    checked={field.state.value === "magnet"}
-                    onChange={() => field.handleChange("magnet")}
-                  />
-                  Magnet link
-                </label>
-              </div>
-            )}
-          />
-          <form.Subscribe selector={(state) => state.values.type}>
-            {(type) => (
-              <>
-                {type === "torrent" && (
-                  <form.AppField
-                    name="files"
-                    children={(field) => (
-                      <field.FileInputField label="Torrent file(s)" />
-                    )}
-                  />
-                )}
+        <h1>Add torrents</h1>
 
-                {type === "magnet" && (
-                  <form.AppField
-                    name="magnet_link"
-                    children={(field) => (
-                      <field.TextField label="Magnet link" />
-                    )}
-                  />
-                )}
-              </>
-            )}
-          </form.Subscribe>
-
-          <form.AppField
-            name="preset_id"
-            children={(field) => (
-              <field.SelectField
-                label="Preset"
-                items={
-                  presets.data?.presets.map((p) => {
-                    return {
-                      value: p.id,
-                      label: p.name,
-                    };
-                  }) ?? []
-                }
+        <form.AppForm>
+          <form.Form>
+            {/* A disabled fieldset disables every control in it while adding. */}
+            <fieldset disabled={busy} className="mt-3 space-y-3">
+              <Sources
+                compact={items.length > 0}
+                onFiles={addFiles}
+                onMagnets={addMagnets}
               />
-            )}
-          />
-          {sessions.data && sessions.data.sessions.length > 1 && (
-            <form.AppField
-              name="session_id"
-              children={(field) => (
-                <field.SelectField
-                  label="Session"
-                  items={
-                    sessions.data.sessions.map((s) => {
-                      return {
-                        value: s.id,
-                        label: s.name,
-                      };
-                    }) ?? []
-                  }
-                />
-              )}
-            />
-          )}
+              <ul className="space-y-2">
+                {items.map((item, index) => (
+                  <ItemCard
+                    key={item.id}
+                    form={form}
+                    index={index}
+                    count={items.length}
+                    open={openId === item.id}
+                    choices={choices}
+                    onToggle={() =>
+                      setOpenId(openId === item.id ? undefined : item.id)
+                    }
+                    onRemove={() => remove(item.id)}
+                    onCopyToAll={() => copyToAll(item)}
+                  />
+                ))}
+              </ul>
+            </fieldset>
 
-          <form.AppField
-            name="save_path"
-            children={(field) => <field.TextField label="Save path" />}
-          />
-
-          <form.AppField
-            name="download_limit"
-            children={(field) => <field.NumberField label="Download limit" />}
-          />
-
-          <form.AppField
-            name="upload_limit"
-            children={(field) => <field.NumberField label="Upload limit" />}
-          />
-
-          <form.AppField
-            name="max_connections"
-            children={(field) => <field.NumberField label="Max connections" />}
-          />
-
-          <form.AppField
-            name="max_uploads"
-            children={(field) => <field.NumberField label="Max uploads" />}
-          />
-
-          <div className="flex items-center space-x-3">
-            <form.AppForm>
-              <form.SubmitButton label="Add torrent" />
-            </form.AppForm>
-
-            <span className="text-sm text-red-400">
-              {error && <>{error}</>}
-            </span>
-          </div>
-        </form>
+            {/* Not disabled by validation: submitting is what shows each
+                torrent's errors and flags the ones to fix. */}
+            <button
+              type="submit"
+              className="btn btn-primary mt-4"
+              disabled={busy || items.length === 0}
+            >
+              {items.length > 1
+                ? `Add ${items.length} torrents`
+                : "Add torrent"}
+            </button>
+          </form.Form>
+        </form.AppForm>
       </Suspense>
     </div>
   );

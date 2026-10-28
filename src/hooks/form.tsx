@@ -3,10 +3,6 @@ import { lazy, type ReactNode } from "react";
 import { useModalDismissible } from "@/components/modal";
 import { fieldContext, formContext, useFormContext } from "./form-context";
 
-const FileInputField = lazy(
-  () => import("@/components/forms/file-input-field.tsx"),
-);
-
 const CheckboxField = lazy(
   () => import("@/components/forms/checkbox-field.tsx"),
 );
@@ -97,7 +93,6 @@ export const { useAppForm, withForm, withFieldGroup } = createFormHook({
     CheckboxField,
     ColorField,
     DateField,
-    FileInputField,
     NumberField,
     SelectField,
     TextField,
