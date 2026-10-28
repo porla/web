@@ -45,9 +45,11 @@ export type TorrentFilterStatus = (typeof statuses)[number];
 
 const pageSizes = [25, 50, 100, 200] as const;
 
+export type PageSize = (typeof pageSizes)[number];
+
 type TorrentSearch = {
   page?: number;
-  page_size?: (typeof pageSizes)[number];
+  page_size?: PageSize;
   query?: string;
   session_id?: number;
   category?: string;
@@ -114,6 +116,7 @@ function RouteComponent() {
         to: "/",
         search: {
           session_id: search.session_id,
+          page_size: search.page_size,
           query: value.query.trim() || undefined,
           selected_info_hash: search.selected_info_hash,
           selected_session_id: search.selected_session_id,
@@ -149,6 +152,25 @@ function RouteComponent() {
       placeholderData: keepPreviousData,
     },
   );
+
+  // Past the last page (its last torrent removed, a filtered list shrank):
+  // the backend answers an empty page, so go to the last one.
+  const total = torrents.data?.torrents_total ?? 0;
+  const lastPage = Math.max(1, Math.ceil(total / pageSize));
+
+  useEffect(() => {
+    if (torrents.isPlaceholderData || total === 0) return;
+    if ((search.page ?? 1) <= lastPage) return;
+
+    navigate({
+      to: "/",
+      replace: true,
+      search: (prev) => ({
+        ...prev,
+        page: lastPage > 1 ? lastPage : undefined,
+      }),
+    });
+  }, [torrents.isPlaceholderData, total, lastPage, search.page, navigate]);
 
   const pager = !torrents.error && !!torrents.data?.torrents_total && (
     <Pager
@@ -197,7 +219,10 @@ function RouteComponent() {
                     type="button"
                     className="btn btn-ghost btn-xs btn-circle"
                     aria-label="Clear the search"
-                    onClick={() =>
+                    onClick={() => {
+                      // also reset search form for any unsubmitted query
+                      searchForm.reset({ query: "" });
+
                       navigate({
                         to: "/",
                         search: {
@@ -205,8 +230,8 @@ function RouteComponent() {
                           query: undefined,
                           page: undefined,
                         },
-                      })
-                    }
+                      });
+                    }}
                   >
                     <X className="size-4" />
                   </button>
@@ -220,7 +245,7 @@ function RouteComponent() {
       <div className="mx-3 min-h-0 flex-1 overflow-y-auto rounded-box border border-base-300 bg-base-100">
         {torrents.error ? (
           <ListError error={torrents.error} query={search.query} />
-        ) : torrents.data?.torrents.length === 0 ? (
+        ) : torrents.data?.torrents_total === 0 ? (
           search.query || filtered ? (
             <ListState icon={SearchX} title="No torrents match">
               {search.query ? (
