@@ -169,6 +169,7 @@ export default function Sidebar({ onNavigate }: { onNavigate?: () => void }) {
 
   const isActive = (filter: Filter) =>
     onList &&
+    !search.query &&
     sameStatus(search.status, filter.status) &&
     search.category === filter.category &&
     search.tag === filter.tag;

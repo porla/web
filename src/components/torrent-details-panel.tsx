@@ -31,7 +31,7 @@ const tabs = [
     id: "trackers",
     name: "Trackers",
   },
-];
+] as const;
 
 export default function TorrentDetailsPanel({
   info_hash,
