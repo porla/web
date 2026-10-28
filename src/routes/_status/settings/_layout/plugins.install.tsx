@@ -2,6 +2,7 @@ import { useInvoker } from "@/api";
 import { useAppForm } from "@/hooks/form";
 import { useQueryClient } from "@tanstack/react-query";
 import { createFileRoute, Link } from "@tanstack/react-router";
+import z from "zod";
 
 export const Route = createFileRoute(
   "/_status/settings/_layout/plugins/install",
@@ -9,11 +10,29 @@ export const Route = createFileRoute(
   component: RouteComponent,
 });
 
+const githubName = z
+  .string()
+  .trim()
+  .min(1, { error: "Required", abort: true })
+  .regex(/^[A-Za-z0-9._-]+$/, "Letters, digits, '.', '-' and '_' only");
+
+const installSchema = z.object({
+  owner: githubName,
+  repository: githubName,
+  version: z
+    .string()
+    .trim()
+    .min(1, { error: "Enter a release tag, like v1.0.0", abort: true })
+    .regex(/^[^\s/?#]+$/, "A release tag, like v1.0.0"),
+  config: z.string(),
+});
+
 function RouteComponent() {
   const navigate = Route.useNavigate();
   const queryClient = useQueryClient();
 
   const install = useInvoker("plugins.install", {
+    meta: { silent: true },
     onSuccess: () =>
       queryClient.invalidateQueries({ queryKey: ["plugins.list"] }),
   });
@@ -25,34 +44,28 @@ function RouteComponent() {
       version: "",
       config: "",
     },
+    validators: {
+      onMount: installSchema,
+      onChange: installSchema,
+    },
     onSubmit: async ({ value }) => {
-      const result = await install.mutateAsync(value);
+      const { config, ...release } = installSchema.parse(value);
 
-      if (
-        !!result &&
-        typeof result === "object" &&
-        "id" in result &&
-        typeof result.id === "number"
-      ) {
-        await navigate({
-          to: "/settings/plugins/$id",
-          params: {
-            id: result.id.toString(),
-          },
-        });
-      }
+      const { id } = await install.mutateAsync({
+        ...release,
+        config: config.trim() ? config : null,
+      });
+
+      await navigate({
+        to: "/settings/plugins/$id",
+        params: { id: id.toString() },
+      });
     },
   });
 
   return (
-    <div>
-      <form
-        onSubmit={(e) => {
-          e.preventDefault();
-          e.stopPropagation();
-          form.handleSubmit();
-        }}
-      >
+    <form.AppForm>
+      <form.Form>
         <form.AppField
           name="owner"
           children={(field) => <field.TextField label="Owner" />}
@@ -83,10 +96,9 @@ function RouteComponent() {
           )}
         />
 
-        <form.AppForm>
-          <form.SubmitButton label="Install" />
-        </form.AppForm>
-      </form>
+        <form.SaveError error={install.error} />
+        <form.SubmitButton label="Install" />
+      </form.Form>
 
       <div className="mt-5 text-sm">
         Or,{" "}
@@ -94,6 +106,6 @@ function RouteComponent() {
           add manually instead
         </Link>
       </div>
-    </div>
+    </form.AppForm>
   );
 }

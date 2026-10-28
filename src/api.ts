@@ -187,8 +187,11 @@ export type PluginsGet = {
   plugin: {
     id: number;
     path: string;
+    name: string | null;
+    version: string | null;
     config: string | null;
     metadata: Record<string, unknown>;
+    is_loaded: boolean;
   };
 };
 
@@ -206,8 +209,10 @@ export type PresetsList = {
 
 export type PluginsListItem = {
   id: number;
-  name: string;
   path: string;
+  name: string | null;
+  version: string | null;
+  is_loaded: boolean;
 };
 
 export type SessionsList = {
