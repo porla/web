@@ -148,7 +148,10 @@ function RouteComponent() {
     },
     {
       meta: { silent: true },
-      refetchInterval: (q) => (q.state.error ? false : 1000),
+      // An RpcError (a bad PQL query) would only repeat; anything else, like
+      // porla restarting or the network dropping, polls on until it's back.
+      refetchInterval: (q) =>
+        q.state.error instanceof RpcError ? false : 1000,
       placeholderData: keepPreviousData,
     },
   );
