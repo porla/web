@@ -22,6 +22,14 @@ export function duration(seconds: number) {
   return `${Math.floor(s / 86400)}d ${Math.floor((s % 86400) / 3600)}h`;
 }
 
+// Long spans in whole days or years: "1 day", "411 days", "3 years".
+export function days(seconds: number) {
+  const d = Math.floor(seconds / 86400);
+  const y = Math.floor(d / 365);
+  if (y >= 1 && d % 365 === 0) return y === 1 ? "1 year" : `${y} years`;
+  return d === 1 ? "1 day" : `${d.toLocaleString("en-US")} days`;
+}
+
 // A Unix timestamp as "2026-10-27 14:05"; 0 means it never happened.
 export function date(unixSeconds: number) {
   return unixSeconds > 0

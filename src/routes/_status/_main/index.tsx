@@ -22,6 +22,7 @@ import MigrateTorrentModal from "@/components/modals/torrent-migrate";
 import MoveTorrentModal from "@/components/modals/torrent-move";
 import TorrentPropertiesModal from "@/components/modals/torrent-properties";
 import RemoveTorrentModal from "@/components/modals/torrent-remove";
+import TorrentStatsModal from "@/components/modals/torrent-stats";
 import Pager from "@/components/pager";
 import TorrentDetailsPanel from "@/components/torrent-details-panel";
 import { useChecked, type Checked } from "@/hooks/use-checked";
@@ -933,6 +934,18 @@ function TorrentsTable({ torrents, checked }: TorrentsTableProps) {
                     }}
                   >
                     Properties
+                  </button>
+                </li>
+                <li>
+                  <button
+                    onClick={() =>
+                      modal.show(TorrentStatsModal, {
+                        info_hash: t.info_hash,
+                        session_id: search.session_id!,
+                      })
+                    }
+                  >
+                    Share stats
                   </button>
                 </li>
               </ul>
