@@ -569,12 +569,16 @@ function TorrentsTable({ torrents, checked }: TorrentsTableProps) {
             <th
               key={col}
               title={torrentsColumns[col].description}
-              style={{
-                width:
-                  torrentsColumns[col].width &&
-                  `${torrentsColumns[col].width}rem`,
-              }}
+              style={
+                torrentsColumns[col].width
+                  ? ({
+                      "--w": `${torrentsColumns[col].width}rem`,
+                      "--w-narrow": `${torrentsColumns[col].narrowWidth ?? torrentsColumns[col].width}rem`,
+                    } as CSSProperties)
+                  : undefined
+              }
               className={clsx(
+                torrentsColumns[col].width && "w-(--w-narrow) md:w-(--w)",
                 torrentsColumns[col].headerClassNames,
                 !narrowCols.has(col) && "max-md:hidden",
               )}

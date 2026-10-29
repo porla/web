@@ -11,9 +11,13 @@ export type TorrentListColumn = {
   default: boolean;
   // rem; none for the name, which takes what's left
   width?: number;
+  // rem below md, where only #, Name and Status are shown
+  narrowWidth?: number;
   headerClassNames: string;
   columnClassNames: string;
   title: string;
+  // For settings, where the title is an abbreviation.
+  name?: string;
   description?: string;
   data: (t: Torrent) => ReactNode;
 };
@@ -31,6 +35,7 @@ export const TorrentListColumns = () => {
       headerClassNames: "text-right",
       columnClassNames: "text-right text-base-content/60",
       title: "#",
+      name: "Queue position",
       data: (t: Torrent) => (
         <>{t.queue_position < 0 ? <Dash /> : t.queue_position + 1}</>
       ),
@@ -72,6 +77,7 @@ export const TorrentListColumns = () => {
     status: {
       default: true,
       width: 10,
+      narrowWidth: 5,
       headerClassNames: "",
       columnClassNames: "",
       title: "Status",
@@ -81,7 +87,7 @@ export const TorrentListColumns = () => {
         // Without metadata there's nothing to show progress of.
         if (t.state === "downloading_metadata") {
           return (
-            <span className="text-xs opacity-70" title={label}>
+            <span className="block truncate text-xs opacity-70" title={label}>
               {label}
             </span>
           );
@@ -91,14 +97,17 @@ export const TorrentListColumns = () => {
         const percent = `${Math.floor(t.progress * 100)}%`;
 
         return (
-          <span className="flex items-center gap-2" title={label}>
-            <span className="h-1.5 flex-1 overflow-hidden rounded-full bg-base-content/10">
+          <span
+            className="flex items-center gap-2 max-md:flex-col max-md:items-stretch max-md:gap-1"
+            title={label}
+          >
+            <span className="h-1.5 flex-1 overflow-hidden rounded-full bg-base-content/10 max-md:flex-none">
               <span
                 className={clsx("block h-full rounded-full", toneBar[tone])}
                 style={{ width: `${t.progress * 100}%` }}
               />
             </span>
-            <span className="min-w-10 text-right text-xs tabular-nums opacity-70">
+            <span className="min-w-10 text-right text-xs tabular-nums opacity-70 max-md:min-w-0 max-md:text-left max-md:leading-none">
               {label === "Checking" ? `Checking ${percent}` : percent}
             </span>
           </span>
@@ -111,6 +120,7 @@ export const TorrentListColumns = () => {
       headerClassNames: "text-right",
       columnClassNames: "text-right",
       title: "DL",
+      name: "Download rate",
       data: (t: Torrent) =>
         t.download_payload_rate > 0 ? (
           `${filesize(t.download_payload_rate)}/s`
@@ -124,6 +134,7 @@ export const TorrentListColumns = () => {
       headerClassNames: "text-right",
       columnClassNames: "text-right",
       title: "UL",
+      name: "Upload rate",
       data: (t: Torrent) =>
         t.upload_payload_rate > 0 ? (
           `${filesize(t.upload_payload_rate)}/s`
