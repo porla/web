@@ -1,4 +1,10 @@
-import { RpcError, useRPC, type InfoHash, type TorrentFile } from "@/api";
+import {
+  RpcError,
+  useRPC,
+  type FileFlag,
+  type InfoHash,
+  type TorrentFile,
+} from "@/api";
 import { FolderTree, Menu, TriangleAlert } from "lucide-react";
 import { useModal } from "./modal";
 import RenameTorrentFileModal from "./modals/torrent-file-rename";
@@ -25,7 +31,7 @@ const tiers = {
 
 // The flags anyone cares about (pad files aren't listed), in a fixed order:
 // porla sends them as a set.
-const flagNames = ["executable", "hidden", "symlink"];
+const flagNames: FileFlag[] = ["executable", "hidden", "symlink"];
 const flags = (f: TorrentFile) => flagNames.filter((n) => f.flags.includes(n));
 
 type FilesTabProps = {

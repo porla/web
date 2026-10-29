@@ -327,7 +327,7 @@ export default function GeneralTab({
           {t.$userdata?.category && (
             <Row name="Category">{t.$userdata.category}</Row>
           )}
-          {t.$userdata?.tags.length > 0 && (
+          {!!t.$userdata?.tags.length && (
             <Row name="Tags">{t.$userdata.tags.join(", ")}</Row>
           )}
           {t.queue_position >= 0 && (

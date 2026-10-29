@@ -1,4 +1,10 @@
-import { useRPC, type InfoHash, type Torrent, type Peer } from "@/api";
+import {
+  useRPC,
+  type InfoHash,
+  type Torrent,
+  type Peer,
+  type PeerFlag,
+} from "@/api";
 import { bytes, duration, rate } from "@/format";
 import { keepPreviousData } from "@tanstack/react-query";
 import clsx from "clsx";
@@ -13,7 +19,7 @@ type PeersTabProps = {
   torrent: Torrent | undefined;
 };
 
-const has = (p: Peer, flag: string) => p.flags.includes(flag);
+const has = (p: Peer, flag: PeerFlag) => p.flags.includes(flag);
 
 const count = (n: number, word: string) => `${n} ${word}${n === 1 ? "" : "s"}`;
 
