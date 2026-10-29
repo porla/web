@@ -11,6 +11,9 @@ const DateField = lazy(() => import("@/components/forms/date-field.tsx"));
 const NumberField = lazy(() => import("@/components/forms/number-field.tsx"));
 const SelectField = lazy(() => import("@/components/forms/select-field.tsx"));
 const TextField = lazy(() => import("@/components/forms/text-field.tsx"));
+const TorrentFlagsField = lazy(
+  () => import("@/components/forms/torrent-flags-field.tsx"),
+);
 
 function SubmitButton({
   disabled,
@@ -90,8 +93,12 @@ function ModalActions({
   // Closing while the save runs would lose its result and any error.
   useModalDismissible(!isSubmitting);
 
+  // stick to the bottom of a modal
   return (
-    <div className="modal-action">
+    <div
+      data-sticky-footer
+      className="modal-action sticky bottom-0 -mx-6 border-t border-base-300 bg-base-100 px-6 pt-4 pb-6"
+    >
       <button
         type="button"
         className="btn"
@@ -114,6 +121,7 @@ export const { useAppForm, withForm, withFieldGroup } = createFormHook({
     NumberField,
     SelectField,
     TextField,
+    TorrentFlagsField,
   },
   formComponents: {
     Form,

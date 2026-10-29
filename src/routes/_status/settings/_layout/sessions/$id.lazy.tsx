@@ -1,12 +1,13 @@
 import { type Session, useInvoker, useRPC } from "@/api";
+import Accordion from "@/components/accordion";
 import { useModal } from "@/components/modal";
 import ConfirmModal from "@/components/modals/confirm";
 import SessionSettingSetModal from "@/components/modals/session-setting-set";
 import { useAppForm } from "@/hooks/form";
 import { useQueryClient } from "@tanstack/react-query";
 import { createLazyFileRoute } from "@tanstack/react-router";
-import { ChevronDown, Lock, SlidersHorizontal } from "lucide-react";
-import { Suspense, useState } from "react";
+import { Lock, SlidersHorizontal } from "lucide-react";
+import { Suspense } from "react";
 import z from "zod";
 
 export const Route = createLazyFileRoute(
@@ -210,79 +211,62 @@ function SessionSettings({ session }: { session: Session }) {
     id: session.id,
   });
 
-  const [isOpen, setIsOpen] = useState(false);
-
   if (settings.isLoading || !settings.data) {
     return <>loading</>;
   }
 
   return (
-    <details
-      open={isOpen}
-      onToggle={(e) => setIsOpen(e.currentTarget.open)}
-      className="collapse bg-base-200 border border-base-300"
-      name="settings-advanced"
-    >
-      <summary className="collapse-title font-semibold flex justify-between pr-4">
-        <span>Session settings</span>
-        <span
-          className={`transition-transform duration-200 ${isOpen ? "rotate-180" : ""}`}
-        >
-          <ChevronDown />
-        </span>
-      </summary>
-      <div className="collapse-content text-sm">
-        {!session.state && (
-          <div role="alert" className="alert alert-info alert-soft">
-            This session isn't loaded, so its settings can't be changed.
-          </div>
-        )}
+    <Accordion title="Session settings">
+      {!session.state && (
+        <div role="alert" className="alert alert-info alert-soft">
+          This session isn't loaded, so its settings can't be changed.
+        </div>
+      )}
 
-        <table className="table">
-          <thead>
-            <tr>
-              <th>Name</th>
-              <th>Value</th>
-              <th></th>
+      <table className="table">
+        <thead>
+          <tr>
+            <th>Name</th>
+            <th>Value</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody>
+          {(
+            Object.keys(
+              settings.data.settings,
+            ) as (keyof typeof settings.data.settings)[]
+          ).map((k) => (
+            <tr key={k}>
+              <td>{k}</td>
+              <td>{settings.data.settings[k].toString()}</td>
+              <td className="flex justify-end">
+                {STATIC_SETTINGS.has(k) ? (
+                  <span className="btn btn-disabled btn-xs btn-neutral btn-square">
+                    <Lock className="size-4 text-white" />
+                  </span>
+                ) : (
+                  session.state && (
+                    <button
+                      className="btn btn-xs btn-neutral btn-square"
+                      aria-label={`Edit ${k}`}
+                      onClick={async () => {
+                        await modal.show(SessionSettingSetModal, {
+                          session_id: session.id,
+                          setting_name: k,
+                          setting_value: settings.data.settings[k],
+                        });
+                      }}
+                    >
+                      <SlidersHorizontal className="size-4 text-white" />
+                    </button>
+                  )
+                )}
+              </td>
             </tr>
-          </thead>
-          <tbody>
-            {(
-              Object.keys(
-                settings.data.settings,
-              ) as (keyof typeof settings.data.settings)[]
-            ).map((k) => (
-              <tr key={k}>
-                <td>{k}</td>
-                <td>{settings.data.settings[k].toString()}</td>
-                <td className="flex justify-end">
-                  {STATIC_SETTINGS.has(k) ? (
-                    <span className="btn btn-disabled btn-xs btn-neutral btn-square">
-                      <Lock className="size-4 text-white" />
-                    </span>
-                  ) : (
-                    session.state && (
-                      <button
-                        className="btn btn-xs btn-neutral btn-square"
-                        aria-label={`Edit ${k}`}
-                        onClick={async () => {
-                          await modal.show(SessionSettingSetModal, {
-                            session_id: session.id,
-                            setting_name: k,
-                            setting_value: settings.data.settings[k],
-                          });
-                        }}
-                      >
-                        <SlidersHorizontal className="size-4 text-white" />
-                      </button>
-                    )
-                  )}
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-    </details>
+          ))}
+        </tbody>
+      </table>
+    </Accordion>
   );
 }

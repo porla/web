@@ -17,28 +17,6 @@ export function isBitSet(num: number, bit: number) {
   return (num & (1 << bit)) !== 0;
 }
 
-export const AllTorrentFlags = [
-  "seed_mode",
-  "upload_mode",
-  "share_mode",
-  "apply_ip_filter",
-  "paused",
-  "auto_managed",
-  "duplicate_is_error",
-  "update_subscribe",
-  "super_seeding",
-  "sequential_download",
-  "stop_when_ready",
-  "need_save_resume",
-  "disable_dht",
-  "disable_lsd",
-  "disable_pex",
-  "no_verify_files",
-  "default_dont_download",
-  "i2p_torrent",
-  "disable_v1_hashes",
-] as TorrentFlag[];
-
 export type TorrentFlag =
   | "seed_mode"
   | "upload_mode"
@@ -98,6 +76,7 @@ export type TorrentsGet = {
 
 export type TorrentsPropertiesGet = {
   download_limit: number | null;
+  flags: TorrentFlag[];
   max_connections: number | null;
   max_uploads: number | null;
   upload_limit: number | null;

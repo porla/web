@@ -2,6 +2,7 @@ import {
   type InfoHash,
   type Params,
   type Torrent,
+  type TorrentFlag,
   type TorrentsPropertiesGet,
   useInvoker,
   useRPC,
@@ -9,8 +10,10 @@ import {
 import type { ModalProps } from "@/components/modal";
 import { useAppForm } from "@/hooks/form";
 import { peerLimit, rateLimit } from "@/limits";
+import { runtimeFlags } from "@/torrent-flags";
 import { useQueryClient } from "@tanstack/react-query";
 import z from "zod";
+import Accordion from "@/components/accordion";
 
 type TorrentPropertiesModalProps = {
   info_hash: InfoHash;
@@ -20,6 +23,10 @@ type TorrentPropertiesModalProps = {
 const propertiesSchema = z.object({
   category: z.string(),
   download_limit: rateLimit,
+  flags: z.object({
+    flags: z.array(z.custom<TorrentFlag>()),
+    mask: z.array(z.custom<TorrentFlag>()),
+  }),
   max_connections: peerLimit,
   max_uploads: peerLimit,
   tags: z.string(),
@@ -117,6 +124,7 @@ function PropertiesForm({
   const initial = {
     category: userdata?.category ?? "",
     download_limit: limits.download_limit,
+    flags: { flags: limits.flags, mask: [] as TorrentFlag[] },
     max_connections: limits.max_connections,
     max_uploads: limits.max_uploads,
     tags: userdata?.tags.join(", ") ?? "",
@@ -149,6 +157,14 @@ function PropertiesForm({
         tags.toSorted().join() !== splitTags(initial.tags).toSorted().join()
       ) {
         changes.tags = tags;
+      }
+
+      // The mask holds only the flags that were toggled.
+      if (next.flags.mask.length > 0) {
+        changes.flags = next.flags.flags.filter((f) =>
+          next.flags.mask.includes(f),
+        );
+        changes.flags_mask = next.flags.mask;
       }
 
       if (Object.keys(changes).length > 0) {
@@ -216,6 +232,15 @@ function PropertiesForm({
             />
           )}
         />
+
+        <Accordion title="Flags" className="mt-4 bg-base-200">
+          <form.AppField
+            name="flags"
+            children={(field) => (
+              <field.TorrentFlagsField mode="torrent" flags={runtimeFlags} />
+            )}
+          />
+        </Accordion>
 
         <form.SaveError error={set.error} />
         <form.ModalActions submitLabel="Save" onCancel={() => close(false)} />

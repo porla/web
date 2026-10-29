@@ -14,6 +14,7 @@ import { useEffect, useState, type ReactNode } from "react";
 import CopyButton from "./copy-button";
 import ListState from "./list-state";
 import Dash from "./dash";
+import { peerSources } from "@/torrent-flags";
 
 type TrackersTabProps = {
   info_hash: InfoHash;
@@ -440,16 +441,15 @@ export default function TrackersTab({
   }
 
   if (all.length === 0) {
-    const ways = [
-      !t?.flags.includes("disable_dht") && "DHT",
-      !t?.flags.includes("disable_pex") && "peer exchange",
-      !t?.flags.includes("disable_lsd") && "local discovery",
-    ].filter((w) => w !== false);
+    const ways = peerSources
+      .filter(({ flag }) => !t?.flags.includes(flag))
+      .map(({ name }) => name);
+
     return (
       <ListState icon={RadioTower} title="No trackers">
         {ways.length
           ? `Peers can still be found through ${list(ways)}.`
-          : "DHT, peer exchange and local discovery are off for this torrent too, so no peers will be found."}
+          : `${list(peerSources.map(({ name }) => name))} are off for this torrent too, so no peers will be found.`}
       </ListState>
     );
   }
