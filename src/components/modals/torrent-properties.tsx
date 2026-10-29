@@ -21,7 +21,7 @@ type TorrentPropertiesModalProps = {
 };
 
 const propertiesSchema = z.object({
-  category: z.string(),
+  category: z.string().trim(),
   download_limit: rateLimit,
   flags: z.object({
     flags: z.array(z.custom<TorrentFlag>()),
@@ -146,7 +146,7 @@ function PropertiesForm({
         }
       }
 
-      if (next.category !== initial.category) {
+      if (next.category !== initial.category.trim()) {
         changes.category = next.category || null;
       }
 

@@ -1,21 +1,12 @@
 import { type InfoHash, useInvoker, useRPC } from "@/api";
 import type { ModalProps } from "@/components/modal";
 import { useAppForm } from "@/hooks/form";
-import z from "zod";
+import { moveSchema } from "./move-schema";
 
 type MoveTorrentModalProps = {
   info_hash: InfoHash;
   session_id: number;
 };
-
-// Save paths must be absolute
-const moveSchema = z.object({
-  path: z
-    .string()
-    .trim()
-    .min(1, { error: "Enter a path", abort: true })
-    .regex(/^(\/|[A-Za-z]:[\\/])/, "Use an absolute path, like /downloads"),
-});
 
 export default function MoveTorrentModal({
   info_hash,

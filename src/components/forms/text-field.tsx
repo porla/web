@@ -7,12 +7,14 @@ export default function TextField({
   autoFocus,
   description,
   label,
+  placeholder,
   type,
 }: {
   autoComplete?: string;
   autoFocus?: boolean;
   description?: string;
   label: string;
+  placeholder?: string;
   type?: HTMLInputTypeAttribute;
 }) {
   const field = useFieldContext<string>();
@@ -29,6 +31,7 @@ export default function TextField({
         autoComplete={autoComplete}
         autoFocus={autoFocus}
         id={id}
+        placeholder={placeholder}
         type={type ?? "text"}
         className="input"
         value={field.state.value ?? ""}

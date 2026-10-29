@@ -6,6 +6,7 @@ import {
   infoHashKey,
   RpcError,
 } from "@/api";
+import BulkActions from "@/components/bulk-actions";
 import DockBar from "@/components/dock-bar";
 import ListState from "@/components/list-state";
 import {
@@ -19,6 +20,7 @@ import TorrentPropertiesModal from "@/components/modals/torrent-properties";
 import RemoveTorrentModal from "@/components/modals/torrent-remove";
 import Pager from "@/components/pager";
 import TorrentDetailsPanel from "@/components/torrent-details-panel";
+import { useChecked, type Checked } from "@/hooks/use-checked";
 import { useForm } from "@tanstack/react-form";
 import { keepPreviousData, useQueryClient } from "@tanstack/react-query";
 import { createFileRoute, Link } from "@tanstack/react-router";
@@ -159,6 +161,20 @@ function RouteComponent() {
     },
   );
 
+  // Checked for a bulk action: within this view of the list only.
+  const checked = useChecked(
+    torrents.data?.torrents ?? [],
+    JSON.stringify([
+      search.session_id,
+      search.page,
+      search.page_size,
+      search.query,
+      search.status,
+      search.category,
+      search.tag,
+    ]),
+  );
+
   // Past the last page (its last torrent removed, a filtered list shrank):
   // the backend answers an empty page, so go to the last one.
   const total = torrents.data?.torrents_total ?? 0;
@@ -200,8 +216,9 @@ function RouteComponent() {
 
   return (
     <div className="flex h-full flex-col bg-base-200">
-      <div className="p-3">
+      <div className="flex flex-wrap items-center gap-2 p-3">
         <form
+          className="min-w-48 flex-1"
           onSubmit={(e) => {
             e.preventDefault();
             e.stopPropagation();
@@ -246,6 +263,30 @@ function RouteComponent() {
             )}
           />
         </form>
+
+        {search.session_id !== undefined && (
+          <BulkActions
+            checked={checked}
+            session_id={search.session_id}
+            onLeft={(gone) => {
+              const left = new Set(gone.map((t) => infoHashKey(t.info_hash)));
+              void navigate({
+                to: "/",
+                replace: true,
+                search: (prev) =>
+                  prev.selected_info_hash &&
+                  left.has(infoHashKey(prev.selected_info_hash))
+                    ? {
+                        ...prev,
+                        selected_info_hash: undefined,
+                        selected_session_id: undefined,
+                        selected_tab_id: undefined,
+                      }
+                    : prev,
+              });
+            }}
+          />
+        )}
       </div>
 
       <div className="mx-3 min-h-0 flex-1 overflow-auto rounded-box border border-base-300 bg-base-100">
@@ -282,7 +323,10 @@ function RouteComponent() {
             </ListState>
           )
         ) : (
-          <TorrentsTable torrents={torrents.data?.torrents ?? []} />
+          <TorrentsTable
+            torrents={torrents.data?.torrents ?? []}
+            checked={checked}
+          />
         )}
       </div>
 
@@ -346,9 +390,10 @@ const narrowCols = new Set(["queue_position", "name", "status"]);
 
 type TorrentsTableProps = {
   torrents: Torrent[];
+  checked: Checked;
 };
 
-function TorrentsTable({ torrents }: TorrentsTableProps) {
+function TorrentsTable({ torrents, checked }: TorrentsTableProps) {
   const navigate = Route.useNavigate();
   const search = Route.useSearch();
 
@@ -396,14 +441,41 @@ function TorrentsTable({ torrents }: TorrentsTableProps) {
       },
     });
 
-  // up/down move the selection through this page, esc closes the details; not
-  // while typing, or with a dialog or a row menu open.
+  // up/down move the selection through this page, esc clears the checked
+  // torrents and then closes the details, ctrl/cmd+a checks the page; not
+  // while typing, or with a dialog or a menu open.
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
-      if (e.altKey || e.ctrlKey || e.metaKey || e.shiftKey) return;
       const target = e.target as HTMLElement;
-      if (target.closest("input, textarea, select, [contenteditable]")) return;
+
+      // Typing, not a focused checkbox (just clicked to check a row).
+      if (
+        target.closest(
+          "input:not([type=checkbox]):not([type=radio]), textarea, select, [contenteditable]",
+        )
+      ) {
+        return;
+      }
+
       if (document.querySelector("dialog[open], :popover-open")) return;
+
+      if (
+        (e.ctrlKey || e.metaKey) &&
+        !e.altKey &&
+        !e.shiftKey &&
+        e.key.toLowerCase() === "a"
+      ) {
+        e.preventDefault();
+        checked.setAll(true);
+        return;
+      }
+      if (e.altKey || e.ctrlKey || e.metaKey || e.shiftKey) return;
+
+      if (e.key === "Escape" && checked.count > 0) {
+        e.preventDefault();
+        checked.setAll(false);
+        return;
+      }
 
       if (e.key === "Escape" && search.selected_info_hash) {
         e.preventDefault();
@@ -484,11 +556,11 @@ function TorrentsTable({ torrents }: TorrentsTableProps) {
       0,
     ) +
     (selectedCols.includes("name") ? NAME_MIN_WIDTH : 0) +
-    4;
+    5;
 
   return (
     <table
-      className="table table-sm table-fixed table-pin-rows md:min-w-(--table-min-width)"
+      className="group/table table table-sm table-fixed table-pin-rows md:min-w-(--table-min-width)"
       style={{ "--table-min-width": `${minWidth}rem` } as CSSProperties}
     >
       <thead>
@@ -510,7 +582,23 @@ function TorrentsTable({ torrents }: TorrentsTableProps) {
               {torrentsColumns[col].title}
             </th>
           ))}
-          <th className="w-16"></th>
+          <th className="w-20 text-right">
+            <input
+              type="checkbox"
+              className={clsx(
+                "checkbox checkbox-sm checkbox-info mr-9 align-middle focus-visible:opacity-100 group-hover/table:opacity-100",
+                checked.count === 0 && "[@media(hover:hover)]:opacity-0",
+              )}
+              aria-label="Select all on this page"
+              title="Select all on this page (Ctrl+A)"
+              checked={checked.allChecked}
+              ref={(el) => {
+                if (el)
+                  el.indeterminate = checked.count > 0 && !checked.allChecked;
+              }}
+              onChange={() => checked.setAll(!checked.allChecked)}
+            />
+          </th>
         </tr>
       </thead>
       <tbody>
@@ -523,11 +611,27 @@ function TorrentsTable({ torrents }: TorrentsTableProps) {
               "group cursor-pointer text-sm",
               isSelected(t)
                 ? "bg-primary/15 shadow-[inset_3px_0_0_var(--color-primary)]"
-                : "hover:bg-base-200/70",
+                : checked.has(t)
+                  ? "bg-info/12 hover:bg-info/18 dark:bg-info/15 dark:hover:bg-info/20"
+                  : "hover:bg-base-200/70",
             )}
-            // The name link and the row menu do their own thing.
+            // Shift-click would select text, and ctrl/cmd-click a table
+            // cell (Firefox outlines it).
+            onMouseDown={(e) => {
+              if (e.shiftKey || e.ctrlKey || e.metaKey) e.preventDefault();
+            }}
+            // A click opens the details; ctrl/cmd-click checks the row and
+            // shift-click a range. The name link, the checkbox and the row
+            // menu do their own thing.
             onClick={(e) => {
-              if (!(e.target as HTMLElement).closest("a, button, [popover]")) {
+              if (
+                (e.target as HTMLElement).closest("a, button, input, [popover]")
+              ) {
+                return;
+              }
+              if (e.ctrlKey || e.metaKey || e.shiftKey) {
+                checked.toggle(t, e.shiftKey);
+              } else {
                 void select(t);
               }
             }}
@@ -545,6 +649,20 @@ function TorrentsTable({ torrents }: TorrentsTableProps) {
             ))}
 
             <td className="py-0 text-right">
+              <input
+                type="checkbox"
+                className={clsx(
+                  "checkbox checkbox-sm checkbox-info mr-3 align-middle focus-visible:opacity-100 group-hover:opacity-100",
+                  checked.count === 0 && "[@media(hover:hover)]:opacity-0",
+                )}
+                aria-label={`Select ${t.name}`}
+                checked={checked.has(t)}
+                // React fires this on the click, so shift is known.
+                onChange={(e) =>
+                  checked.toggle(t, (e.nativeEvent as MouseEvent).shiftKey)
+                }
+              />
+
               <button
                 className={clsx(
                   "btn btn-ghost btn-xs btn-square focus-visible:opacity-100 group-hover:opacity-100",
