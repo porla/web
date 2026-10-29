@@ -1,11 +1,12 @@
 import { useRPC, type InfoHash, type Torrent } from "@/api";
 import PieceProgress from "./pieces-progress";
-import { binaryBytes, bytes, date, duration, rate } from "@/format";
+import { binaryBytes, bytes, date, duration, rate, ratio } from "@/format";
 import { Fragment, type ReactNode } from "react";
 import CopyButton from "./copy-button";
 import { torrentStatus, type Tone } from "@/torrent-status";
 import Dash from "./dash";
 import { notableFlags } from "@/torrent-flags";
+import Ratio from "./ratio";
 
 type GeneralTabProps = {
   info_hash: InfoHash;
@@ -36,9 +37,6 @@ function eta(t: Torrent) {
     ? duration(left / t.download_payload_rate)
     : "∞";
 }
-
-// Utils::RealRatio caps at MAX_RATIO (9999) when nothing was downloaded.
-const ratio = (r: number) => (r >= 9999 ? "∞" : r.toFixed(2));
 
 function trackerHost(url: string) {
   try {
@@ -210,14 +208,14 @@ export default function GeneralTab({
             />
           </Row>
           <Row name="Ratio">
-            {t.ratio.toFixed(2)}
-            {t.ratio_real.toFixed(2) !== t.ratio.toFixed(2) && (
+            <Ratio value={t.ratio} />
+            {ratio(t.ratio_real) !== ratio(t.ratio) && (
               <span
-                className="opacity-60"
+                className="text-base-content/60"
                 title="Counting only what this client downloaded"
               >
                 {" "}
-                (own {ratio(t.ratio_real)})
+                (own <Ratio value={t.ratio_real} />)
               </span>
             )}
           </Row>

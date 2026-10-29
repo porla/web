@@ -8,7 +8,10 @@ import {
 } from "@/api";
 import DockBar from "@/components/dock-bar";
 import ListState from "@/components/list-state";
-import { TorrentListColumns } from "@/components/lists/torrents";
+import {
+  NAME_MIN_WIDTH,
+  TorrentListColumns,
+} from "@/components/lists/torrents";
 import { useModal } from "@/components/modal";
 import MigrateTorrentModal from "@/components/modals/torrent-migrate";
 import MoveTorrentModal from "@/components/modals/torrent-move";
@@ -28,7 +31,7 @@ import {
   TriangleAlert,
   X,
 } from "lucide-react";
-import { useEffect } from "react";
+import { useEffect, type CSSProperties } from "react";
 import z from "zod";
 
 const statuses = [
@@ -245,7 +248,7 @@ function RouteComponent() {
         </form>
       </div>
 
-      <div className="mx-3 min-h-0 flex-1 overflow-y-auto rounded-box border border-base-300 bg-base-100">
+      <div className="mx-3 min-h-0 flex-1 overflow-auto rounded-box border border-base-300 bg-base-100">
         {torrents.error ? (
           <ListError error={torrents.error} query={search.query} />
         ) : torrents.data?.torrents_total === 0 ? (
@@ -472,13 +475,33 @@ function TorrentsTable({ torrents }: TorrentsTableProps) {
           Object.keys(torrentsColumns) as (keyof typeof torrentsColumns)[]
         ).filter((c) => torrentsColumns[c].default);
 
+  // Fixed columns plus a floor for the name and the row menu: past that the
+  // list scrolls sideways instead of squeezing the name to nothing. Phones
+  // only show the narrow columns, so it applies from md up.
+  const minWidth =
+    selectedCols.reduce(
+      (sum, col) => sum + (torrentsColumns[col].width ?? 0),
+      0,
+    ) +
+    (selectedCols.includes("name") ? NAME_MIN_WIDTH : 0) +
+    4;
+
   return (
-    <table className="table table-sm table-fixed">
+    <table
+      className="table table-sm table-fixed table-pin-rows md:min-w-(--table-min-width)"
+      style={{ "--table-min-width": `${minWidth}rem` } as CSSProperties}
+    >
       <thead>
         <tr>
           {selectedCols.map((col) => (
             <th
               key={col}
+              title={torrentsColumns[col].description}
+              style={{
+                width:
+                  torrentsColumns[col].width &&
+                  `${torrentsColumns[col].width}rem`,
+              }}
               className={clsx(
                 torrentsColumns[col].headerClassNames,
                 !narrowCols.has(col) && "max-md:hidden",
