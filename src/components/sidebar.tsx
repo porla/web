@@ -1,4 +1,4 @@
-import { useRPC, type TorrentsCount } from "@/api";
+import { useInvoker, useRPC, type TorrentsCount } from "@/api";
 import { Link, useMatch, useNavigate, useSearch } from "@tanstack/react-router";
 import {
   AppWindow,
@@ -7,6 +7,7 @@ import {
   Cog,
   Download,
   Folder,
+  LogOut,
   Pause,
   Plus,
   Server,
@@ -24,6 +25,7 @@ import clsx from "clsx";
 import { getCurrentVersion } from "@/features";
 import { useWebVersion } from "@/version";
 import { prefixPath } from "@/base";
+import { useQueryClient } from "@tanstack/react-query";
 
 type Filter = {
   status?: TorrentFilterStatus[];
@@ -134,10 +136,20 @@ export default function Sidebar({ onNavigate }: { onNavigate?: () => void }) {
   // The list's search, or what the add page carries (its session).
   const search = useSearch({ strict: false });
   const onList = !!useMatch({ from: "/_status/_main/", shouldThrow: false });
+  const queryClient = useQueryClient();
 
   const sessions = useRPC("sessions.list", null, { refetchInterval: 5000 });
   const list = sessions.data?.sessions;
   const current = list?.find((s) => s.id === search.session_id);
+
+  const logout = useInvoker("auth.logout", {
+    // Leave the app first so nothing polls with the old session, then drop
+    // what it loaded.
+    onSuccess: async () => {
+      await navigate({ to: "/login" });
+      queryClient.clear();
+    },
+  });
 
   useEffect(() => {
     if (!onList || !list?.length || current) {
@@ -335,6 +347,20 @@ export default function Sidebar({ onNavigate }: { onNavigate?: () => void }) {
             <Cog className="size-4 opacity-60" />
             Settings
           </Link>
+        </li>
+      </ul>
+
+      <ul className="menu w-full border-t border-base-300 pt-3">
+        <li className={clsx(logout.isPending && "menu-disabled")}>
+          <button
+            type="button"
+            className="text-base-content/60"
+            disabled={logout.isPending}
+            onClick={() => logout.mutate({})}
+          >
+            <LogOut className="size-4" />
+            Log out
+          </button>
         </li>
       </ul>
     </div>
