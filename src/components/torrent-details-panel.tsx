@@ -5,6 +5,7 @@ import {
   ChevronUp,
   FolderTree,
   Info,
+  LayoutGrid,
   RadioTower,
   Users,
   X,
@@ -18,6 +19,7 @@ import { useEffect, useRef, useState, type ReactNode } from "react";
 import { toast } from "@/toast";
 import clsx from "clsx";
 import DockBar from "./dock-bar";
+import PiecesTab from "./pieces-tab";
 
 type TorrentDetailsPanelProps = {
   info_hash: InfoHash;
@@ -26,12 +28,13 @@ type TorrentDetailsPanelProps = {
 };
 
 const tabs: {
-  id: "general" | "files" | "peers" | "trackers";
+  id: "general" | "files" | "pieces" | "peers" | "trackers";
   name: string;
   icon: LucideIcon;
 }[] = [
   { id: "general", name: "General", icon: Info },
   { id: "files", name: "Files", icon: FolderTree },
+  { id: "pieces", name: "Pieces", icon: LayoutGrid },
   { id: "peers", name: "Peers", icon: Users },
   { id: "trackers", name: "Trackers", icon: RadioTower },
 ];
@@ -217,6 +220,14 @@ export default function TorrentDetailsPanel({
 
           {selectedTab === "files" && (
             <FilesTab info_hash={info_hash} session_id={session_id} />
+          )}
+
+          {selectedTab === "pieces" && (
+            <PiecesTab
+              info_hash={info_hash}
+              session_id={session_id}
+              torrent={torrent.data?.torrent}
+            />
           )}
 
           {selectedTab === "peers" && (

@@ -60,7 +60,7 @@ type TorrentSearch = {
   status?: TorrentFilterStatus[];
   selected_info_hash?: InfoHash;
   selected_session_id?: number;
-  selected_tab_id?: "general" | "files" | "peers" | "trackers";
+  selected_tab_id?: "general" | "files" | "pieces" | "peers" | "trackers";
 };
 
 // Hand-edited or stale URLs: a value that doesn't fit is dropped instead of
@@ -93,7 +93,7 @@ const searchSchema = z.object({
     .catch(undefined),
   selected_session_id: id,
   selected_tab_id: z
-    .enum(["general", "files", "peers", "trackers"])
+    .enum(["general", "files", "pieces", "peers", "trackers"])
     .optional()
     .catch(undefined),
 });

@@ -7,6 +7,7 @@ import { torrentStatus, type Tone } from "@/torrent-status";
 import Dash from "./dash";
 import { notableFlags } from "@/torrent-flags";
 import Ratio from "./ratio";
+import { pieceSize } from "@/pieces";
 
 type GeneralTabProps = {
   info_hash: InfoHash;
@@ -44,13 +45,6 @@ function trackerHost(url: string) {
   } catch {
     return url;
   }
-}
-
-// The bitfield only has the piece count; piece sizes are powers of two, so the
-// smallest one that covers size / count is the piece size.
-function pieceSize(total: number, count: number) {
-  if (count === 0 || total === 0) return 0;
-  return 2 ** Math.ceil(Math.log2(total / count));
 }
 
 function Section({ title, children }: { title: string; children: ReactNode }) {
@@ -185,10 +179,7 @@ export default function GeneralTab({
       </div>
 
       {t.has_metadata && (
-        <PieceProgress
-          pieces={pieces.data.pieces}
-          verified={pieces.data.verified_pieces}
-        />
+        <PieceProgress pieces={pieces.data.pieces} tone={st.tone} />
       )}
 
       <div className="grid gap-x-6 gap-y-4 md:grid-cols-2 xl:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_minmax(max-content,1fr)_minmax(0,1.4fr)]">
