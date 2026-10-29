@@ -1,22 +1,11 @@
 import { infoHashKey, type Torrent } from "@/api";
-import { torrentStatus, type Tone } from "@/torrent-status";
+import { toneBar, torrentStatus } from "@/torrent-status";
 import { Link, useSearch } from "@tanstack/react-router";
 import clsx from "clsx";
 import { filesize } from "filesize";
 import Dash from "../dash";
 import type { ReactNode } from "react";
 import Ratio from "../ratio";
-
-// The sidebar's status colors (its icons use the same shades), so a row reads
-// like the filter it's in.
-const bars: Record<Tone, string> = {
-  downloading: "bg-green-600 dark:bg-green-300",
-  seeding: "bg-blue-600 dark:bg-blue-300",
-  finished: "bg-purple-600 dark:bg-purple-300",
-  paused: "bg-orange-600 dark:bg-orange-300",
-  error: "bg-red-600 dark:bg-red-300",
-  other: "bg-base-content/40",
-};
 
 export type TorrentListColumn = {
   default: boolean;
@@ -105,7 +94,7 @@ export const TorrentListColumns = () => {
           <span className="flex items-center gap-2" title={label}>
             <span className="h-1.5 flex-1 overflow-hidden rounded-full bg-base-content/10">
               <span
-                className={clsx("block h-full rounded-full", bars[tone])}
+                className={clsx("block h-full rounded-full", toneBar[tone])}
                 style={{ width: `${t.progress * 100}%` }}
               />
             </span>

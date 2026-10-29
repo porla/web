@@ -10,6 +10,27 @@ export type Tone =
   | "error"
   | "other";
 
+// The sidebar's status colors (its icons use the same shades), for bars and
+// piece maps, so a torrent reads like the filter it's in.
+export const toneBar: Record<Tone, string> = {
+  downloading: "bg-green-600 dark:bg-green-300",
+  seeding: "bg-blue-600 dark:bg-blue-300",
+  finished: "bg-purple-600 dark:bg-purple-300",
+  paused: "bg-orange-600 dark:bg-orange-300",
+  error: "bg-red-600 dark:bg-red-300",
+  other: "bg-base-content/40",
+};
+
+// The same colors as outlines (piece map: had but not verified yet).
+export const toneRing: Record<Tone, string> = {
+  downloading: "ring-green-600 dark:ring-green-300",
+  seeding: "ring-blue-600 dark:ring-blue-300",
+  finished: "ring-purple-600 dark:ring-purple-300",
+  paused: "ring-orange-600 dark:ring-orange-300",
+  error: "ring-red-600 dark:ring-red-300",
+  other: "ring-base-content/40",
+};
+
 // What a user would call the torrent's state (an error's message is added
 // where it's shown). libtorrent keeps "downloading" or "seeding" while
 // paused; paused + auto-managed is waiting in the queue.
