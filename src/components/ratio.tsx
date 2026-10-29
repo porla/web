@@ -12,18 +12,9 @@ const steps: [number, string][] = [
   [1.25, "text-green-600 dark:text-green-400"],
   [1.5, "text-emerald-600 dark:text-emerald-400"],
   [2, "text-teal-600 dark:text-teal-400"],
-  [
-    3,
-    "text-yellow-600 text-shadow-xs text-shadow-yellow-400/30 dark:text-yellow-300 dark:text-shadow-yellow-400/40",
-  ],
-  [
-    5,
-    "font-medium text-yellow-600 text-shadow-sm text-shadow-yellow-400/40 dark:text-yellow-300 dark:text-shadow-yellow-400/60",
-  ],
-  [
-    Infinity,
-    "font-semibold text-yellow-600 text-shadow-md text-shadow-yellow-400/50 dark:text-yellow-200 dark:text-shadow-yellow-400/80",
-  ],
+  [3, "text-yellow-600 dark:text-yellow-300"],
+  [5, "font-medium text-yellow-600 dark:text-yellow-300"],
+  [Infinity, "font-semibold text-yellow-600 dark:text-yellow-200"],
 ];
 
 const ratioClass = (r: number) => steps.find(([max]) => r < max)![1];
