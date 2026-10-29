@@ -49,21 +49,26 @@ export type TorrentsList = {
   torrents_total_unfiltered: number;
 };
 
-export type TorrentSortField =
-  | "download_rate"
-  | "eta"
-  | "list_peers"
-  | "list_seeds"
-  | "name"
-  | "num_peers"
-  | "num_seeds"
-  | "progress"
-  | "queue_position"
-  | "ratio"
-  | "save_path"
-  | "total"
-  | "total_done"
-  | "upload_rate";
+export const torrentSortFields = [
+  "download_rate",
+  "eta",
+  "list_peers",
+  "list_seeds",
+  "name",
+  "num_peers",
+  "num_seeds",
+  "progress",
+  "queue_position",
+  "ratio",
+  "save_path",
+  "total",
+  "total_done",
+  "upload_rate",
+] as const;
+
+export type TorrentSortField = (typeof torrentSortFields)[number];
+
+export type SortDir = "asc" | "desc";
 
 export type TorrentStatusFilter =
   | "downloading"
@@ -649,7 +654,7 @@ export type Methods = {
       page?: number | null; // 0-based
       page_size?: number | null; // 1–1000, default 50
       order_by?: TorrentSortField | null; // default queue_position
-      order_by_dir?: "asc" | "desc" | null;
+      order_by_dir?: SortDir | null;
     };
     result: TorrentsList;
   };
