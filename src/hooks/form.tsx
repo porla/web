@@ -12,7 +12,13 @@ const NumberField = lazy(() => import("@/components/forms/number-field.tsx"));
 const SelectField = lazy(() => import("@/components/forms/select-field.tsx"));
 const TextField = lazy(() => import("@/components/forms/text-field.tsx"));
 
-function SubmitButton({ label }: { label: string }) {
+function SubmitButton({
+  disabled,
+  label,
+}: {
+  disabled?: boolean;
+  label: string;
+}) {
   const form = useFormContext();
   return (
     <form.Subscribe selector={(state) => [state.canSubmit, state.isSubmitting]}>
@@ -20,7 +26,7 @@ function SubmitButton({ label }: { label: string }) {
         <button
           type="submit"
           className="btn btn-primary"
-          disabled={!canSubmit || isSubmitting}
+          disabled={disabled || !canSubmit || isSubmitting}
         >
           {label}
         </button>
@@ -55,6 +61,18 @@ function SaveError({ error }: { error: Error | null }) {
   return (
     <div role="alert" className="alert alert-error alert-soft">
       {error.message || "Request failed"}
+    </div>
+  );
+}
+
+function Saved({ show, children }: { show: boolean; children?: ReactNode }) {
+  if (!show) {
+    return null;
+  }
+
+  return (
+    <div role="status" className="alert alert-success alert-soft">
+      {children ?? "Saved"}
     </div>
   );
 }
@@ -101,6 +119,7 @@ export const { useAppForm, withForm, withFieldGroup } = createFormHook({
     Form,
     ModalActions,
     SaveError,
+    Saved,
     SubmitButton,
   },
   fieldContext,

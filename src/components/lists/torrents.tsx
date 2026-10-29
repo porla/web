@@ -57,7 +57,13 @@ export const TorrentListColumns = () => {
       headerClassNames: "w-32",
       columnClassNames: "text-base-content/60",
       title: "Size",
-      data: (t: Torrent) => <>{filesize(t.total)}</>,
+      // A magnet has no size until its metadata arrives.
+      data: (t: Torrent) =>
+        t.state === "downloading_metadata" ? (
+          <Dash />
+        ) : (
+          <>{filesize(t.total)}</>
+        ),
     },
     status: {
       default: true,
@@ -66,6 +72,19 @@ export const TorrentListColumns = () => {
       title: "Status",
       data: (t: Torrent) => {
         const { label, tone } = torrentStatus(t);
+
+        // Without metadata there's nothing to show progress of.
+        if (t.state === "downloading_metadata") {
+          return (
+            <span className="text-xs opacity-70" title={label}>
+              {label}
+            </span>
+          );
+        }
+
+        // While checking, progress is how much of the data was checked.
+        const percent = `${Math.floor(t.progress * 100)}%`;
+
         return (
           <span className="flex items-center gap-2" title={label}>
             <span className="h-1.5 flex-1 overflow-hidden rounded-full bg-base-content/10">
@@ -74,8 +93,8 @@ export const TorrentListColumns = () => {
                 style={{ width: `${t.progress * 100}%` }}
               />
             </span>
-            <span className="w-10 text-right text-xs tabular-nums opacity-70">
-              {Math.floor(t.progress * 100)}%
+            <span className="min-w-10 text-right text-xs tabular-nums opacity-70">
+              {label === "Checking" ? `Checking ${percent}` : percent}
             </span>
           </span>
         );
