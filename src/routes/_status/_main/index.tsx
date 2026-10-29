@@ -5,6 +5,9 @@ import {
   useInvoker,
   infoHashKey,
   RpcError,
+  type TorrentSortField,
+  type SortDir,
+  torrentSortFields,
 } from "@/api";
 import BulkActions from "@/components/bulk-actions";
 import DockBar from "@/components/dock-bar";
@@ -12,6 +15,7 @@ import ListState from "@/components/list-state";
 import {
   NAME_MIN_WIDTH,
   TorrentListColumns,
+  type TorrentListColumn,
 } from "@/components/lists/torrents";
 import { useModal } from "@/components/modal";
 import MigrateTorrentModal from "@/components/modals/torrent-migrate";
@@ -26,6 +30,8 @@ import { keepPreviousData, useQueryClient } from "@tanstack/react-query";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import clsx from "clsx";
 import {
+  ArrowDown,
+  ArrowUp,
   Inbox,
   Menu,
   SearchIcon,
@@ -55,6 +61,8 @@ export type PageSize = (typeof pageSizes)[number];
 type TorrentSearch = {
   page?: number;
   page_size?: PageSize;
+  order_by?: TorrentSortField;
+  order_by_dir?: SortDir;
   query?: string;
   session_id?: number;
   category?: string;
@@ -76,6 +84,8 @@ const searchSchema = z.object({
     .pipe(z.union(pageSizes.map((n) => z.literal(n))))
     .optional()
     .catch(undefined),
+  order_by: z.enum(torrentSortFields).optional().catch(undefined),
+  order_by_dir: z.enum(["asc", "desc"]).optional().catch(undefined),
   query: text,
   session_id: id,
   category: text,
@@ -122,6 +132,8 @@ function RouteComponent() {
         search: {
           session_id: search.session_id,
           page_size: search.page_size,
+          order_by: search.order_by,
+          order_by_dir: search.order_by_dir,
           query: value.query.trim() || undefined,
           selected_info_hash: search.selected_info_hash,
           selected_session_id: search.selected_session_id,
@@ -148,6 +160,8 @@ function RouteComponent() {
         status: search.status,
         tags: search.tag ? [search.tag] : undefined,
       },
+      order_by: search.order_by,
+      order_by_dir: search.order_by_dir,
       page: search.page ? search.page - 1 : 0,
       page_size: pageSize,
     },
@@ -166,6 +180,8 @@ function RouteComponent() {
     torrents.data?.torrents ?? [],
     JSON.stringify([
       search.session_id,
+      search.order_by,
+      search.order_by_dir,
       search.page,
       search.page_size,
       search.query,
@@ -384,6 +400,48 @@ function ListError({ error, query }: { error: Error; query?: string }) {
   );
 }
 
+function SortableTitle({
+  column,
+  active,
+  dir,
+  onSort,
+}: {
+  column: TorrentListColumn;
+  active: boolean;
+  dir: SortDir;
+  onSort: (field: TorrentSortField, first: SortDir) => void;
+}) {
+  const field = column.sort;
+
+  if (!field) return <>{column.title}</>;
+
+  const shown = active ? dir : (column.sortFirst ?? "desc");
+  const Arrow = shown === "asc" ? ArrowUp : ArrowDown;
+
+  return (
+    <button
+      type="button"
+      className={clsx(
+        "group/sort inline-flex max-w-full cursor-pointer items-center gap-1 hover:text-base-content",
+        // Right-aligned titles keep their text flush with the numbers.
+        column.headerClassNames.includes("text-right") && "flex-row-reverse",
+        active && "text-base-content",
+      )}
+      title={`Sort by ${(column.name ?? column.title).toLowerCase()}`}
+      onClick={() => onSort(field, column.sortFirst ?? "desc")}
+    >
+      <span className="truncate">{column.title}</span>
+      <Arrow
+        aria-hidden
+        className={clsx(
+          "size-3 shrink-0",
+          !active && "opacity-0 group-hover/sort:opacity-40",
+        )}
+      />
+    </button>
+  );
+}
+
 // What's left of the table on narrow screens; every column is a fixed width
 // except the name, which would otherwise be squeezed to nothing.
 const narrowCols = new Set(["queue_position", "name", "status"]);
@@ -421,6 +479,25 @@ function TorrentsTable({ torrents, checked }: TorrentsTableProps) {
   });
 
   const torrentsColumns = TorrentListColumns();
+
+  const orderBy = search.order_by ?? "queue_position";
+  const orderDir = search.order_by_dir ?? "asc";
+
+  const sortBy = (field: TorrentSortField, first: SortDir) => {
+    const dir =
+      field === orderBy ? (orderDir === "asc" ? "desc" : "asc") : first;
+    const isDefault = field === "queue_position" && dir === "asc";
+
+    void navigate({
+      to: "/",
+      search: {
+        ...search,
+        page: undefined,
+        order_by: isDefault ? undefined : field,
+        order_by_dir: isDefault ? undefined : dir,
+      },
+    });
+  };
 
   const isSelected = (t: Torrent) =>
     !!search.selected_info_hash &&
@@ -569,6 +646,13 @@ function TorrentsTable({ torrents, checked }: TorrentsTableProps) {
             <th
               key={col}
               title={torrentsColumns[col].description}
+              aria-sort={
+                torrentsColumns[col].sort === orderBy
+                  ? orderDir === "asc"
+                    ? "ascending"
+                    : "descending"
+                  : undefined
+              }
               style={
                 torrentsColumns[col].width
                   ? ({
@@ -583,7 +667,12 @@ function TorrentsTable({ torrents, checked }: TorrentsTableProps) {
                 !narrowCols.has(col) && "max-md:hidden",
               )}
             >
-              {torrentsColumns[col].title}
+              <SortableTitle
+                column={torrentsColumns[col]}
+                active={torrentsColumns[col].sort === orderBy}
+                dir={orderDir}
+                onSort={sortBy}
+              />
             </th>
           ))}
           <th className="w-20 text-right">

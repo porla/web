@@ -1,4 +1,9 @@
-import { infoHashKey, type Torrent } from "@/api";
+import {
+  infoHashKey,
+  type SortDir,
+  type Torrent,
+  type TorrentSortField,
+} from "@/api";
 import { toneBar, torrentStatus } from "@/torrent-status";
 import { Link, useSearch } from "@tanstack/react-router";
 import clsx from "clsx";
@@ -19,6 +24,8 @@ export type TorrentListColumn = {
   // For settings, where the title is an abbreviation.
   name?: string;
   description?: string;
+  sort?: TorrentSortField;
+  sortFirst?: SortDir;
   data: (t: Torrent) => ReactNode;
 };
 
@@ -36,6 +43,8 @@ export const TorrentListColumns = () => {
       columnClassNames: "text-right text-base-content/60",
       title: "#",
       name: "Queue position",
+      sort: "queue_position" as const,
+      sortFirst: "asc" as const,
       data: (t: Torrent) => (
         <>{t.queue_position < 0 ? <Dash /> : t.queue_position + 1}</>
       ),
@@ -45,6 +54,8 @@ export const TorrentListColumns = () => {
       headerClassNames: "",
       columnClassNames: "overflow-hidden text-ellipsis whitespace-nowrap",
       title: "Name",
+      sort: "name" as const,
+      sortFirst: "asc" as const,
       data: (t: Torrent) => (
         <Link
           to="/"
@@ -66,6 +77,7 @@ export const TorrentListColumns = () => {
       headerClassNames: "",
       columnClassNames: "text-base-content/60",
       title: "Size",
+      sort: "total" as const,
       // A magnet has no size until its metadata arrives.
       data: (t: Torrent) =>
         t.state === "downloading_metadata" ? (
@@ -81,6 +93,7 @@ export const TorrentListColumns = () => {
       headerClassNames: "",
       columnClassNames: "",
       title: "Status",
+      sort: "progress" as const,
       data: (t: Torrent) => {
         const { label, tone } = torrentStatus(t);
 
@@ -121,6 +134,9 @@ export const TorrentListColumns = () => {
       columnClassNames: "text-right",
       title: "DL",
       name: "Download rate",
+      // download_rate counts protocol overhead too; there is no payload rate
+      // to sort by yet
+      sort: "download_rate" as const,
       data: (t: Torrent) =>
         t.download_payload_rate > 0 ? (
           `${filesize(t.download_payload_rate)}/s`
@@ -135,6 +151,7 @@ export const TorrentListColumns = () => {
       columnClassNames: "text-right",
       title: "UL",
       name: "Upload rate",
+      sort: "upload_rate" as const,
       data: (t: Torrent) =>
         t.upload_payload_rate > 0 ? (
           `${filesize(t.upload_payload_rate)}/s`
@@ -148,6 +165,7 @@ export const TorrentListColumns = () => {
       headerClassNames: "text-right",
       columnClassNames: "text-right",
       title: "Peers",
+      sort: "num_peers" as const,
       data: (t: Torrent) => (
         <>
           {t.num_peers - t.num_seeds} ({t.list_peers - t.list_seeds})
@@ -160,6 +178,7 @@ export const TorrentListColumns = () => {
       headerClassNames: "text-right",
       columnClassNames: "text-right",
       title: "Seeds",
+      sort: "num_seeds" as const,
       data: (t: Torrent) => (
         <>
           {t.num_seeds} ({t.list_seeds})
@@ -188,6 +207,7 @@ export const TorrentListColumns = () => {
       headerClassNames: "text-right",
       columnClassNames: "text-right",
       title: "Ratio",
+      sort: "ratio" as const,
       data: (t: Torrent) => <Ratio value={t.ratio} />,
     },
     ratio_real: {
