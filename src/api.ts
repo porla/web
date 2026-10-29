@@ -13,10 +13,6 @@ export function infoHashKey(ih: InfoHash) {
   return typeof ih === "string" ? ih : (ih[0] ?? ih[1] ?? "");
 }
 
-export function isBitSet(num: number, bit: number) {
-  return (num & (1 << bit)) !== 0;
-}
-
 export type TorrentFlag =
   | "seed_mode"
   | "upload_mode"
@@ -44,11 +40,39 @@ export type ErrC = {
 };
 
 export type TorrentsList = {
+  order_by: TorrentSortField;
+  order_by_dir: string;
   page: number;
   page_size: number;
   torrents: Torrent[];
   torrents_total: number;
+  torrents_total_unfiltered: number;
 };
+
+export type TorrentSortField =
+  | "download_rate"
+  | "eta"
+  | "list_peers"
+  | "list_seeds"
+  | "name"
+  | "num_peers"
+  | "num_seeds"
+  | "progress"
+  | "queue_position"
+  | "ratio"
+  | "save_path"
+  | "total"
+  | "total_done"
+  | "upload_rate";
+
+export type TorrentStatusFilter =
+  | "downloading"
+  | "downloading_queued"
+  | "error"
+  | "finished"
+  | "paused"
+  | "seeding"
+  | "seeding_queued";
 
 export type SessionsGet = {
   session: Session;
@@ -66,9 +90,7 @@ export type Session = {
   };
 };
 
-export type SessionSettings = {
-  active_limit: number;
-};
+export type SessionSettings = Record<string, string | number | boolean>;
 
 export type TorrentsGet = {
   torrent: Torrent;
@@ -94,32 +116,56 @@ export type ApiKeysList = {
   keys: ApiKey[];
 };
 
-export type InfoHash = [string | null, string | null] | string;
+// what Porla sends: [v1, v2], hex, either half null (v1-only or v2-only).
+export type InfoHashPair = [string | null, string | null];
+
+// What Porla accepts: the pair, or a v1 (40) or v2 (64) hex string.
+export type InfoHash = InfoHashPair | string;
+
+// The resume data categories that need saving (libtorrent 2.1).
+export type ResumeDataFlag =
+  | "flush_disk_cache"
+  | "save_info_dict"
+  | "if_counters_changed"
+  | "if_download_progress"
+  | "if_config_changed"
+  | "if_state_changed"
+  | "if_metadata_changed";
 
 export type Bitfield = [number, string];
 
 export type Torrent = {
   $userdata: {
     category: string | null;
+    completed_at: number | null; // unix time, null until complete
     metadata: Record<string, unknown>;
     tags: string[];
-  };
+  } | null;
 
   active_duration: number;
   added_time: number;
   all_time_download: number;
   all_time_upload: number;
-  completed_time: number;
+  announcing_to_dht: boolean;
+  announcing_to_lsd: boolean;
+  announcing_to_trackers: boolean;
+  block_size: number;
+  completed_time: number; // unix time, 0 = not complete
+  connect_candidates: number;
   connections_limit: number;
   current_tracker: string;
   distributed_copies: number; // availability, -1 when not known
+  down_bandwidth_queue: number;
   download_payload_rate: number;
   download_rate: number;
   errc: ErrC | null;
   finished_duration: number;
   flags: TorrentFlag[];
+  has_incoming: boolean;
   has_metadata: boolean;
-  info_hash: InfoHash;
+  info_hash: InfoHashPair;
+  is_finished: boolean;
+  is_seeding: boolean;
   last_download: number; // seconds ago, -1 = never
   last_seen_complete: number;
   last_upload: number; // seconds ago, -1 = never
@@ -127,29 +173,35 @@ export type Torrent = {
   list_seeds: number;
   moving_storage: boolean;
   name: string;
+  need_save_resume_data: ResumeDataFlag[];
   next_announce: number; // seconds from now
   num_complete: number; // seeds in the swarm per the tracker, -1 if unknown
   num_connections: number;
   num_incomplete: number; // peers in the swarm per the tracker, -1 if unknown
   num_peers: number;
+  num_pieces: number;
   num_seeds: number;
+  num_uploads: number;
   progress: number;
   queue_position: number;
   ratio: number;
   ratio_real: number;
   save_path: string;
+  seed_rank: number;
   seeding_duration: number;
   state: TorrentState;
   storage_mode: "allocate" | "sparse";
-  tags: string[];
   total: number;
   total_done: number;
+  total_download: number;
   total_failed_bytes: number;
   total_payload_download: number; // this session
   total_payload_upload: number; // this session
   total_redundant_bytes: number;
+  total_upload: number;
   total_wanted: number;
   total_wanted_done: number;
+  up_bandwidth_queue: number;
   upload_payload_rate: number;
   upload_rate: number;
   uploads_limit: number;
@@ -193,6 +245,7 @@ export type PluginsListItem = {
   name: string | null;
   version: string | null;
   is_loaded: boolean;
+  metadata: Record<string, unknown>;
 };
 
 export type SessionsList = {
@@ -201,15 +254,6 @@ export type SessionsList = {
 
 export type SessionsSettingsGet = {
   settings: SessionSettings;
-};
-
-export type Plugin = {
-  id: number;
-  name: string | null;
-  config: string | null;
-  metadata: Record<string, unknown> | null;
-  type: "path" | "archive";
-  version: string | null;
 };
 
 export type Preset = {
@@ -230,13 +274,16 @@ export type Preset = {
   upload_limit: number | null;
 };
 
+export type FileFlag = "pad_file" | "hidden" | "executable" | "symlink";
+
 export type TorrentFile = {
   absolute_path: boolean;
-  flags: string[];
+  flags: FileFlag[];
   index: number;
+  offset: number;
   path: string;
   size: number;
-  symlink: boolean;
+  symlink: string;
 };
 
 export type TorrentsFilesList = {
@@ -251,6 +298,36 @@ export type TorrentsFilesProgress = {
   progress: number[];
 };
 
+export type PeerFlag =
+  | "interesting"
+  | "choked"
+  | "remote_interested"
+  | "remote_choked"
+  | "supports_extensions"
+  | "outgoing_connection"
+  | "handshake"
+  | "connecting"
+  | "on_parole"
+  | "seed"
+  | "optimistic_unchoke"
+  | "snubbed"
+  | "upload_only"
+  | "endgame_mode"
+  | "holepunched"
+  | "i2p_socket"
+  | "utp_socket"
+  | "ssl_socket"
+  | "rc4_encrypted"
+  | "plaintext_encrypted";
+
+export type PeerSource =
+  | "tracker"
+  | "dht"
+  | "pex"
+  | "lsd"
+  | "resume_data"
+  | "incoming";
+
 export type Peer = {
   busy_requests: number;
   client: string;
@@ -258,14 +335,14 @@ export type Peer = {
   down_speed: number; // bytes/s
   download_queue_length: number; // block requests outstanding
   download_queue_time: number; // s
-  flags: string[];
+  flags: PeerFlag[];
   last_active: number; // s ago
   last_request: number; // s ago
   local_endpoint: [string, number];
   progress: number; // 0..1
   remote_endpoint: [string, number];
   rtt: number; // ms
-  source: string[];
+  source: PeerSource[];
   total_download: number; // from this peer, this connection
   total_upload: number;
   up_speed: number;
@@ -285,8 +362,8 @@ export type AnnounceInfohash = {
   fails: number;
   last_error: null | ErrC;
   message: string; // the tracker's warning or failure text
-  min_announce: number;
-  next_announce: number;
+  min_announce: number; // unix time, -2147483648 = not set
+  next_announce: number; // unix time, -2147483648 = not set
   scrape_complete: number;
   scrape_downloaded: number;
   scrape_incomplete: number;
@@ -303,7 +380,7 @@ export type AnnounceEndpoint = {
 export type AnnounceEntry = {
   endpoints: AnnounceEndpoint[];
   fail_limit: number;
-  source: string[];
+  source: ("torrent" | "client" | "magnet_link" | "tex")[];
   tier: number;
   trackerid: string;
   url: string;
@@ -333,9 +410,15 @@ export type SysStatus = {
 };
 
 export type SysVersions = {
-  porla: {
-    version: string;
-  };
+  porla: { branch: string; commitish: string; version: string };
+  libtorrent: { revision: string; version: string };
+  boost: { version: string };
+  curl: { version: string };
+  libzip: { version: string };
+  maxminddb: { version: string };
+  nlohmann_json: { version: string };
+  openssl: { release_date: string; version: string; version_text: string };
+  sqlite: { source_id: string; version: string };
 };
 
 export class RpcError extends Error {
@@ -368,6 +451,7 @@ type NoParams = Record<string, never>;
 
 export type MmdbEntry = {
   country?: { iso_code?: string; names?: Record<string, string> };
+  [key: string]: unknown;
 };
 
 // Optional backend fields accept both an absent key and null.
@@ -523,7 +607,7 @@ export type Methods = {
       trackers?: string[] | null;
       url_seeds?: string[] | null;
     };
-    result: { info_hash: InfoHash; session_id: number };
+    result: { info_hash: InfoHashPair; session_id: number };
   };
   "torrents.count": {
     params: { session_id?: number };
@@ -558,23 +642,26 @@ export type Methods = {
         query?: string | null;
         session_id?: number | null;
         save_path?: string | null;
-        state?: string[] | null;
-        status?: string[] | null;
+        state?: TorrentState[] | null;
+        status?: TorrentStatusFilter[] | null;
         tags?: string[] | null;
       } | null;
-      page?: number | null;
-      page_size?: number | null;
-      order_by?: string | null;
+      page?: number | null; // 0-based
+      page_size?: number | null; // 1–1000, default 50
+      order_by?: TorrentSortField | null; // default queue_position
       order_by_dir?: "asc" | "desc" | null;
     };
     result: TorrentsList;
   };
   "torrents.migrate": {
     params: TorrentRef & { target_session_id: number };
-    result: { info_hash: InfoHash; session_id: number };
+    result: { info_hash: InfoHashPair; session_id: number };
   };
   "torrents.move": {
-    params: TorrentRef & { path: string; flags?: string | null };
+    params: TorrentRef & {
+      path: string;
+      flags?: "always_replace_files" | "dont_replace" | "fail_if_exist" | null;
+    };
     result: null;
   };
   "torrents.pause": { params: TorrentRef; result: null };

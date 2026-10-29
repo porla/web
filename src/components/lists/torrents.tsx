@@ -158,7 +158,7 @@ export const TorrentListColumns = () => {
       headerClassNames: "w-32",
       columnClassNames: "overflow-hidden text-ellipsis whitespace-nowrap",
       title: "Category",
-      data: (t: Torrent) => <>{t.$userdata.category}</>,
+      data: (t: Torrent) => <>{t.$userdata?.category}</>,
     },
     ratio: {
       default: false,

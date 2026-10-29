@@ -102,7 +102,7 @@ function PropertiesForm({
   close,
 }: TorrentPropertiesModalProps & {
   limits: TorrentsPropertiesGet;
-  userdata: Torrent["$userdata"] | null;
+  userdata: Torrent["$userdata"];
 } & ModalProps<boolean>) {
   const queryClient = useQueryClient();
 
