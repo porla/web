@@ -5,9 +5,11 @@ import FieldErrors from "./field-errors";
 export default function NumberField({
   autoFocus,
   label,
+  placeholder,
 }: {
   autoFocus?: boolean;
   label: string;
+  placeholder?: string;
 }) {
   const field = useFieldContext<number | null>();
 
@@ -22,6 +24,7 @@ export default function NumberField({
       <input
         id={id}
         autoFocus={autoFocus}
+        placeholder={placeholder}
         type="number"
         className="input"
         value={field.state.value ?? ""}

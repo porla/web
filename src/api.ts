@@ -97,10 +97,10 @@ export type TorrentsGet = {
 };
 
 export type TorrentsPropertiesGet = {
-  download_limit: number;
-  max_connections: number;
-  max_uploads: number;
-  upload_limit: number;
+  download_limit: number | null;
+  max_connections: number | null;
+  max_uploads: number | null;
+  upload_limit: number | null;
 };
 
 export type ApiKey = {

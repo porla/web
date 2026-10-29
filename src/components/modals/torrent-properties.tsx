@@ -1,7 +1,15 @@
-import { type InfoHash, useInvoker, useRPC } from "@/api";
+import {
+  type InfoHash,
+  type Params,
+  type Torrent,
+  type TorrentsPropertiesGet,
+  useInvoker,
+  useRPC,
+} from "@/api";
 import type { ModalProps } from "@/components/modal";
 import { useAppForm } from "@/hooks/form";
 import { peerLimit, rateLimit } from "@/limits";
+import { useQueryClient } from "@tanstack/react-query";
 import z from "zod";
 
 type TorrentPropertiesModalProps = {
@@ -18,56 +26,138 @@ const propertiesSchema = z.object({
   upload_limit: rateLimit,
 });
 
+const LIMITS = [
+  "download_limit",
+  "upload_limit",
+  "max_connections",
+  "max_uploads",
+] as const;
+
+const splitTags = (tags: string) =>
+  tags
+    .split(",")
+    .map((s) => s.trim())
+    .filter(Boolean);
+
 export default function TorrentPropertiesModal({
   info_hash,
   session_id,
   close,
 }: TorrentPropertiesModalProps & ModalProps<boolean>) {
-  const properties = useRPC("torrents.properties.get", {
-    info_hash,
-    session_id,
+  const properties = useRPC(
+    "torrents.properties.get",
+    { info_hash, session_id },
+    { meta: { silent: true } },
+  );
+
+  const torrent = useRPC(
+    "torrents.get",
+    { info_hash, session_id },
+    { meta: { silent: true } },
+  );
+
+  if (!properties.isFetchedAfterMount || !torrent.isFetchedAfterMount) {
+    return <span className="loading loading-spinner"></span>;
+  }
+
+  const error = properties.error ?? torrent.error;
+
+  if (error || !properties.data || !torrent.data) {
+    return (
+      <>
+        <h3 className="font-bold text-lg">Properties</h3>
+        <p className="py-2">{error?.message ?? "Torrent not found"}</p>
+        <div className="modal-action">
+          <button type="button" className="btn" onClick={() => close(false)}>
+            Close
+          </button>
+        </div>
+      </>
+    );
+  }
+
+  return (
+    <PropertiesForm
+      info_hash={info_hash}
+      session_id={session_id}
+      limits={properties.data}
+      userdata={torrent.data.torrent.$userdata}
+      close={close}
+    />
+  );
+}
+
+function PropertiesForm({
+  info_hash,
+  session_id,
+  limits,
+  userdata,
+  close,
+}: TorrentPropertiesModalProps & {
+  limits: TorrentsPropertiesGet;
+  userdata: Torrent["$userdata"] | null;
+} & ModalProps<boolean>) {
+  const queryClient = useQueryClient();
+
+  const set = useInvoker("torrents.properties.set", {
+    meta: { silent: true },
+    onSuccess: () =>
+      Promise.all(
+        [
+          "torrents.properties.get",
+          "torrents.get",
+          "torrents.list",
+          "torrents.count",
+        ].map((method) =>
+          queryClient.invalidateQueries({ queryKey: [method] }),
+        ),
+      ),
   });
 
-  const torrent = useRPC("torrents.get", {
-    info_hash,
-    session_id,
-  });
-
-  const set = useInvoker("torrents.properties.set", { meta: { silent: true } });
+  const initial = {
+    category: userdata?.category ?? "",
+    download_limit: limits.download_limit,
+    max_connections: limits.max_connections,
+    max_uploads: limits.max_uploads,
+    tags: userdata?.tags.join(", ") ?? "",
+    upload_limit: limits.upload_limit,
+  };
 
   const form = useAppForm({
-    defaultValues: {
-      category: torrent.data?.torrent.$userdata.category ?? "",
-      download_limit: properties.data?.download_limit ?? null,
-      max_connections: properties.data?.max_connections ?? null,
-      max_uploads: properties.data?.max_uploads ?? null,
-      tags: torrent.data?.torrent.$userdata.tags.join(", ") ?? "",
-      upload_limit: properties.data?.upload_limit ?? null,
-    },
+    defaultValues: initial,
     validators: {
       onChange: propertiesSchema,
     },
     onSubmit: async ({ value }) => {
-      const { category, tags, ...limits } = propertiesSchema.parse(value);
+      const next = propertiesSchema.parse(value);
+      const changes: Partial<Params<"torrents.properties.set">> = {};
 
-      await set.mutateAsync({
-        info_hash,
-        session_id,
-        ...limits,
-        category: category.length > 0 ? category : null,
-        tags: tags
-          .split(",")
-          .map((s) => s.trim())
-          .filter(Boolean),
-      });
+      for (const key of LIMITS) {
+        if (next[key] !== initial[key]) {
+          changes[key] = next[key];
+        }
+      }
+
+      if (next.category !== initial.category) {
+        changes.category = next.category || null;
+      }
+
+      const tags = splitTags(next.tags);
+
+      // porla keeps tags as a set, in no particular order.
+      if (
+        tags.toSorted().join() !== splitTags(initial.tags).toSorted().join()
+      ) {
+        changes.tags = tags;
+      }
+
+      if (Object.keys(changes).length > 0) {
+        await set.mutateAsync({ info_hash, session_id, ...changes });
+      }
 
       close(true);
     },
   });
-
-  if (properties.isLoading || torrent.isLoading) {
-    return <>loading</>;
-  }
 
   return (
     <form.AppForm>
@@ -77,23 +167,39 @@ export default function TorrentPropertiesModal({
         <form.AppField
           name="download_limit"
           children={(field) => (
-            <field.NumberField label="Download limit" autoFocus />
+            <field.NumberField
+              label="Download limit (bytes/s)"
+              placeholder="Unlimited"
+              autoFocus
+            />
           )}
         />
 
         <form.AppField
           name="upload_limit"
-          children={(field) => <field.NumberField label="Upload limit" />}
+          children={(field) => (
+            <field.NumberField
+              label="Upload limit (bytes/s)"
+              placeholder="Unlimited"
+            />
+          )}
         />
 
         <form.AppField
           name="max_connections"
-          children={(field) => <field.NumberField label="Max connections" />}
+          children={(field) => (
+            <field.NumberField
+              label="Max connections"
+              placeholder="Unlimited"
+            />
+          )}
         />
 
         <form.AppField
           name="max_uploads"
-          children={(field) => <field.NumberField label="Max uploads" />}
+          children={(field) => (
+            <field.NumberField label="Max uploads" placeholder="Unlimited" />
+          )}
         />
 
         <form.AppField
