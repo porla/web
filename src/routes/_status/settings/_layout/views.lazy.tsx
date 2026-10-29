@@ -57,6 +57,9 @@ function EditTorrentListForm({ initialCols }: { initialCols: string[] }) {
 
   const allCols = Object.keys(torrentsColumns) as ColKey[];
 
+  const nameOf = (c: ColKey) =>
+    torrentsColumns[c].name ?? torrentsColumns[c].title;
+
   const form = useAppForm({
     defaultValues: {
       cols: initialCols.filter((c) => knownCols.has(c)) as ColKey[],
@@ -98,7 +101,9 @@ function EditTorrentListForm({ initialCols }: { initialCols: string[] }) {
                       key={col}
                       className="flex flex-row items-center justify-between"
                     >
-                      <span>{col}</span>
+                      <span title={torrentsColumns[col].description}>
+                        {nameOf(col)}
+                      </span>
                       <div className="join">
                         <button
                           type="button"
@@ -136,7 +141,7 @@ function EditTorrentListForm({ initialCols }: { initialCols: string[] }) {
                           type="button"
                           onClick={() => field.pushValue(col)}
                         >
-                          + {col}
+                          + {nameOf(col)}
                         </button>
                       </li>
                     ))}
