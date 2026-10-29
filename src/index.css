@@ -1,2 +1,9 @@
 @import "tailwindcss";
 @plugin "daisyui";
+
+/* daisyUI's select dropdown (Chromium's ::picker) inherits the select's
+   background. A ghost select's is transparent until focused, and fades in, so
+   the open list showed the page through it: give the list its own. */
+.select-ghost::picker(select) {
+  background-color: var(--color-base-100);
+}
