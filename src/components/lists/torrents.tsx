@@ -4,6 +4,8 @@ import { Link, useSearch } from "@tanstack/react-router";
 import clsx from "clsx";
 import { filesize } from "filesize";
 import Dash from "../dash";
+import type { ReactNode } from "react";
+import Ratio from "../ratio";
 
 // The sidebar's status colors (its icons use the same shades), so a row reads
 // like the filter it's in.
@@ -16,17 +18,29 @@ const bars: Record<Tone, string> = {
   other: "bg-base-content/40",
 };
 
+export type TorrentListColumn = {
+  default: boolean;
+  // rem; none for the name, which takes what's left
+  width?: number;
+  headerClassNames: string;
+  columnClassNames: string;
+  title: string;
+  description?: string;
+  data: (t: Torrent) => ReactNode;
+};
+
 export const TorrentListColumns = () => {
   const torrentSearch = useSearch({
     from: "/_status/_main/",
     shouldThrow: false,
   });
 
-  return {
+  const columns = {
     queue_position: {
       default: true,
-      headerClassNames: "text-right w-4",
-      columnClassNames: "text-base-content/60",
+      width: 3,
+      headerClassNames: "text-right",
+      columnClassNames: "text-right text-base-content/60",
       title: "#",
       data: (t: Torrent) => (
         <>{t.queue_position < 0 ? <Dash /> : t.queue_position + 1}</>
@@ -54,7 +68,8 @@ export const TorrentListColumns = () => {
     },
     size: {
       default: true,
-      headerClassNames: "w-32",
+      width: 8,
+      headerClassNames: "",
       columnClassNames: "text-base-content/60",
       title: "Size",
       // A magnet has no size until its metadata arrives.
@@ -67,7 +82,8 @@ export const TorrentListColumns = () => {
     },
     status: {
       default: true,
-      headerClassNames: "w-40",
+      width: 10,
+      headerClassNames: "",
       columnClassNames: "",
       title: "Status",
       data: (t: Torrent) => {
@@ -102,7 +118,8 @@ export const TorrentListColumns = () => {
     },
     download_payload_rate: {
       default: true,
-      headerClassNames: "w-32 text-right",
+      width: 8,
+      headerClassNames: "text-right",
       columnClassNames: "text-right",
       title: "DL",
       data: (t: Torrent) =>
@@ -114,7 +131,8 @@ export const TorrentListColumns = () => {
     },
     upload_payload_rate: {
       default: true,
-      headerClassNames: "w-32 text-right",
+      width: 8,
+      headerClassNames: "text-right",
       columnClassNames: "text-right",
       title: "UL",
       data: (t: Torrent) =>
@@ -126,7 +144,8 @@ export const TorrentListColumns = () => {
     },
     peers: {
       default: false,
-      headerClassNames: "w-32 text-right",
+      width: 8,
+      headerClassNames: "text-right",
       columnClassNames: "text-right",
       title: "Peers",
       data: (t: Torrent) => (
@@ -137,7 +156,8 @@ export const TorrentListColumns = () => {
     },
     seeds: {
       default: false,
-      headerClassNames: "w-32 text-right",
+      width: 8,
+      headerClassNames: "text-right",
       columnClassNames: "text-right",
       title: "Seeds",
       data: (t: Torrent) => (
@@ -148,31 +168,40 @@ export const TorrentListColumns = () => {
     },
     tracker: {
       default: false,
-      headerClassNames: "w-64",
+      width: 16,
+      headerClassNames: "",
       columnClassNames: "overflow-hidden text-ellipsis whitespace-nowrap",
       title: "Tracker",
       data: (t: Torrent) => <>{t.current_tracker}</>,
     },
     category: {
       default: false,
-      headerClassNames: "w-32",
+      width: 8,
+      headerClassNames: "",
       columnClassNames: "overflow-hidden text-ellipsis whitespace-nowrap",
       title: "Category",
       data: (t: Torrent) => <>{t.$userdata?.category}</>,
     },
     ratio: {
       default: false,
-      headerClassNames: "w-32",
-      columnClassNames: "",
+      width: 6,
+      headerClassNames: "text-right",
+      columnClassNames: "text-right",
       title: "Ratio",
-      data: (t: Torrent) => <>{t.ratio}</>,
+      data: (t: Torrent) => <Ratio value={t.ratio} />,
     },
     ratio_real: {
       default: false,
-      headerClassNames: "w-32",
-      columnClassNames: "",
-      title: "Ratio",
-      data: (t: Torrent) => <>{t.ratio_real}</>,
+      width: 7,
+      headerClassNames: "text-right",
+      columnClassNames: "text-right",
+      title: "Own ratio",
+      description: "Counting only what this client downloaded",
+      data: (t: Torrent) => <Ratio value={t.ratio_real} />,
     },
   };
+
+  return columns as Record<keyof typeof columns, TorrentListColumn>;
 };
+
+export const NAME_MIN_WIDTH = 16;

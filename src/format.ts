@@ -1,6 +1,9 @@
 import { filesize } from "filesize";
 import { DateTime } from "luxon";
 
+// Porla caps a ratio at 9999 (uploaded without downloading anything).
+export const ratio = (r: number) => (r >= 9999 ? "∞" : r.toFixed(2));
+
 export const bytes = (n: number) => filesize(n);
 
 // For sizes that are powers of two, e.g. pieces: "16 KiB", not "16.38 kB".
