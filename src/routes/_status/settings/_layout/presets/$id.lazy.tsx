@@ -1,14 +1,9 @@
-import {
-  AllTorrentFlags,
-  useInvoker,
-  useRPC,
-  type Preset,
-  type TorrentFlag,
-} from "@/api";
+import { useInvoker, useRPC, type Preset, type TorrentFlag } from "@/api";
 import { useModal } from "@/components/modal";
 import ConfirmModal from "@/components/modals/confirm";
 import { useAppForm } from "@/hooks/form";
 import { peerLimit, rateLimit } from "@/limits";
+import { presetFlags } from "@/torrent-flags";
 import { useQueryClient } from "@tanstack/react-query";
 import { createLazyFileRoute } from "@tanstack/react-router";
 import { Suspense } from "react";
@@ -19,17 +14,6 @@ export const Route = createLazyFileRoute(
 )({
   component: RouteComponent,
 });
-
-type FlagState = "on" | "off" | "unchanged";
-
-const flagState = (
-  f: TorrentFlag,
-  flags: TorrentFlag[],
-  mask: TorrentFlag[],
-): FlagState =>
-  !mask.includes(f) ? "unchanged" : flags.includes(f) ? "on" : "off";
-
-const OPTIONS = ["on", "off", "unchanged"] as const;
 
 function RouteComponent() {
   const { id } = Route.useParams();
@@ -95,13 +79,16 @@ const presetSchema = (taken: string[]) =>
           .map((s) => s.trim())
           .filter(Boolean),
       ),
-      flags: z.array(z.custom<TorrentFlag>()),
-      flags_mask: z.array(z.custom<TorrentFlag>()),
+      flags: z.object({
+        flags: z.array(z.custom<TorrentFlag>()),
+        mask: z.array(z.custom<TorrentFlag>()),
+      }),
     })
     // Only flags in the mask mean anything.
-    .transform((v) => ({
+    .transform(({ flags, ...v }) => ({
       ...v,
-      flags: v.flags.filter((f) => v.flags_mask.includes(f)),
+      flags: flags.flags.filter((f) => flags.mask.includes(f)),
+      flags_mask: flags.mask,
     }));
 
 function PresetForm({ preset }: PresetFormProps) {
@@ -139,8 +126,7 @@ function PresetForm({ preset }: PresetFormProps) {
       max_connections: preset.max_connections,
       max_uploads: preset.max_uploads,
       tags: preset.tags.join(", "),
-      flags: preset.flags ?? [],
-      flags_mask: preset.flags_mask ?? [],
+      flags: { flags: preset.flags ?? [], mask: preset.flags_mask ?? [] },
     },
     validators: {
       onChange: presetSchema(taken),
@@ -156,185 +142,121 @@ function PresetForm({ preset }: PresetFormProps) {
   });
 
   return (
-    <form
-      onSubmit={(e) => {
-        e.preventDefault();
-        e.stopPropagation();
-        form.handleSubmit().catch(() => {});
-      }}
-    >
-      <form.AppField
-        name="name"
-        children={(field) => <field.TextField label="Name" />}
-      />
-
-      <form.AppField
-        name="is_default"
-        children={(field) => <field.CheckboxField label="Is default" />}
-      />
-
-      <form.AppField
-        name="category"
-        children={(field) => <field.TextField label="Category" />}
-      />
-
-      <form.AppField
-        name="download_limit"
-        children={(field) => <field.NumberField label="Download limit" />}
-      />
-
-      <form.AppField
-        name="max_connections"
-        children={(field) => <field.NumberField label="Max connections" />}
-      />
-
-      <form.AppField
-        name="max_uploads"
-        children={(field) => <field.NumberField label="Max uploads" />}
-      />
-
-      <form.AppField
-        name="save_path"
-        children={(field) => <field.TextField label="Save path" />}
-      />
-
-      {sessions.data && sessions.data.sessions.length > 1 && (
+    <form.AppForm>
+      <form.Form>
         <form.AppField
-          name="session_id"
-          children={(field) => (
-            <field.SelectField
-              label="Session"
-              items={
-                sessions.data.sessions.map((s) => {
-                  return {
-                    value: s.id,
-                    label: s.name,
-                  };
-                }) ?? []
-              }
-            />
-          )}
+          name="name"
+          children={(field) => <field.TextField label="Name" />}
         />
-      )}
 
-      <form.AppField
-        name="tags"
-        children={(field) => (
-          <field.TextField
-            label="Tags"
-            description="A comma (,) separated list of tags"
+        <form.AppField
+          name="is_default"
+          children={(field) => <field.CheckboxField label="Is default" />}
+        />
+
+        <form.AppField
+          name="category"
+          children={(field) => <field.TextField label="Category" />}
+        />
+
+        <form.AppField
+          name="download_limit"
+          children={(field) => <field.NumberField label="Download limit" />}
+        />
+
+        <form.AppField
+          name="max_connections"
+          children={(field) => <field.NumberField label="Max connections" />}
+        />
+
+        <form.AppField
+          name="max_uploads"
+          children={(field) => <field.NumberField label="Max uploads" />}
+        />
+
+        <form.AppField
+          name="save_path"
+          children={(field) => <field.TextField label="Save path" />}
+        />
+
+        {sessions.data && sessions.data.sessions.length > 1 && (
+          <form.AppField
+            name="session_id"
+            children={(field) => (
+              <field.SelectField
+                label="Session"
+                items={
+                  sessions.data.sessions.map((s) => {
+                    return {
+                      value: s.id,
+                      label: s.name,
+                    };
+                  }) ?? []
+                }
+              />
+            )}
           />
         )}
-      />
 
-      <form.AppField
-        name="upload_limit"
-        children={(field) => <field.NumberField label="Upload limit" />}
-      />
-
-      <div className="flex">
         <form.AppField
-          name="flags"
-          children={(flagsField) => (
-            <form.AppField
-              name="flags_mask"
-              children={(maskField) => {
-                const flags = flagsField.state.value ?? [];
-                const mask = maskField.state.value ?? [];
-
-                const set = (f: TorrentFlag, next: FlagState) => {
-                  const nextFlags = flags.filter((x) => x !== f);
-                  const nextMask = mask.filter((x) => x !== f);
-
-                  if (next === "on") {
-                    nextFlags.push(f);
-                    nextMask.push(f);
-                  }
-
-                  if (next === "off") {
-                    nextMask.push(f);
-                  }
-
-                  flagsField.handleChange(nextFlags);
-                  maskField.handleChange(nextMask);
-                };
-
-                return (
-                  <div className="fieldset">
-                    <label className="label">Flags</label>
-                    <table className="table">
-                      <thead>
-                        <tr>
-                          <th>Flag</th>
-                          <th>Set</th>
-                          <th>Unset</th>
-                          <th>Leave</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {AllTorrentFlags.map((f) => {
-                          const current = flagState(f, flags, mask);
-
-                          return (
-                            <tr key={f}>
-                              <td>{f}</td>
-                              {OPTIONS.map((opt) => (
-                                <td key={opt}>
-                                  <input
-                                    type="radio"
-                                    className="radio"
-                                    name={`flags-${f}`}
-                                    value={opt}
-                                    checked={current === opt}
-                                    onChange={() => set(f, opt)}
-                                  />
-                                </td>
-                              ))}
-                            </tr>
-                          );
-                        })}
-                      </tbody>
-                    </table>
-                  </div>
-                );
-              }}
+          name="tags"
+          children={(field) => (
+            <field.TextField
+              label="Tags"
+              description="A comma (,) separated list of tags"
             />
           )}
         />
-      </div>
 
-      <form.AppForm>
+        <form.AppField
+          name="upload_limit"
+          children={(field) => <field.NumberField label="Upload limit" />}
+        />
+
+        <form.AppField
+          name="flags"
+          children={(field) => (
+            <field.TorrentFlagsField
+              label="Flags"
+              mode="preset"
+              flags={presetFlags}
+            />
+          )}
+        />
+
         <form.SaveError error={update.error} />
         <form.SubmitButton label="Update" />
-      </form.AppForm>
 
-      <button
-        type="button"
-        disabled={preset.is_default}
-        title={
-          preset.is_default ? "Cannot remove the default preset" : undefined
-        }
-        className="btn btn-warning ml-3"
-        onClick={async () => {
-          const removed = await modal.show(ConfirmModal, {
-            title: "Remove preset",
-            message: `Remove the preset "${preset.name}"?`,
-            confirmLabel: "Remove",
-            action: () => remove.mutateAsync({ id: preset.id }),
-          });
-
-          if (removed) {
-            queryClient.removeQueries({
-              queryKey: ["presets.get", { id: preset.id }],
+        <button
+          type="button"
+          disabled={preset.is_default}
+          title={
+            preset.is_default ? "Cannot remove the default preset" : undefined
+          }
+          className="btn btn-warning ml-3"
+          onClick={async () => {
+            const removed = await modal.show(ConfirmModal, {
+              title: "Remove preset",
+              message: `Remove the preset "${preset.name}"?`,
+              confirmLabel: "Remove",
+              action: () => remove.mutateAsync({ id: preset.id }),
             });
 
-            await queryClient.invalidateQueries({ queryKey: ["presets.list"] });
-            await navigate({ to: "/settings/presets" });
-          }
-        }}
-      >
-        Remove
-      </button>
-    </form>
+            if (removed) {
+              queryClient.removeQueries({
+                queryKey: ["presets.get", { id: preset.id }],
+              });
+
+              await queryClient.invalidateQueries({
+                queryKey: ["presets.list"],
+              });
+              await navigate({ to: "/settings/presets" });
+            }
+          }}
+        >
+          Remove
+        </button>
+      </form.Form>
+    </form.AppForm>
   );
 }

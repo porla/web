@@ -1,4 +1,5 @@
 import { useInvoker, useRPC } from "@/api";
+import Accordion from "@/components/accordion";
 import { useAppForm } from "@/hooks/form";
 import { useQueryClient } from "@tanstack/react-query";
 import { createLazyFileRoute, Link } from "@tanstack/react-router";
@@ -132,43 +133,35 @@ function RouteComponent() {
                   )}
                 />
 
-                <details
-                  className="collapse bg-base-100 border border-base-300"
-                  name="settings-advanced"
-                >
-                  <summary className="collapse-title font-semibold">
-                    Advanced
-                  </summary>
-                  <div className="collapse-content text-sm">
-                    <form.AppField
-                      name="timer_dht_stats"
-                      children={(field) => (
-                        <field.NumberField label="DHT stats interval (ms)" />
-                      )}
-                    />
+                <Accordion title="Advanced" className="bg-base-100">
+                  <form.AppField
+                    name="timer_dht_stats"
+                    children={(field) => (
+                      <field.NumberField label="DHT stats interval (ms)" />
+                    )}
+                  />
 
-                    <form.AppField
-                      name="timer_save_state"
-                      children={(field) => (
-                        <field.NumberField label="Save state interval (ms)" />
-                      )}
-                    />
+                  <form.AppField
+                    name="timer_save_state"
+                    children={(field) => (
+                      <field.NumberField label="Save state interval (ms)" />
+                    )}
+                  />
 
-                    <form.AppField
-                      name="timer_session_stats"
-                      children={(field) => (
-                        <field.NumberField label="Session stats interval (ms)" />
-                      )}
-                    />
+                  <form.AppField
+                    name="timer_session_stats"
+                    children={(field) => (
+                      <field.NumberField label="Session stats interval (ms)" />
+                    )}
+                  />
 
-                    <form.AppField
-                      name="timer_torrent_updates"
-                      children={(field) => (
-                        <field.NumberField label="Torrent update interval (ms)" />
-                      )}
-                    />
-                  </div>
-                </details>
+                  <form.AppField
+                    name="timer_torrent_updates"
+                    children={(field) => (
+                      <field.NumberField label="Torrent update interval (ms)" />
+                    )}
+                  />
+                </Accordion>
 
                 <form.SaveError error={add.error} />
                 <form.SubmitButton label="Add session" />

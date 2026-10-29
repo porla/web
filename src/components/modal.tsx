@@ -131,7 +131,7 @@ function ModalHost({
         }
       }}
     >
-      <div className="modal-box">
+      <div className="modal-box has-data-sticky-footer:pb-0">
         {/* A modal that crashes or whose code fails to load (e.g. a stale tab
             after an upgrade) must not take the app down. */}
         <CatchBoundary

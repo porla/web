@@ -5,6 +5,7 @@ import { Fragment, type ReactNode } from "react";
 import CopyButton from "./copy-button";
 import { torrentStatus, type Tone } from "@/torrent-status";
 import Dash from "./dash";
+import { notableFlags } from "@/torrent-flags";
 
 type GeneralTabProps = {
   info_hash: InfoHash;
@@ -157,13 +158,10 @@ export default function GeneralTab({
     typeof t.info_hash === "string" ? [t.info_hash, null] : t.info_hash;
   const dlLimit = properties.data?.download_limit ?? -1;
   const ulLimit = properties.data?.upload_limit ?? -1;
-  const options = [
-    t.flags.includes("sequential_download") && "Sequential",
-    t.flags.includes("super_seeding") && "Super seeding",
-    t.flags.includes("upload_mode") && "Upload only",
-    t.flags.includes("share_mode") && "Share mode",
-    !t.flags.includes("auto_managed") && "Not auto-managed",
-  ].filter(Boolean);
+
+  const options = notableFlags
+    .filter(({ flag, when }) => t.flags.includes(flag) === (when === "on"))
+    .map(({ label }) => label);
 
   return (
     <div className="p-3 space-y-3">
