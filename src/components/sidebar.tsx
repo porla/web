@@ -22,7 +22,7 @@ import type {
   TorrentFilterStatus,
 } from "@/routes/_status/_main/index";
 import clsx from "clsx";
-import { getCurrentVersion } from "@/features";
+import { feature, getCurrentVersion } from "@/features";
 import { useWebVersion } from "@/version";
 import { prefixPath } from "@/base";
 import { useQueryClient } from "@tanstack/react-query";
@@ -350,19 +350,21 @@ export default function Sidebar({ onNavigate }: { onNavigate?: () => void }) {
         </li>
       </ul>
 
-      <ul className="menu w-full border-t border-base-300 pt-3">
-        <li className={clsx(logout.isPending && "menu-disabled")}>
-          <button
-            type="button"
-            className="text-base-content/60"
-            disabled={logout.isPending}
-            onClick={() => logout.mutate({})}
-          >
-            <LogOut className="size-4" />
-            Log out
-          </button>
-        </li>
-      </ul>
+      {feature("logout") && (
+        <ul className="menu w-full border-t border-base-300 pt-3">
+          <li className={clsx(logout.isPending && "menu-disabled")}>
+            <button
+              type="button"
+              className="text-base-content/60"
+              disabled={logout.isPending}
+              onClick={() => logout.mutate({})}
+            >
+              <LogOut className="size-4" />
+              Log out
+            </button>
+          </li>
+        </ul>
+      )}
     </div>
   );
 }
