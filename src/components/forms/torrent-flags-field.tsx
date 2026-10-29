@@ -21,10 +21,12 @@ export default function FlagsField({
   label,
   mode,
   flags,
+  unsetLabel = "Not set",
 }: {
   label?: string;
   mode: "preset" | "torrent";
   flags: TorrentFlag[];
+  unsetLabel?: string;
 }) {
   const field = useFieldContext<FlagsValue>();
   const id = useId();
@@ -104,7 +106,7 @@ export default function FlagsField({
                         "checked:border-base-300 checked:bg-base-300 checked:text-base-content",
                     )}
                     name={`${id}-${flag}`}
-                    aria-label={label}
+                    aria-label={state === "unset" ? unsetLabel : label}
                     checked={stateOf(flag) === state}
                     onChange={() => set(flag, state)}
                     onBlur={field.handleBlur}

@@ -173,7 +173,9 @@ export default function GeneralTab({
           <span className={`badge ${s.badge}`}>{s.label}</span>
         )}
         <span className="font-semibold">{(t.progress * 100).toFixed(1)}%</span>
-        {left && s.label === "Downloading" && <span>{left} left</span>}
+        {left && s.label === "Downloading" && (
+          <span>{left === "∞" ? left : `${left} left`}</span>
+        )}
         <span className="opacity-70">↓ {rate(t.download_payload_rate)}</span>
         <span className="opacity-70">↑ {rate(t.upload_payload_rate)}</span>
       </div>
