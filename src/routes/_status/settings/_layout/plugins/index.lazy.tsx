@@ -1,4 +1,5 @@
 import { useRPC } from "@/api";
+import { pluginInfo } from "@/plugins/translate";
 import { createLazyFileRoute, Link } from "@tanstack/react-router";
 
 export const Route = createLazyFileRoute("/_status/settings/_layout/plugins/")({
@@ -31,13 +32,13 @@ function RouteComponent() {
               <tr key={`plugin_${p.id}`}>
                 <td className="">
                   <div className="flex items-center gap-2">
-                    <span className="font-semibold">
-                      {p.name ?? p.path.split(/[\\/]/).pop()}
-                    </span>
-                    {p.version && (
-                      <span className="text-xs opacity-60">{p.version}</span>
+                    <span className="font-semibold">{pluginInfo(p).name}</span>
+                    {pluginInfo(p).version && (
+                      <span className="text-xs opacity-60">
+                        {pluginInfo(p).version}
+                      </span>
                     )}
-                    {!p.is_loaded && (
+                    {!pluginInfo(p).loaded && (
                       <span className="badge badge-error badge-soft badge-sm">
                         Not loaded
                       </span>

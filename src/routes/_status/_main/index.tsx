@@ -22,10 +22,10 @@ import MigrateTorrentModal from "@/components/modals/torrent-migrate";
 import MoveTorrentModal from "@/components/modals/torrent-move";
 import TorrentPropertiesModal from "@/components/modals/torrent-properties";
 import RemoveTorrentModal from "@/components/modals/torrent-remove";
-import TorrentStatsModal from "@/components/modals/torrent-stats";
 import Pager from "@/components/pager";
 import TorrentDetailsPanel from "@/components/torrent-details-panel";
 import { useChecked, type Checked } from "@/hooks/use-checked";
+import { usePlugins } from "@/plugins/control-frame";
 import { useForm } from "@tanstack/react-form";
 import { keepPreviousData, useQueryClient } from "@tanstack/react-query";
 import { createFileRoute, Link } from "@tanstack/react-router";
@@ -474,6 +474,7 @@ function TorrentsTable({ torrents, checked }: TorrentsTableProps) {
   const queueBottom = useInvoker("torrents.queue.bottom", refresh);
 
   const modal = useModal();
+  const { menuItems } = usePlugins();
 
   const userColumns = useRPC("kv.get", {
     keys: ["webui.lists.torrents.cols"],
@@ -936,18 +937,24 @@ function TorrentsTable({ torrents, checked }: TorrentsTableProps) {
                     Properties
                   </button>
                 </li>
-                <li>
-                  <button
-                    onClick={() =>
-                      modal.show(TorrentStatsModal, {
-                        info_hash: t.info_hash,
-                        session_id: search.session_id!,
-                      })
-                    }
-                  >
-                    Share stats
-                  </button>
-                </li>
+                {menuItems.map((itm) => (
+                  <li key={itm.id}>
+                    <button
+                      onClick={() =>
+                        itm.onClick({
+                          torrents: [
+                            {
+                              info_hash: t.info_hash,
+                              session_id: search.session_id,
+                            },
+                          ],
+                        })
+                      }
+                    >
+                      {itm.label}
+                    </button>
+                  </li>
+                ))}
               </ul>
             </td>
           </tr>
