@@ -6,6 +6,7 @@ const FEATURES = {
   base: new Range(">=0.43.0", RANGE_OPTIONS),
   api_keys: new Range(">=0.49.0", RANGE_OPTIONS),
   logout: new Range(">=0.52.0", RANGE_OPTIONS),
+  plugin_ui: new Range(">=0.53.0", RANGE_OPTIONS),
 } satisfies Record<string, Range>;
 
 type FeatureName = keyof typeof FEATURES;

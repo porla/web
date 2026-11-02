@@ -220,20 +220,37 @@ export type TorrentState =
   | "seeding"
   | "checking_resume_data";
 
+export type PluginManifest = {
+  name: string | null;
+  slug: string | null;
+  version: string | null;
+  ui: {
+    entry: string | null;
+    settings?: string | null; // porla with ui.settings
+    rpc: string[] | null;
+  } | null;
+};
+
+export type Plugin = {
+  id: number;
+  path: string;
+  config: string | null;
+  metadata: Record<string, unknown>;
+  name?: string | null; // <=0.52.0
+  version?: string | null; // <=0.52.0
+  is_loaded?: boolean; // <=0.52.0
+  slug?: string;
+  manifest?: PluginManifest | null;
+  status?: "running" | "error";
+  error?: string | null;
+};
+
 export type PluginsGet = {
-  plugin: {
-    id: number;
-    path: string;
-    name: string | null;
-    version: string | null;
-    config: string | null;
-    metadata: Record<string, unknown>;
-    is_loaded: boolean;
-  };
+  plugin: Plugin;
 };
 
 export type PluginsList = {
-  plugins: PluginsListItem[];
+  plugins: Plugin[];
 };
 
 export type PresetsGet = {
@@ -242,15 +259,6 @@ export type PresetsGet = {
 
 export type PresetsList = {
   presets: Pick<Preset, "id" | "name" | "is_default" | "metadata">[];
-};
-
-export type PluginsListItem = {
-  id: number;
-  path: string;
-  name: string | null;
-  version: string | null;
-  is_loaded: boolean;
-  metadata: Record<string, unknown>;
 };
 
 export type SessionsList = {
@@ -803,4 +811,26 @@ export function useRPC<M extends Method>(method: M, ...args: RpcArgs<M>) {
     queryKey: [method, params],
     ...config,
   });
+}
+
+export type RpcResponse = {
+  result?: unknown;
+  error?: { code: number; message: string; data?: unknown };
+};
+
+export async function rpcCall(
+  method: string,
+  params: unknown,
+): Promise<RpcResponse> {
+  try {
+    const data = await post(method, params ?? {});
+    return data.error ? { error: data.error } : { result: data.result };
+  } catch (e) {
+    return {
+      error: {
+        code: -32603,
+        message: e instanceof Error ? e.message : String(e),
+      },
+    };
+  }
 }

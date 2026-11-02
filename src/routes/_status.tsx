@@ -1,6 +1,7 @@
 import { createFileRoute, Navigate, Outlet } from "@tanstack/react-router";
 import { useRPC } from "@/api";
 import { initializeFeatures } from "@/features";
+import { PluginHost } from "@/components/plugin-host";
 
 export const Route = createFileRoute("/_status")({
   component: RouteComponent,
@@ -31,5 +32,9 @@ function VersionedComponent() {
 
   initializeFeatures(version, versions.error);
 
-  return <Outlet />;
+  return (
+    <PluginHost>
+      <Outlet />
+    </PluginHost>
+  );
 }

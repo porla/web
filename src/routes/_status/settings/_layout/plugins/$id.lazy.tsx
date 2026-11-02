@@ -1,7 +1,9 @@
 import { useInvoker, useRPC, type PluginsGet } from "@/api";
 import { useModal } from "@/components/modal";
 import ConfirmModal from "@/components/modals/confirm";
+import { PluginSettings } from "@/components/plugin-settings";
 import { useAppForm } from "@/hooks/form";
+import { pluginInfo } from "@/plugins/translate";
 import { useQueryClient } from "@tanstack/react-query";
 import { createLazyFileRoute, Link } from "@tanstack/react-router";
 import z from "zod";
@@ -92,26 +94,34 @@ function PluginForm({ plugin }: { plugin: PluginsGet["plugin"] }) {
     },
   });
 
+  const info = pluginInfo(plugin);
+
   return (
     <div className="space-y-6">
       <div className="flex flex-wrap items-center gap-2">
-        <h2 className="text-lg font-semibold">
-          {plugin.name ?? plugin.path.split(/[\\/]/).pop()}
-        </h2>
-        {plugin.version && (
-          <span className="badge badge-ghost">{plugin.version}</span>
+        <h2 className="text-lg font-semibold">{info.name}</h2>
+        {info.version && (
+          <span className="badge badge-ghost">{info.version}</span>
         )}
-        {plugin.is_loaded ? (
+        {info.loaded ? (
           <span className="badge badge-success badge-soft">Loaded</span>
         ) : (
           <span
             className="badge badge-error badge-soft"
-            title="The plugin or its configuration failed to load; porla's log says why"
+            title={
+              info.error ??
+              "The plugin or its configuration failed to load; porla's log says why"
+            }
           >
             Not loaded
           </span>
         )}
       </div>
+
+      <PluginSettings
+        key={`${info.version}:${plugin.manifest?.ui?.settings}`}
+        plugin={plugin}
+      />
 
       <form.AppForm>
         <form.Form>
@@ -155,7 +165,7 @@ function PluginForm({ plugin }: { plugin: PluginsGet["plugin"] }) {
               onClick={async () => {
                 const removed = await modal.show(ConfirmModal, {
                   title: "Remove plugin",
-                  message: `Remove the plugin "${plugin.name ?? plugin.path}"?`,
+                  message: `Remove the plugin "${info.name}"?`,
                   confirmLabel: "Remove",
                   action: () => remove.mutateAsync({ id: plugin.id }),
                 });
