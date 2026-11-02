@@ -1,6 +1,6 @@
 import { useFieldContext } from "@/components/form/form-context";
-import { useId, type HTMLInputTypeAttribute } from "react";
-import { FieldErrors } from "@/components/form/field-errors";
+import { Field } from "@/components/form/field";
+import type { HTMLInputTypeAttribute } from "react";
 
 export function TextField({
   autoComplete,
@@ -19,29 +19,20 @@ export function TextField({
 }) {
   const field = useFieldContext<string>();
 
-  const id = useId();
-
   return (
-    <div className="fieldset">
-      <label className="label" htmlFor={id}>
-        {label}
-      </label>
-
-      <input
-        autoComplete={autoComplete}
-        autoFocus={autoFocus}
-        id={id}
-        placeholder={placeholder}
-        type={type ?? "text"}
-        className="input"
-        value={field.state.value ?? ""}
-        onChange={(e) => field.handleChange(e.target.value)}
-        onBlur={field.handleBlur}
-      />
-
-      {description && <div className="text-base-content">{description}</div>}
-
-      <FieldErrors />
-    </div>
+    <Field label={label} description={description}>
+      {(control) => (
+        <input
+          {...control}
+          autoComplete={autoComplete}
+          autoFocus={autoFocus}
+          placeholder={placeholder}
+          type={type ?? "text"}
+          className="input"
+          value={field.state.value ?? ""}
+          onChange={(e) => field.handleChange(e.target.value)}
+        />
+      )}
+    </Field>
   );
 }

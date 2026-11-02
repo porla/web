@@ -1,6 +1,6 @@
-// The modal API for components: useModal().show(Component, props) opens a modal and
-// resolves with what it passes to close(), or undefined when dismissed. ModalProvider
-// (modal-provider.tsx) renders them.
+// The modal API for components: useModal().show(Component, props) opens a modal
+// and resolves with what it passes to close(), or undefined when dismissed (Esc,
+// the backdrop, Cancel or Close). ModalProvider (modal-provider.tsx) renders them.
 import {
   createContext,
   useContext,
@@ -23,13 +23,34 @@ export type ShowFn = <P extends ModalProps<never>>(
 
 export const ModalContext = createContext<{ show: ShowFn } | null>(null);
 
-// Lets the open modal turn off Esc and backdrop dismissal.
-export const DismissibleContext = createContext<(dismissible: boolean) => void>(
-  () => {},
-);
+// The modal that renders a component: its title's id (the dialog's accessible
+// name), a way to dismiss it, and whether Esc and the backdrop may.
+type ModalInstance = {
+  titleId: string | undefined;
+  dismiss: () => void;
+  setDismissible: (dismissible: boolean) => void;
+};
 
+export const ModalInstanceContext = createContext<ModalInstance>({
+  titleId: undefined,
+  dismiss: () => {},
+  setDismissible: () => {},
+});
+
+// Closes the modal this component is in, the same as Esc or the backdrop: the
+// show() promise resolves undefined.
+export function useModalDismiss() {
+  return useContext(ModalInstanceContext).dismiss;
+}
+
+export function useModalTitleId() {
+  return useContext(ModalInstanceContext).titleId;
+}
+
+// Turns Esc and backdrop dismissal off while `dismissible` is false (a save is
+// running, or the content can't be shown again).
 export function useModalDismissible(dismissible: boolean) {
-  const setDismissible = useContext(DismissibleContext);
+  const { setDismissible } = useContext(ModalInstanceContext);
 
   useEffect(() => {
     setDismissible(dismissible);

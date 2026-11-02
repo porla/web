@@ -15,6 +15,7 @@ import { CopyButton } from "@/components/ui/copy-button";
 import { ListState } from "@/components/ui/list-state";
 import { Dash } from "@/components/ui/dash";
 import { peerSources } from "@/lib/torrent/flags";
+import { Spinner } from "@/components/ui/spinner";
 
 type TrackersTabProps = {
   info_hash: InfoHash;
@@ -429,7 +430,7 @@ export function TrackersTab({
   const all = trackers.data?.trackers ?? [];
 
   if (trackers.isLoading) {
-    return <span className="loading loading-spinner m-3" />;
+    return <Spinner className="m-3" />;
   }
 
   if (trackers.error) {

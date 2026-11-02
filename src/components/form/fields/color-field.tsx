@@ -1,6 +1,5 @@
 import { useFieldContext } from "@/components/form/form-context";
-import { useId } from "react";
-import { FieldErrors } from "@/components/form/field-errors";
+import { Field } from "@/components/form/field";
 
 export function ColorField({
   fallback = "#000000",
@@ -11,24 +10,17 @@ export function ColorField({
 }) {
   const field = useFieldContext<string>();
 
-  const id = useId();
-
   return (
-    <div className="fieldset">
-      <label className="label" htmlFor={id}>
-        {label}
-      </label>
-
-      <input
-        id={id}
-        type={"color"}
-        className="size-8 rounded-md cursor-pointer outline-0 border-0"
-        value={field.state.value ?? fallback}
-        onChange={(e) => field.handleChange(e.target.value)}
-        onBlur={field.handleBlur}
-      />
-
-      <FieldErrors />
-    </div>
+    <Field label={label}>
+      {(control) => (
+        <input
+          {...control}
+          type="color"
+          className="size-8 rounded-md cursor-pointer outline-0 border-0"
+          value={field.state.value ?? fallback}
+          onChange={(e) => field.handleChange(e.target.value)}
+        />
+      )}
+    </Field>
   );
 }

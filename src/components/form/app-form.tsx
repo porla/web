@@ -1,49 +1,18 @@
 import { createFormHook, useSelector } from "@tanstack/react-form";
-import { lazy, type ReactNode } from "react";
-import { useModalDismissible } from "@/components/modal/use-modal";
+import { type ReactNode } from "react";
+import {
+  useModalDismiss,
+  useModalDismissible,
+} from "@/components/modal/use-modal";
 import { fieldContext, formContext, useFormContext } from "./form-context";
-
-const CheckboxField = lazy(() =>
-  import("@/components/form/fields/checkbox-field").then((m) => ({
-    default: m.CheckboxField,
-  })),
-);
-
-const ColorField = lazy(() =>
-  import("@/components/form/fields/color-field").then((m) => ({
-    default: m.ColorField,
-  })),
-);
-
-const DateField = lazy(() =>
-  import("@/components/form/fields/date-field").then((m) => ({
-    default: m.DateField,
-  })),
-);
-
-const NumberField = lazy(() =>
-  import("@/components/form/fields/number-field").then((m) => ({
-    default: m.NumberField,
-  })),
-);
-
-const SelectField = lazy(() =>
-  import("@/components/form/fields/select-field").then((m) => ({
-    default: m.SelectField,
-  })),
-);
-
-const TextField = lazy(() =>
-  import("@/components/form/fields/text-field").then((m) => ({
-    default: m.TextField,
-  })),
-);
-
-const TorrentFlagsField = lazy(() =>
-  import("@/components/form/fields/torrent-flags-field").then((m) => ({
-    default: m.TorrentFlagsField,
-  })),
-);
+import { CheckboxField } from "@/components/form/fields/checkbox-field";
+import { ColorField } from "@/components/form/fields/color-field";
+import { DateField } from "@/components/form/fields/date-field";
+import { NumberField } from "@/components/form/fields/number-field";
+import { SelectField } from "@/components/form/fields/select-field";
+import { TextField } from "@/components/form/fields/text-field";
+import { TorrentFlagsField } from "@/components/form/fields/torrent-flags-field";
+import { ModalTitle } from "@/components/modal/modal-title";
 
 function SubmitButton({
   disabled,
@@ -110,14 +79,12 @@ function Saved({ show, children }: { show: boolean; children?: ReactNode }) {
   );
 }
 
-function ModalActions({
-  submitLabel,
-  onCancel,
-}: {
-  submitLabel: string;
-  onCancel: () => void;
-}) {
+// Cancel and the submit button, stuck to the bottom of a modal. Cancel
+// dismisses it like Esc does.
+function ModalActions({ submitLabel }: { submitLabel: string }) {
   const form = useFormContext();
+  const dismiss = useModalDismiss();
+
   const isSubmitting = useSelector(form.store, (state) => state.isSubmitting);
 
   // Closing while the save runs would lose its result and any error.
@@ -133,7 +100,7 @@ function ModalActions({
         type="button"
         className="btn"
         disabled={isSubmitting}
-        onClick={onCancel}
+        onClick={dismiss}
       >
         Cancel
       </button>
@@ -143,7 +110,28 @@ function ModalActions({
   );
 }
 
-export const { useAppForm, withForm, withFieldGroup } = createFormHook({
+function ModalForm({
+  title,
+  submitLabel,
+  error,
+  children,
+}: {
+  title: ReactNode;
+  submitLabel: string;
+  error?: Error | null;
+  children: ReactNode;
+}) {
+  return (
+    <Form>
+      <ModalTitle>{title}</ModalTitle>
+      {children}
+      <SaveError error={error ?? null} />
+      <ModalActions submitLabel={submitLabel} />
+    </Form>
+  );
+}
+
+export const { useAppForm, withForm } = createFormHook({
   fieldComponents: {
     CheckboxField,
     ColorField,
@@ -155,7 +143,7 @@ export const { useAppForm, withForm, withFieldGroup } = createFormHook({
   },
   formComponents: {
     Form,
-    ModalActions,
+    ModalForm,
     SaveError,
     Saved,
     SubmitButton,

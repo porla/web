@@ -1,4 +1,5 @@
 import { useRPC, type InfoHash, useInvoker } from "@/api";
+import { ModalNotice } from "@/components/modal/modal-notice";
 import type { ModalProps } from "@/components/modal/use-modal";
 import { useAppForm } from "@/components/form/app-form";
 import z from "zod";
@@ -42,12 +43,15 @@ export function MigrateTorrentModal({
     },
   });
 
-  if (sessions.isLoading || torrent.isLoading) {
-    return <>Loading</>;
-  }
-
   if (!sessions.data || !torrent.data) {
-    return <>Not found</>;
+    return (
+      <ModalNotice
+        title="Migrate torrent"
+        loading={sessions.isLoading || torrent.isLoading}
+      >
+        {(sessions.error ?? torrent.error)?.message ?? "Torrent not found"}
+      </ModalNotice>
+    );
   }
 
   // No session_id means the default session (Sessions::Resolve). The backend
@@ -60,25 +64,20 @@ export function MigrateTorrentModal({
 
   if (targets.length === 0) {
     return (
-      <div>
-        <h3 className="font-bold text-lg">Migrate torrent</h3>
-        <p>{torrent.data.torrent.name}</p>
-        <p className="mt-3">There is no other loaded session to migrate to.</p>
-        <div className="modal-action">
-          <button type="button" className="btn" onClick={() => close(false)}>
-            Close
-          </button>
-        </div>
-      </div>
+      <ModalNotice title="Migrate torrent">
+        <p>There is no other loaded session to migrate to.</p>
+      </ModalNotice>
     );
   }
 
   return (
     <form.AppForm>
-      <form.Form>
-        <h3 className="font-bold text-lg">Migrate torrent</h3>
+      <form.ModalForm
+        title="Migrate torrent"
+        submitLabel="Migrate"
+        error={migrate.error}
+      >
         <p>{torrent.data.torrent.name}</p>
-
         <form.AppField
           name="session_id"
           children={(field) => (
@@ -89,13 +88,7 @@ export function MigrateTorrentModal({
             />
           )}
         />
-
-        <form.SaveError error={migrate.error} />
-        <form.ModalActions
-          submitLabel="Migrate"
-          onCancel={() => close(false)}
-        />
-      </form.Form>
+      </form.ModalForm>
     </form.AppForm>
   );
 }

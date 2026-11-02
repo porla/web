@@ -7,6 +7,7 @@ import { pluginInfo } from "@/plugins/plugin-info";
 import { useQueryClient } from "@tanstack/react-query";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import z from "zod";
+import { Spinner } from "@/components/ui/spinner";
 
 export const Route = createFileRoute("/_app/settings/plugins/$id")({
   component: RouteComponent,
@@ -31,7 +32,7 @@ function RouteComponent() {
   );
 
   if (plugin.isLoading) {
-    return <span className="loading loading-spinner loading-xl"></span>;
+    return <Spinner size="xl" />;
   }
 
   if (plugin.error || !plugin.data) {

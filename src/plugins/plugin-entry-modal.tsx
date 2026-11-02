@@ -3,6 +3,7 @@ import type { ModalProps } from "@/components/modal/use-modal";
 import { usePageFrame } from "./page-frame";
 import type { Plugin } from "@/api";
 import clsx from "clsx";
+import { ModalTitle } from "@/components/modal/modal-title";
 
 type PluginEntryModalProps = {
   plugin: Plugin;
@@ -26,7 +27,7 @@ export function PluginEntryModal({
   return (
     <>
       <div className="mb-3 flex items-start justify-between gap-2">
-        <h3 className="font-bold text-lg">{title}</h3>
+        <ModalTitle>{title}</ModalTitle>
         <button
           type="button"
           className="btn btn-sm btn-circle btn-ghost"

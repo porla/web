@@ -1,4 +1,5 @@
 import { type InfoHash, useInvoker, useRPC } from "@/api";
+import { ModalNotice } from "@/components/modal/modal-notice";
 import type { ModalProps } from "@/components/modal/use-modal";
 import { useAppForm } from "@/components/form/app-form";
 import { moveSchema } from "./move-schema";
@@ -22,22 +23,12 @@ export function MoveTorrentModal({
     { meta: { silent: true } },
   );
 
-  if (torrent.isLoading) {
-    return <span className="loading loading-spinner"></span>;
-  }
-
   // Removed or migrated while the menu was open: there's nothing to move.
   if (!torrent.data) {
     return (
-      <>
-        <h3 className="font-bold text-lg">Move torrent</h3>
-        <p className="py-2">{torrent.error?.message ?? "Torrent not found"}</p>
-        <div className="modal-action">
-          <button type="button" className="btn" onClick={() => close(false)}>
-            Close
-          </button>
-        </div>
-      </>
+      <ModalNotice title="Move torrent" loading={torrent.isLoading}>
+        {torrent.error?.message ?? "Torrent not found"}
+      </ModalNotice>
     );
   }
 
@@ -79,17 +70,16 @@ function MoveForm({
 
   return (
     <form.AppForm>
-      <form.Form>
-        <h3 className="font-bold text-lg">Move torrent</h3>
-
+      <form.ModalForm
+        title="Move torrent"
+        submitLabel="Move"
+        error={move.error}
+      >
         <form.AppField
           name="path"
           children={(field) => <field.TextField label="Path" autoFocus />}
         />
-
-        <form.SaveError error={move.error} />
-        <form.ModalActions submitLabel="Move" onCancel={() => close(false)} />
-      </form.Form>
+      </form.ModalForm>
     </form.AppForm>
   );
 }

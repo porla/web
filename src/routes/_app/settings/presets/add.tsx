@@ -2,7 +2,6 @@ import { useInvoker, useRPC } from "@/api";
 import { useAppForm } from "@/components/form/app-form";
 import { useQueryClient } from "@tanstack/react-query";
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { Suspense } from "react";
 import z from "zod";
 
 export const Route = createFileRoute("/_app/settings/presets/add")({
@@ -67,19 +66,17 @@ function RouteComponent() {
 
       <div className="card bg-base-200 shadow-sm w-full">
         <div className="card-body">
-          <Suspense>
-            <form.AppForm>
-              <form.Form>
-                <form.AppField
-                  name="name"
-                  children={(field) => <field.TextField label="Name" />}
-                />
+          <form.AppForm>
+            <form.Form>
+              <form.AppField
+                name="name"
+                children={(field) => <field.TextField label="Name" />}
+              />
 
-                <form.SaveError error={add.error} />
-                <form.SubmitButton label="Add preset" />
-              </form.Form>
-            </form.AppForm>
-          </Suspense>
+              <form.SaveError error={add.error} />
+              <form.SubmitButton label="Add preset" />
+            </form.Form>
+          </form.AppForm>
         </div>
       </div>
     </div>

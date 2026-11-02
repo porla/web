@@ -30,16 +30,13 @@ export function ConfirmModal({
 
   return (
     <form.AppForm>
-      <form.Form>
-        <h3 className="font-bold text-lg">{title}</h3>
+      <form.ModalForm
+        title={<>{title}</>}
+        submitLabel={confirmLabel}
+        error={run.error}
+      >
         <p className="py-2">{message}</p>
-
-        <form.SaveError error={run.error} />
-        <form.ModalActions
-          submitLabel={confirmLabel}
-          onCancel={() => close(false)}
-        />
-      </form.Form>
+      </form.ModalForm>
     </form.AppForm>
   );
 }

@@ -4,7 +4,6 @@ import { ShowApiKeyModal } from "@/components/modals/show-api-key-modal";
 import { useAppForm } from "@/components/form/app-form";
 import { useQueryClient } from "@tanstack/react-query";
 import { createFileRoute } from "@tanstack/react-router";
-import { Suspense } from "react";
 import z from "zod";
 
 export const Route = createFileRoute("/_app/settings/api-keys/add")({
@@ -65,26 +64,24 @@ function RouteComponent() {
 
       <div className="card bg-base-200 shadow-sm w-full">
         <div className="card-body">
-          <Suspense>
-            <form.AppForm>
-              <form.Form>
-                <form.AppField
-                  name="name"
-                  children={(field) => <field.TextField label="Name" />}
-                />
+          <form.AppForm>
+            <form.Form>
+              <form.AppField
+                name="name"
+                children={(field) => <field.TextField label="Name" />}
+              />
 
-                <form.AppField
-                  name="expires_at"
-                  children={(field) => (
-                    <field.DateField label="Expires at (optional, inclusive)" />
-                  )}
-                />
+              <form.AppField
+                name="expires_at"
+                children={(field) => (
+                  <field.DateField label="Expires at (optional, inclusive)" />
+                )}
+              />
 
-                <form.SaveError error={create.error} />
-                <form.SubmitButton label="Add API key" />
-              </form.Form>
-            </form.AppForm>
-          </Suspense>
+              <form.SaveError error={create.error} />
+              <form.SubmitButton label="Add API key" />
+            </form.Form>
+          </form.AppForm>
         </div>
       </div>
     </div>

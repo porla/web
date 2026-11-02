@@ -14,6 +14,7 @@ import { runtimeFlags } from "@/lib/torrent/flags";
 import { useQueryClient } from "@tanstack/react-query";
 import z from "zod";
 import { Accordion } from "@/components/ui/accordion";
+import { ModalNotice } from "@/components/modal/modal-notice";
 
 type SetTorrentPropertiesModalProps = {
   info_hash: InfoHash;
@@ -67,19 +68,16 @@ export function SetTorrentPropertiesModal({
     return <span className="loading loading-spinner"></span>;
   }
 
+  const loading =
+    !properties.isFetchedAfterMount || !torrent.isFetchedAfterMount;
+
   const error = properties.error ?? torrent.error;
 
-  if (error || !properties.data || !torrent.data) {
+  if (loading || error || !properties.data || !torrent.data) {
     return (
-      <>
-        <h3 className="font-bold text-lg">Properties</h3>
-        <p className="py-2">{error?.message ?? "Torrent not found"}</p>
-        <div className="modal-action">
-          <button type="button" className="btn" onClick={() => close(false)}>
-            Close
-          </button>
-        </div>
-      </>
+      <ModalNotice title="Properties" loading={loading}>
+        {error?.message ?? "Torrent not found"}
+      </ModalNotice>
     );
   }
 
@@ -177,9 +175,7 @@ function PropertiesForm({
 
   return (
     <form.AppForm>
-      <form.Form>
-        <h3 className="font-bold text-lg">Properties</h3>
-
+      <form.ModalForm title="Properties" submitLabel="Save" error={set.error}>
         <form.AppField
           name="download_limit"
           children={(field) => (
@@ -241,10 +237,7 @@ function PropertiesForm({
             )}
           />
         </Accordion>
-
-        <form.SaveError error={set.error} />
-        <form.ModalActions submitLabel="Save" onCancel={() => close(false)} />
-      </form.Form>
+      </form.ModalForm>
     </form.AppForm>
   );
 }

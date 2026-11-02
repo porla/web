@@ -8,6 +8,7 @@ import { Dash } from "@/components/ui/dash";
 import { notableFlags } from "@/lib/torrent/flags";
 import { Ratio } from "@/components/ui/ratio";
 import { pieceSize } from "@/lib/torrent/pieces";
+import { Spinner } from "@/components/ui/spinner";
 
 type GeneralTabProps = {
   info_hash: InfoHash;
@@ -137,7 +138,7 @@ export function GeneralTab({
   });
 
   if (!t || pieces.isLoading || !pieces.data) {
-    return <span className="loading loading-spinner m-3" />;
+    return <Spinner className="m-3" />;
   }
 
   const st = torrentStatus(t);

@@ -6,6 +6,7 @@ import {
   BulkPropertiesModal,
   BulkRemoveModal,
 } from "@/components/modals/bulk-modals";
+import { Spinner } from "@/components/ui/spinner";
 import type { Checked } from "@/hooks/use-checked";
 import { useQueryClient } from "@tanstack/react-query";
 import { Check, ChevronDown, TriangleAlert, X } from "lucide-react";
@@ -167,15 +168,18 @@ export function BulkActions({
 
       {running ? (
         <div role="status" className="flex items-center gap-2 text-sm">
-          <span className="loading loading-spinner loading-sm" />
+          <Spinner size="sm" />
+
           <span className="tabular-nums">
             {running.label} {running.done} / {running.total}
           </span>
+
           <progress
             className="progress progress-primary w-24"
             value={running.done}
             max={running.total}
           />
+
           <button
             type="button"
             className="btn btn-sm btn-ghost"

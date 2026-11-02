@@ -6,6 +6,7 @@ import clsx from "clsx";
 import { LayoutGrid, TriangleAlert } from "lucide-react";
 import { useMemo } from "react";
 import { ListState } from "@/components/ui/list-state";
+import { Spinner } from "@/components/ui/spinner";
 
 type PiecesTabProps = {
   info_hash: InfoHash;
@@ -57,7 +58,7 @@ export function PiecesTab({
   }
 
   if (!t || !pieces.data) {
-    return <span className="loading loading-spinner m-3" />;
+    return <Spinner className="m-3" />;
   }
 
   if (!t.has_metadata) {

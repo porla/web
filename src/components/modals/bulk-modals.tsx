@@ -1,4 +1,5 @@
 import { useRPC, type Params, type Torrent, type TorrentFlag } from "@/api";
+import { ModalNotice } from "@/components/modal/modal-notice";
 import type { ModalProps } from "@/components/modal/use-modal";
 import { useAppForm } from "@/components/form/app-form";
 import z from "zod";
@@ -42,20 +43,17 @@ export function BulkRemoveModal({
 
   return (
     <form.AppForm>
-      <form.Form>
-        <h3 className="font-bold text-lg">Remove {plural(torrents.length)}</h3>
+      <form.ModalForm
+        title={<>Remove {plural(torrents.length)}</>}
+        submitLabel={`Remove ${torrents.length}`}
+      >
         <Names torrents={torrents} />
 
         <form.AppField
           name="remove_data"
           children={(field) => <field.CheckboxField label="Remove data" />}
         />
-
-        <form.ModalActions
-          submitLabel={`Remove ${torrents.length}`}
-          onCancel={() => close(undefined)}
-        />
-      </form.Form>
+      </form.ModalForm>
     </form.AppForm>
   );
 }
@@ -75,20 +73,17 @@ export function BulkMoveModal({
 
   return (
     <form.AppForm>
-      <form.Form>
-        <h3 className="font-bold text-lg">Move {plural(torrents.length)}</h3>
+      <form.ModalForm
+        title={<>Move {plural(torrents.length)}</>}
+        submitLabel={`Move ${torrents.length}`}
+      >
         <Names torrents={torrents} />
 
         <form.AppField
           name="path"
           children={(field) => <field.TextField label="Path" autoFocus />}
         />
-
-        <form.ModalActions
-          submitLabel={`Move ${torrents.length}`}
-          onCancel={() => close(undefined)}
-        />
-      </form.Form>
+      </form.ModalForm>
     </form.AppForm>
   );
 }
@@ -113,7 +108,14 @@ export function BulkMigrateModal({
   });
 
   if (!sessions.data) {
-    return <span className="loading loading-spinner" />;
+    return (
+      <ModalNotice
+        title={<>Migrate {plural(torrents.length)}</>}
+        loading={sessions.isLoading}
+      >
+        {sessions.error?.message ?? "No sessions"}
+      </ModalNotice>
+    );
   }
 
   // porla refuses the torrents' own session and sessions that aren't loaded.
@@ -123,26 +125,18 @@ export function BulkMigrateModal({
 
   if (targets.length === 0) {
     return (
-      <div>
-        <h3 className="font-bold text-lg">Migrate {plural(torrents.length)}</h3>
-        <p className="mt-3">There is no other loaded session to migrate to.</p>
-        <div className="modal-action">
-          <button
-            type="button"
-            className="btn"
-            onClick={() => close(undefined)}
-          >
-            Close
-          </button>
-        </div>
-      </div>
+      <ModalNotice title={<>Migrate {plural(torrents.length)}</>}>
+        There is no other loaded session to migrate to.
+      </ModalNotice>
     );
   }
 
   return (
     <form.AppForm>
-      <form.Form>
-        <h3 className="font-bold text-lg">Migrate {plural(torrents.length)}</h3>
+      <form.ModalForm
+        title={<>Migrate {plural(torrents.length)}</>}
+        submitLabel={`Migrate ${torrents.length}`}
+      >
         <Names torrents={torrents} />
 
         <form.AppField
@@ -155,12 +149,7 @@ export function BulkMigrateModal({
             />
           )}
         />
-
-        <form.ModalActions
-          submitLabel={`Migrate ${torrents.length}`}
-          onCancel={() => close(undefined)}
-        />
-      </form.Form>
+      </form.ModalForm>
     </form.AppForm>
   );
 }
@@ -279,10 +268,10 @@ export function BulkPropertiesModal({
 
   return (
     <form.AppForm>
-      <form.Form>
-        <h3 className="font-bold text-lg">
-          Properties of {plural(torrents.length)}
-        </h3>
+      <form.ModalForm
+        title={<>Properties of {plural(torrents.length)}</>}
+        submitLabel={`Apply to ${torrents.length}`}
+      >
         <Names torrents={torrents} />
         <p className="text-sm text-base-content/70">
           Only what you change is applied; the rest stays as each torrent has
@@ -347,12 +336,7 @@ export function BulkPropertiesModal({
             )}
           />
         </Accordion>
-
-        <form.ModalActions
-          submitLabel={`Apply to ${torrents.length}`}
-          onCancel={() => close(undefined)}
-        />
-      </form.Form>
+      </form.ModalForm>
     </form.AppForm>
   );
 }

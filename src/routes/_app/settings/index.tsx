@@ -1,4 +1,5 @@
 import { HttpError, useInvoker, useRPC } from "@/api";
+import { Spinner } from "@/components/ui/spinner";
 import { useWebVersion } from "@/lib/web-version";
 import { useQuery } from "@tanstack/react-query";
 import { createFileRoute } from "@tanstack/react-router";
@@ -56,18 +57,14 @@ function RouteComponent() {
           <div className="stat">
             <div className="stat-title">Porla version</div>
             <div className="stat-value font-mono">
-              {versions.isLoading && (
-                <span className="loading loading-spinner loading-xl"></span>
-              )}
+              {versions.isLoading && <Spinner size="xl" />}
 
               {!versions.isLoading && versions.data && (
                 <span>{versions.data.porla.version}</span>
               )}
             </div>
             <div className="stat-desc">
-              {coreRelease.isFetching && (
-                <span className="loading loading-spinner loading-xs"></span>
-              )}
+              {coreRelease.isFetching && <Spinner size="xs" />}
 
               {!coreRelease.isFetching && coreRelease.data && versions.data && (
                 <VersionBadge
@@ -83,9 +80,7 @@ function RouteComponent() {
             <div className="stat-title">Web UI version</div>
             <div className="stat-value font-mono">{webVersion}</div>
             <div className="stat-actions">
-              {webRelease.isFetching && (
-                <span className="loading loading-spinner loading-xs"></span>
-              )}
+              {webRelease.isFetching && <Spinner size="xs" />}
 
               {!webRelease.isFetching && webRelease.data && (
                 <WebUIVersionAction
@@ -100,9 +95,7 @@ function RouteComponent() {
           <div className="stat">
             <div className="stat-title">Torrents</div>
             <div className="stat-value font-mono">
-              {sessions.isLoading && (
-                <span className="loading loading-spinner loading-xl"></span>
-              )}
+              {sessions.isLoading && <Spinner size="xl" />}
 
               {!sessions.isLoading && sessions.data && (
                 <span>

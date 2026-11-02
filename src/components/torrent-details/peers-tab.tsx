@@ -12,6 +12,7 @@ import { ArrowDownLeft, Lock, TriangleAlert, Users } from "lucide-react";
 import { type ReactNode } from "react";
 import { ListState } from "@/components/ui/list-state";
 import { Dash } from "@/components/ui/dash";
+import { Spinner } from "@/components/ui/spinner";
 
 type PeersTabProps = {
   info_hash: InfoHash;
@@ -485,7 +486,7 @@ export function PeersTab({ info_hash, session_id, torrent: t }: PeersTabProps) {
     );
 
   if (peers.isLoading) {
-    return <span className="loading loading-spinner m-3" />;
+    return <Spinner className="m-3" />;
   }
 
   if (peers.error) {

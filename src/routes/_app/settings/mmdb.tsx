@@ -1,9 +1,9 @@
 import { RpcError, useInvoker, useRPC } from "@/api";
 import { useAppForm } from "@/components/form/app-form";
+import { Spinner } from "@/components/ui/spinner";
 import { useSelector } from "@tanstack/react-form";
 import { useQueryClient } from "@tanstack/react-query";
 import { createFileRoute } from "@tanstack/react-router";
-import { Suspense } from "react";
 
 export const Route = createFileRoute("/_app/settings/mmdb")({
   component: RouteComponent,
@@ -25,13 +25,11 @@ function RouteComponent() {
 
   return (
     <div>
-      <Suspense fallback={"Loading"}>
-        <LookupForm />
-        <div className="mt-10">
-          <h1>Set MMDB database path</h1>
-          <PathForm savedPath={typeof path === "string" ? path : ""} />
-        </div>
-      </Suspense>
+      <LookupForm />
+      <div className="mt-10">
+        <h1>Set MMDB database path</h1>
+        <PathForm savedPath={typeof path === "string" ? path : ""} />
+      </div>
     </div>
   );
 }
@@ -78,7 +76,7 @@ function PathForm({ savedPath }: { savedPath: string }) {
     <form.AppForm>
       <p className="my-2 text-sm">
         {status.isLoading ? (
-          <span className="loading loading-spinner loading-xs" />
+          <Spinner size="xs" />
         ) : status.isSuccess ? (
           <span className="text-success">Database loaded</span>
         ) : notLoaded ? (

@@ -1,4 +1,5 @@
 import type { TorrentFlag } from "@/api";
+import { FieldErrors } from "@/components/form/field-errors";
 import { useFieldContext } from "@/components/form/form-context";
 import { torrentFlags } from "@/lib/torrent/flags";
 import clsx from "clsx";
@@ -61,8 +62,8 @@ export function TorrentFlagsField({
         : "off";
 
   return (
-    <div className="fieldset">
-      {label && <span className="label">{label}</span>}
+    <fieldset className="fieldset">
+      {label && <legend className="label">{label}</legend>}
 
       <ul className="max-w-2xl divide-y divide-base-300">
         {flags.map((flag) => (
@@ -117,6 +118,8 @@ export function TorrentFlagsField({
           </li>
         ))}
       </ul>
-    </div>
+
+      <FieldErrors />
+    </fieldset>
   );
 }

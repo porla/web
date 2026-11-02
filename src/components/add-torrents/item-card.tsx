@@ -6,6 +6,7 @@ import clsx from "clsx";
 import { ChevronDown, FileIcon, Magnet, TriangleAlert, X } from "lucide-react";
 import z from "zod";
 import { emptyOptions, type AddOptions, type Item } from "./items";
+import { Spinner } from "@/components/ui/spinner";
 
 export type Choices = {
   presets: { id: number; name: string }[];
@@ -127,9 +128,7 @@ export const ItemCard = withForm({
             onClick={onToggle}
           >
             <span className="font-semibold wrap-anywhere">{item.name}</span>
-            {item.adding && (
-              <span className="loading loading-spinner loading-xs ml-2" />
-            )}
+            {item.adding && <Spinner size="xs" className="ml-2" />}
             {invalid && (
               <span className="badge badge-xs badge-soft badge-error ml-2">
                 Check options

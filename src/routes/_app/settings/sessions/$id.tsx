@@ -7,8 +7,8 @@ import { useAppForm } from "@/components/form/app-form";
 import { useQueryClient } from "@tanstack/react-query";
 import { createFileRoute } from "@tanstack/react-router";
 import { Lock, SlidersHorizontal } from "lucide-react";
-import { Suspense } from "react";
 import z from "zod";
+import { Spinner } from "@/components/ui/spinner";
 
 export const Route = createFileRoute("/_app/settings/sessions/$id")({
   component: RouteComponent,
@@ -31,11 +31,7 @@ function RouteComponent() {
   );
 
   if (session.isLoading) {
-    return (
-      <div>
-        <span className="loading loading-spinner loading-xl"></span>
-      </div>
-    );
+    return <Spinner size="xl" />;
   }
 
   if (session.error) {
@@ -123,82 +119,76 @@ function SessionForm({ session }: { session: Session }) {
   const torrents = session.state?.torrents_total ?? 0;
 
   return (
-    <Suspense
-      fallback={<span className="loading loading-spinner loading-xl"></span>}
-    >
-      <form.AppForm>
-        <form.Form>
-          <form.AppField
-            name="name"
-            children={(field) => <field.TextField label="Name" />}
-          />
+    <form.AppForm>
+      <form.Form>
+        <form.AppField
+          name="name"
+          children={(field) => <field.TextField label="Name" />}
+        />
 
-          <form.AppField
-            name="is_default"
-            children={(field) => (
-              <field.CheckboxField
-                label="Is default"
-                disabled={session.is_default}
-                description={
-                  session.is_default
-                    ? "Cannot unset default session"
-                    : undefined
-                }
-              />
-            )}
-          />
-
-          <form.AppField
-            name="metadata.color"
-            children={(field) => (
-              <field.ColorField label="Color" fallback="#9ca3af" />
-            )}
-          />
-
-          <form.SaveError error={update.error} />
-
-          <div className="flex flex-wrap gap-3">
-            <form.SubmitButton label="Update" />
-
-            <button
-              type="button"
-              className="btn btn-warning"
-              disabled={session.is_default || torrents > 0}
-              title={
-                session.is_default
-                  ? "Cannot remove the default session"
-                  : torrents > 0
-                    ? "Cannot remove a session with torrents"
-                    : undefined
+        <form.AppField
+          name="is_default"
+          children={(field) => (
+            <field.CheckboxField
+              label="Is default"
+              disabled={session.is_default}
+              description={
+                session.is_default ? "Cannot unset default session" : undefined
               }
-              onClick={async () => {
-                const removed = await modal.show(ConfirmModal, {
-                  title: "Remove session",
-                  message: `Remove the session "${session.name}"?`,
-                  confirmLabel: "Remove",
-                  action: () => remove.mutateAsync({ id: session.id }),
+            />
+          )}
+        />
+
+        <form.AppField
+          name="metadata.color"
+          children={(field) => (
+            <field.ColorField label="Color" fallback="#9ca3af" />
+          )}
+        />
+
+        <form.SaveError error={update.error} />
+
+        <div className="flex flex-wrap gap-3">
+          <form.SubmitButton label="Update" />
+
+          <button
+            type="button"
+            className="btn btn-warning"
+            disabled={session.is_default || torrents > 0}
+            title={
+              session.is_default
+                ? "Cannot remove the default session"
+                : torrents > 0
+                  ? "Cannot remove a session with torrents"
+                  : undefined
+            }
+            onClick={async () => {
+              const removed = await modal.show(ConfirmModal, {
+                title: "Remove session",
+                message: `Remove the session "${session.name}"?`,
+                confirmLabel: "Remove",
+                action: () => remove.mutateAsync({ id: session.id }),
+              });
+
+              if (removed) {
+                queryClient.removeQueries({
+                  queryKey: ["sessions.get", { id: session.id }],
                 });
 
-                if (removed) {
-                  queryClient.removeQueries({
-                    queryKey: ["sessions.get", { id: session.id }],
-                  });
+                await queryClient.invalidateQueries({
+                  queryKey: ["sessions.list"],
+                });
 
-                  await queryClient.invalidateQueries({
-                    queryKey: ["sessions.list"],
-                  });
-
-                  await navigate({ to: "/settings/sessions" });
-                }
-              }}
-            >
-              Remove session
-              {torrents > 0 && <> ({torrents} torrents)</>}
-            </button>
-          </div>
-        </form.Form>
-      </form.AppForm>
-    </Suspense>
+                await navigate({ to: "/settings/sessions" });
+              }
+            }}
+          >
+            Remove session
+            {torrents > 0 && <> ({torrents} torrents)</>}
+          </button>
+        </div>
+      </form.Form>
+    </form.AppForm>
   );
 }
 

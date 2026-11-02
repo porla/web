@@ -13,6 +13,7 @@ import { ListState } from "@/components/ui/list-state";
 import clsx from "clsx";
 import { Dash } from "@/components/ui/dash";
 import { bytes } from "@/lib/format";
+import { Spinner } from "@/components/ui/spinner";
 
 const fraction = (done: number, size: number) => (size > 0 ? done / size : 1);
 
@@ -83,7 +84,7 @@ export function FilesTab({ info_hash, session_id }: FilesTabProps) {
     files.data?.files.filter((f) => !f.flags.includes("pad_file")) ?? [];
 
   if (files.isLoading) {
-    return <span className="loading loading-spinner m-3" />;
+    return <Spinner className="m-3" />;
   }
 
   if (files.error) {

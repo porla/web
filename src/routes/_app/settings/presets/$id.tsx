@@ -6,7 +6,6 @@ import { peerLimit, rateLimit } from "@/lib/limits";
 import { presetFlags } from "@/lib/torrent/flags";
 import { useQueryClient } from "@tanstack/react-query";
 import { createFileRoute } from "@tanstack/react-router";
-import { Suspense } from "react";
 import z from "zod";
 
 export const Route = createFileRoute("/_app/settings/presets/$id")({
@@ -38,9 +37,7 @@ function RouteComponent() {
     <div className="space-y-6">
       <div className="card bg-base-200 shadow-sm w-full">
         <div className="card-body">
-          <Suspense fallback={"Loading"}>
-            <PresetForm preset={preset.data.preset} />
-          </Suspense>
+          <PresetForm preset={preset.data.preset} />
         </div>
       </div>
     </div>

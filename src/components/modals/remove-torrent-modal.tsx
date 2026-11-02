@@ -2,6 +2,7 @@ import { useRPC, type InfoHash, useInvoker } from "@/api";
 import type { ModalProps } from "@/components/modal/use-modal";
 import { useAppForm } from "@/components/form/app-form";
 import z from "zod";
+import { ModalNotice } from "@/components/modal/modal-notice";
 
 type RemoveTorrentModalProps = {
   info_hash: InfoHash;
@@ -42,28 +43,28 @@ export function RemoveTorrentModal({
     },
   });
 
-  if (torrent.isLoading) {
-    return <>Loading</>;
-  }
-
   if (!torrent.data) {
-    return <>Not found</>;
+    return (
+      <ModalNotice title="Remove torrent" loading={torrent.isLoading}>
+        {torrent.error?.message ?? "Torrent not found"}
+      </ModalNotice>
+    );
   }
 
   return (
     <form.AppForm>
-      <form.Form>
-        <h3 className="font-bold text-lg">Remove torrent</h3>
+      <form.ModalForm
+        title="Remove torrent"
+        submitLabel="Remove"
+        error={remove.error}
+      >
         <p>{torrent.data.torrent.name}</p>
 
         <form.AppField
           name="remove_data"
           children={(field) => <field.CheckboxField label="Remove data" />}
         />
-
-        <form.SaveError error={remove.error} />
-        <form.ModalActions submitLabel="Remove" onCancel={() => close(false)} />
-      </form.Form>
+      </form.ModalForm>
     </form.AppForm>
   );
 }

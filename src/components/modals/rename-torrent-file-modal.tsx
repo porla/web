@@ -67,9 +67,11 @@ export function RenameTorrentFileModal({
 
   return (
     <form.AppForm>
-      <form.Form>
-        <h3 className="font-bold text-lg">Rename torrent file</h3>
-
+      <form.ModalForm
+        title="Rename torrent file"
+        submitLabel="Rename"
+        error={rename.error}
+      >
         <form.Subscribe selector={(s) => s.values.full}>
           {(full) =>
             full ? (
@@ -113,10 +115,7 @@ export function RenameTorrentFileModal({
           }}
           children={(field) => <field.CheckboxField label="Set full path" />}
         />
-
-        <form.SaveError error={rename.error} />
-        <form.ModalActions submitLabel="Rename" onCancel={() => close(false)} />
-      </form.Form>
+      </form.ModalForm>
     </form.AppForm>
   );
 }

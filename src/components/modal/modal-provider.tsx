@@ -3,17 +3,22 @@ import {
   Suspense,
   useCallback,
   useEffect,
+  useId,
+  useMemo,
   useRef,
   useState,
   type ComponentType,
   type ReactNode,
 } from "react";
 import {
-  DismissibleContext,
   ModalContext,
+  ModalInstanceContext,
+  useModalDismiss,
   type ModalProps,
   type ShowFn,
 } from "./use-modal";
+import { Spinner } from "@/components/ui/spinner";
+import { ModalTitle } from "@/components/modal/modal-title";
 
 const DISMISSED = Symbol("dismissed"); // ESC / backdrop → resolves undefined
 
@@ -96,6 +101,12 @@ function ModalHost({
     dialogRef.current?.close(); // fires the native "close" event
   }, []);
 
+  const titleId = useId();
+  const modalInstance = useMemo(
+    () => ({ titleId, dismiss: () => close(DISMISSED), setDismissible }),
+    [titleId, close, setDismissible],
+  );
+
   const handleClose = () => {
     const r = resultRef.current === DISMISSED ? undefined : resultRef.current;
     onClosed(instance.id, r);
@@ -107,6 +118,7 @@ function ModalHost({
     <dialog
       ref={dialogRef}
       className="modal"
+      aria-labelledby={titleId}
       onClose={handleClose}
       onCancel={(e) => {
         if (!dismissibleRef.current) {
@@ -117,18 +129,16 @@ function ModalHost({
       <div className="modal-box has-data-sticky-footer:pb-0 has-data-plugin-frame:flex has-data-plugin-frame:flex-col">
         {/* A modal that crashes or whose code fails to load (e.g. a stale tab
             after an upgrade) must not take the app down. */}
-        <CatchBoundary
-          getResetKey={() => instance.id}
-          errorComponent={({ error }) => (
-            <ModalError error={error} onClose={() => close(DISMISSED)} />
-          )}
-        >
-          <Suspense fallback={<span className="loading loading-spinner" />}>
-            <DismissibleContext.Provider value={setDismissible}>
+        <ModalInstanceContext.Provider value={modalInstance}>
+          <CatchBoundary
+            getResetKey={() => instance.id}
+            errorComponent={({ error }) => <ModalError error={error} />}
+          >
+            <Suspense fallback={<Spinner />}>
               <Component {...props} close={close} />
-            </DismissibleContext.Provider>
-          </Suspense>
-        </CatchBoundary>
+            </Suspense>
+          </CatchBoundary>
+        </ModalInstanceContext.Provider>
       </div>
       {/* click outside → dismiss (resolves undefined). Not a button: the
           dialog focuses its first focusable element, and Enter would close it. */}
@@ -140,10 +150,12 @@ function ModalHost({
   );
 }
 
-function ModalError({ error, onClose }: { error: Error; onClose: () => void }) {
+function ModalError({ error }: { error: Error }) {
+  const dismiss = useModalDismiss();
+
   return (
     <div className="space-y-3">
-      <h3 className="font-bold text-lg">This dialog failed to load</h3>
+      <ModalTitle>This dialog failed to load</ModalTitle>
       <p className="text-sm opacity-70">
         Reloading the page usually helps after an upgrade.
       </p>
@@ -151,7 +163,7 @@ function ModalError({ error, onClose }: { error: Error; onClose: () => void }) {
         {error.message}
       </pre>
       <div className="modal-action">
-        <button type="button" className="btn" onClick={onClose}>
+        <button type="button" className="btn" onClick={dismiss}>
           Close
         </button>
       </div>

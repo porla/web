@@ -1,6 +1,5 @@
 import { useFieldContext } from "@/components/form/form-context";
-import { useId } from "react";
-import { FieldErrors } from "@/components/form/field-errors";
+import { Field } from "@/components/form/field";
 
 type SelectItem = {
   value: number;
@@ -18,35 +17,28 @@ export function SelectField({
 }) {
   const field = useFieldContext<number | null>();
 
-  const id = useId();
-
   return (
-    <div className="fieldset">
-      <label className="label" htmlFor={id}>
-        {label}
-      </label>
-
-      <select
-        autoFocus={autoFocus}
-        id={id}
-        className="select"
-        onBlur={field.handleBlur}
-        onChange={(e) => {
-          field.handleChange(
-            e.target.value === "" ? null : parseInt(e.target.value),
-          );
-        }}
-        value={field.state.value ?? ""}
-      >
-        <option value={""}>None</option>
-        {items.map((item) => (
-          <option key={`${field.name}_${item.value}`} value={item.value}>
-            {item.label}
-          </option>
-        ))}
-      </select>
-
-      <FieldErrors />
-    </div>
+    <Field label={label}>
+      {(control) => (
+        <select
+          {...control}
+          autoFocus={autoFocus}
+          className="select"
+          onChange={(e) =>
+            field.handleChange(
+              e.target.value === "" ? null : parseInt(e.target.value),
+            )
+          }
+          value={field.state.value ?? ""}
+        >
+          <option value="">None</option>
+          {items.map((item) => (
+            <option key={item.value} value={item.value}>
+              {item.label}
+            </option>
+          ))}
+        </select>
+      )}
+    </Field>
   );
 }

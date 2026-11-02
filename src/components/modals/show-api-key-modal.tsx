@@ -1,3 +1,4 @@
+import { ModalTitle } from "@/components/modal/modal-title";
 import {
   useModalDismissible,
   type ModalProps,
@@ -31,7 +32,7 @@ export function ShowApiKeyModal(
 
   return (
     <div className="space-y-3">
-      <h3 className="font-bold text-lg">API key</h3>
+      <ModalTitle>API key</ModalTitle>
 
       <p>
         Your API key has been created. It cannot be retrieved after this dialog

@@ -13,7 +13,7 @@ import { Sources } from "@/components/add-torrents/sources";
 import { useAppForm } from "@/components/form/app-form";
 import { useSelector } from "@tanstack/react-form";
 import { createFileRoute } from "@tanstack/react-router";
-import { Suspense, useState } from "react";
+import { useState } from "react";
 
 export const Route = createFileRoute("/_app/_shell/add")({
   component: RouteComponent,
@@ -136,7 +136,7 @@ function RouteComponent() {
         }
       }}
     >
-      <Suspense>
+      <>
         <h1>Add torrents</h1>
 
         <form.AppForm>
@@ -180,7 +180,7 @@ function RouteComponent() {
             </button>
           </form.Form>
         </form.AppForm>
-      </Suspense>
+      </>
     </div>
   );
 }

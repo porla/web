@@ -66,9 +66,11 @@ export function SetSessionSettingModal({
 
   return (
     <form.AppForm>
-      <form.Form>
-        <h3 className="font-bold text-lg">Update session setting</h3>
-
+      <form.ModalForm
+        title="Update session setting"
+        submitLabel="Update"
+        error={setSetting.error}
+      >
         <form.AppField
           name="setting_value"
           children={(field) => (
@@ -87,10 +89,7 @@ export function SetSessionSettingModal({
             </>
           )}
         />
-
-        <form.SaveError error={setSetting.error} />
-        <form.ModalActions submitLabel="Update" onCancel={() => close(false)} />
-      </form.Form>
+      </form.ModalForm>
     </form.AppForm>
   );
 }
