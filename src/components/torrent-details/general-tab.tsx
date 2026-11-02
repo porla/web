@@ -3,7 +3,7 @@ import { PieceProgress } from "./piece-progress";
 import { binaryBytes, bytes, date, duration, rate, ratio } from "@/lib/format";
 import { Fragment, type ReactNode } from "react";
 import { CopyButton } from "@/components/ui/copy-button";
-import { torrentStatus, type Tone } from "@/lib/torrent/status";
+import { toneBadge, torrentStatus } from "@/lib/torrent/status";
 import { Dash } from "@/components/ui/dash";
 import { notableFlags } from "@/lib/torrent/flags";
 import { Ratio } from "@/components/ui/ratio";
@@ -18,17 +18,6 @@ type GeneralTabProps = {
 
 // libtorrent reports "no limit" as -1, 0 or 2^24 - 1 depending on the field.
 const limited = (n: number) => n > 0 && n < 16777215;
-
-// The sidebar filters' colors, solid so they read in light and dark mode.
-// Class names are spelled out for Tailwind.
-const badges: Record<Tone, string> = {
-  downloading: "bg-green-300 border-green-300 text-green-950",
-  seeding: "bg-blue-300 border-blue-300 text-blue-950",
-  finished: "bg-purple-300 border-purple-300 text-purple-950",
-  paused: "bg-orange-300 border-orange-300 text-orange-950",
-  error: "bg-red-300 border-red-300 text-red-950",
-  other: "badge-ghost",
-};
 
 // Same rule as the backend's Utils::ETA: what's left of the selected files at
 // the current payload rate.
@@ -142,7 +131,7 @@ export function GeneralTab({
   }
 
   const st = torrentStatus(t);
-  const s = { label: st.label, badge: badges[st.tone] };
+  const s = { label: st.label, badge: toneBadge[st.tone] };
 
   const left = eta(t);
   const pieceCount = pieces.data.pieces[0];

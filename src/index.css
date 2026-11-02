@@ -7,3 +7,24 @@
 .select-ghost::picker(select) {
   background-color: var(--color-base-100);
 }
+
+/* Torrent status colours, as the sidebar's filters show them: icons, bars and
+   piece maps (text-status-seeding, bg-status-error, …). Darker shades read on
+   the light theme, lighter ones on the dark theme. */
+@theme {
+  --color-status-downloading: var(--color-green-600);
+  --color-status-seeding: var(--color-blue-600);
+  --color-status-finished: var(--color-purple-600);
+  --color-status-paused: var(--color-orange-600);
+  --color-status-error: var(--color-red-600);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --color-status-downloading: var(--color-green-300);
+    --color-status-seeding: var(--color-blue-300);
+    --color-status-finished: var(--color-purple-300);
+    --color-status-paused: var(--color-orange-300);
+    --color-status-error: var(--color-red-300);
+  }
+}

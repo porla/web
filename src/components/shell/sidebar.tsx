@@ -29,6 +29,7 @@ import { feature, getCurrentVersion } from "@/lib/features";
 import { useWebVersion } from "@/lib/web-version";
 import { prefixPath } from "@/lib/base-path";
 import { useQueryClient } from "@tanstack/react-query";
+import { toneText } from "@/lib/torrent/status";
 
 type Filter = {
   status?: TorrentFilterStatus[];
@@ -36,8 +37,7 @@ type Filter = {
   tag?: string;
 };
 
-// The sidebar's filters, with the porla statuses each one covers. Icon
-// colors match the status badges (general-tab.tsx).
+// The sidebar's filters, with the porla statuses each one covers.
 const statuses: {
   label: string;
   icon: LucideIcon;
@@ -48,35 +48,35 @@ const statuses: {
   {
     label: "Downloading",
     icon: Download,
-    color: "text-green-600 dark:text-green-300",
+    color: toneText.downloading,
     status: ["downloading", "downloading_queued"],
     count: (c) => c.downloading + c.downloading_queued,
   },
   {
     label: "Seeding",
     icon: Upload,
-    color: "text-blue-600 dark:text-blue-300",
+    color: toneText.seeding,
     status: ["seeding", "seeding_queued"],
     count: (c) => c.seeding + c.seeding_queued,
   },
   {
     label: "Finished",
     icon: Check,
-    color: "text-purple-600 dark:text-purple-300",
+    color: toneText.finished,
     status: ["finished"],
     count: (c) => c.finished,
   },
   {
     label: "Paused",
     icon: Pause,
-    color: "text-orange-600 dark:text-orange-300",
+    color: toneText.paused,
     status: ["paused"],
     count: (c) => c.paused,
   },
   {
     label: "Error",
     icon: TriangleAlert,
-    color: "text-red-600 dark:text-red-300",
+    color: toneText.error,
     status: ["error"],
     count: (c) => c.error,
   },

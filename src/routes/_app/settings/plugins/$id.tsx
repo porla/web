@@ -137,6 +137,7 @@ function PluginForm({ plugin }: { plugin: PluginsGet["plugin"] }) {
                   className="w-lg max-w-full h-96 font-mono textarea"
                   onBlur={field.handleBlur}
                   onChange={(e) => field.handleChange(e.target.value)}
+                  aria-label="Plugin configuration (Lua)"
                   placeholder="Plugin configuration (Lua)"
                   value={field.state.value}
                 ></textarea>

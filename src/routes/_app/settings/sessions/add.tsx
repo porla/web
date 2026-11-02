@@ -4,6 +4,7 @@ import { useAppForm } from "@/components/form/app-form";
 import { useQueryClient } from "@tanstack/react-query";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import z from "zod";
+import { Field } from "@/components/form/field";
 
 export const Route = createFileRoute("/_app/settings/sessions/add")({
   component: RouteComponent,
@@ -106,26 +107,26 @@ function RouteComponent() {
               <form.AppField
                 name="settings_base"
                 children={(field) => (
-                  <div className="fieldset">
-                    <label className="label">Settings base</label>
-
-                    <select
-                      className="select"
-                      onBlur={field.handleBlur}
-                      onChange={(e) => {
-                        field.handleChange(e.target.value as Settings);
-                      }}
-                      value={field.state.value}
-                    >
-                      <option value={"default"}>Default</option>
-                      <option value={"min_memory_usage"}>
-                        Min. memory usage
-                      </option>
-                      <option value={"high_performance_seed"}>
-                        High performance seed
-                      </option>
-                    </select>
-                  </div>
+                  <Field label="Settings base">
+                    {(control) => (
+                      <select
+                        {...control}
+                        className="select"
+                        onChange={(e) => {
+                          field.handleChange(e.target.value as Settings);
+                        }}
+                        value={field.state.value}
+                      >
+                        <option value={"default"}>Default</option>
+                        <option value={"min_memory_usage"}>
+                          Min. memory usage
+                        </option>
+                        <option value={"high_performance_seed"}>
+                          High performance seed
+                        </option>
+                      </select>
+                    )}
+                  </Field>
                 )}
               />
 

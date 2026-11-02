@@ -111,9 +111,7 @@ function RouteComponent() {
           <div className="stat">
             <div className="stat-title">Sessions</div>
             <div className="stat-value font-mono">
-              {sessions.isLoading && (
-                <span className="loading loading-spinner loading-xl"></span>
-              )}
+              {sessions.isLoading && <Spinner size="xl" />}
 
               {!sessions.isLoading && sessions.data && (
                 <span>{sessions.data.sessions.length}</span>

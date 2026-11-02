@@ -64,10 +64,6 @@ export function SetTorrentPropertiesModal({
     { meta: { silent: true } },
   );
 
-  if (!properties.isFetchedAfterMount || !torrent.isFetchedAfterMount) {
-    return <span className="loading loading-spinner"></span>;
-  }
-
   const loading =
     !properties.isFetchedAfterMount || !torrent.isFetchedAfterMount;
 

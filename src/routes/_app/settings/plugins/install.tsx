@@ -87,6 +87,7 @@ function RouteComponent() {
                 className="w-lg h-96 font-mono textarea"
                 onBlur={field.handleBlur}
                 onChange={(e) => field.handleChange(e.target.value)}
+                aria-label="Plugin configuration"
                 placeholder="Plugin configuration"
                 value={field.state.value ?? ""}
               ></textarea>
