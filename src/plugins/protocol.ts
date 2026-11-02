@@ -4,8 +4,8 @@
 // well-behaved plugin sends, not what arrives, so handlers still check fields.
 
 import { rpcCall, type InfoHash, type Plugin, type RpcResponse } from "@/api";
-import { prefixPath } from "@/base";
-import { getCurrentVersion } from "@/features";
+import { prefixPath } from "@/lib/base-path";
+import { getCurrentVersion } from "@/lib/features";
 import { useLayoutEffect, useRef, type SyntheticEvent } from "react";
 
 export const PROTOCOL = 1;

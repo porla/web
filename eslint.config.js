@@ -22,9 +22,31 @@ export default defineConfig([
     },
   },
   {
+    // Imports go through the @/ alias (or ./ within a folder) and leave out the
+    // extension, so moving a file doesn't break the paths in it and every import
+    // reads the same everywhere.
+    rules: {
+      "no-restricted-imports": [
+        "error",
+        {
+          patterns: [
+            {
+              group: ["../*"],
+              message: "Import from @/… instead of a parent folder.",
+            },
+            {
+              group: ["*.ts", "*.tsx"],
+              message: "Leave the extension out of import paths.",
+            },
+          ],
+        },
+      ],
+    },
+  },
+  {
     // Route files export `Route` next to their components (the router plugin
-    // handles HMR for them), and hooks/form.tsx is a hook factory.
-    files: ["src/routes/**/*.tsx", "src/hooks/form.tsx"],
+    // handles HMR for them), and components/form/app-form.tsx is a hook factory.
+    files: ["src/routes/**/*.tsx", "src/components/form/app-form.tsx"],
     rules: {
       "react-refresh/only-export-components": "off",
     },

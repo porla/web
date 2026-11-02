@@ -1,5 +1,5 @@
 import { useInvoker, useRPC } from "@/api";
-import { useAppForm } from "@/hooks/form";
+import { useAppForm } from "@/components/form/app-form";
 import { useQueryClient } from "@tanstack/react-query";
 import { createFileRoute, Navigate } from "@tanstack/react-router";
 import z from "zod";

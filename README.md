@@ -40,20 +40,40 @@ mark the generated `src/routeTree.gen.ts` read-only.
 
 - **Routing**: file-based routes in `src/routes/`, read by the TanStack Router Vite plugin, which writes
   `src/routeTree.gen.ts` (generated, don't edit; it is committed). Routes are code-split automatically.
-- **Data**: `useRPC(method, params)` (a TanStack Query query) and `useInvoker(method)` (a mutation) in `src/api.ts`. Every
-  RPC method's params and result are typed in the `Methods` map there.
+- **Data**: `useRPC(method, params)` (a TanStack Query query) and `useInvoker(method)` (a mutation), imported from
+  `@/api`. Every RPC method's params and result are typed in the `Methods` map in `src/api/methods.ts`.
 - **Errors**: a failed query or mutation shows a toast unless the code handles the error itself.
 - **Styling**: Tailwind utilities and daisyUI components; the theme follows the system's light or dark mode.
-- **Plugins**: plugins can add their own UI in sandboxed iframes; the host is in `src/plugins/` and
-  `src/components/plugin-host.tsx`.
+- **Plugins**: plugins can add their own UI in sandboxed iframes; the host is in `src/plugins/`.
+
+### Project layout
+
+```
+src/
+  api/           JSON-RPC client, typed methods, useRPC/useInvoker, response types (import from "@/api")
+  lib/           plain helpers: formatting, features, base path, toasts; lib/torrent/ for torrent data
+  hooks/         shared React hooks
+  components/
+    ui/          small building blocks (pager, list state, copy button, …)
+    form/        TanStack Form setup (useAppForm) and the field components
+    modal/       the modal host and useModal()
+    modals/      one file per modal
+    shell/       the sidebar
+    torrent-list/, torrent-details/, add-torrents/   the parts of those pages
+  plugins/       the plugin UI host and protocol
+  routes/        pages; _app is everything behind login, _app/_shell the pages with the sidebar
+```
+
+Files are named after what they export (`ConfirmModal` lives in `confirm-modal.tsx`), exports are named, and imports
+use `@/…` (or `./…` within the same folder).
 
 ### Base path
 
 Porla can serve the UI under a sub-path (`--http-base-path`). `index.html` carries a `%BASE_PATH%` placeholder that
-Porla replaces when it serves the page; use `prefixPath()` from `src/base.ts` for any URL you build by hand. Asset URLs
+Porla replaces when it serves the page; use `prefixPath()` from `src/lib/base-path.ts` for any URL you build by hand. Asset URLs
 in the build are relative, so they work under any base path.
 
 ### Backend versions
 
-New UI features that need a newer Porla are gated with `feature("name")` from `src/features.ts`, keyed by the version
+New UI features that need a newer Porla are gated with `feature("name")` from `src/lib/features.ts`, keyed by the version
 Porla reports. A Porla built without version info (a local debug build) reports `0.0.0` and gets every feature.

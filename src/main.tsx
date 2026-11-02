@@ -13,8 +13,8 @@ import {
   QueryClientProvider,
 } from "@tanstack/react-query";
 import { AuthError, HttpError, RpcError } from "@/api";
-import { ModalProvider } from "./components/modal";
-import { toast } from "./toast";
+import { ModalProvider } from "@/components/modal/modal-provider";
+import { toast } from "@/lib/toast";
 
 // Create a new router instance
 const router = createRouter({ routeTree, basepath: window.porla.base_path });
