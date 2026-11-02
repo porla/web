@@ -334,12 +334,7 @@ export type PeerFlag =
   | "plaintext_encrypted";
 
 export type PeerSource =
-  | "tracker"
-  | "dht"
-  | "pex"
-  | "lsd"
-  | "resume_data"
-  | "incoming";
+  "tracker" | "dht" | "pex" | "lsd" | "resume_data" | "incoming";
 
 export type Peer = {
   busy_requests: number;

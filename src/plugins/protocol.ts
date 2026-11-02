@@ -60,8 +60,7 @@ export type MenuContext = {
 // Host -> frame.
 export type HostMessage = {
   control:
-    | { type: "menu.invoke"; id: string; context: MenuContext }
-    | JsonRpcResult;
+    { type: "menu.invoke"; id: string; context: MenuContext } | JsonRpcResult;
   modal: JsonRpcResult;
   settings: JsonRpcResult;
 };

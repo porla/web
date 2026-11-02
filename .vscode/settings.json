@@ -1,0 +1,23 @@
+{
+  // Use the project's TypeScript, not the one bundled with VS Code.
+  "js/ts.tsdk.path": "node_modules/typescript/lib",
+  "js/ts.tsdk.promptToUseWorkspaceVersion": true,
+  "js/ts.preferences.importModuleSpecifier": "non-relative",
+
+  "editor.formatOnSave": true,
+  "editor.defaultFormatter": "esbenp.prettier-vscode",
+  "editor.codeActionsOnSave": {
+    "source.fixAll.eslint": "explicit"
+  },
+
+  // Tailwind v4 + daisyUI: class completion in className and clsx(), and no
+  // warnings for @plugin/@theme in index.css.
+  "tailwindCSS.classFunctions": ["clsx"],
+  "files.associations": { "*.css": "tailwindcss" },
+  "css.lint.unknownAtRules": "ignore",
+
+  // Written by the TanStack Router plugin on every dev/build run.
+  "files.readonlyInclude": { "src/routeTree.gen.ts": true },
+  "search.exclude": { "src/routeTree.gen.ts": true, "bun.lock": true },
+  "files.watcherExclude": { "**/.tanstack/**": true }
+}

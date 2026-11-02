@@ -3,12 +3,7 @@ import type { Torrent } from "@/api";
 // Which sidebar filter lists the torrent (porla's torrents.list status
 // rules), so it can be colored the same everywhere; "other" has no filter.
 export type Tone =
-  | "downloading"
-  | "seeding"
-  | "finished"
-  | "paused"
-  | "error"
-  | "other";
+  "downloading" | "seeding" | "finished" | "paused" | "error" | "other";
 
 // The sidebar's status colors (its icons use the same shades), for bars and
 // piece maps, so a torrent reads like the filter it's in.

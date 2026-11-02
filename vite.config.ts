@@ -16,11 +16,11 @@ export default defineConfig({
   ],
   resolve: {
     alias: {
-      "@": path.resolve(__dirname, "./src"),
+      "@": path.resolve(import.meta.dirname, "./src"),
     },
   },
   experimental: {
-    // porla serves the UI under --http-base-path; make the preload URLs that
+    // Porla serves the UI under --http-base-path; make the preload URLs that
     // Vite writes into JS relative so they follow wherever the chunk was loaded.
     renderBuiltUrl(_filename, { hostType }) {
       return hostType === "js" ? { relative: true } : undefined;
