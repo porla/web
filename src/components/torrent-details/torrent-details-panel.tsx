@@ -1,4 +1,4 @@
-import { RpcError, useRPC, type InfoHash } from "@/api";
+import { RpcError, useRPC, type InfoHash, type Torrent } from "@/api";
 import { Link, useNavigate, useSearch } from "@tanstack/react-router";
 import {
   ChevronDown,
@@ -16,7 +16,13 @@ import { FilesTab } from "./files-tab";
 import { PeersTab } from "./peers-tab";
 import { PiecesTab } from "./pieces-tab";
 import { TrackersTab } from "./trackers-tab";
-import { useEffect, useRef, useState, type ReactNode } from "react";
+import {
+  useEffect,
+  useRef,
+  useState,
+  type ComponentType,
+  type ReactNode,
+} from "react";
 import { toast } from "@/lib/toast";
 import clsx from "clsx";
 import { DockBar } from "@/components/ui/dock-bar";
@@ -35,17 +41,19 @@ const tabs: {
   id: DetailTab;
   name: string;
   icon: LucideIcon;
+  Tab: ComponentType<{
+    info_hash: InfoHash;
+    session_id: number;
+    torrent: Torrent | undefined;
+  }>;
 }[] = [
-  { id: "general", name: "General", icon: Info },
-  { id: "files", name: "Files", icon: FolderTree },
-  { id: "pieces", name: "Pieces", icon: LayoutGrid },
-  { id: "peers", name: "Peers", icon: Users },
-  { id: "trackers", name: "Trackers", icon: RadioTower },
+  { id: "general", name: "General", icon: Info, Tab: GeneralTab },
+  { id: "files", name: "Files", icon: FolderTree, Tab: FilesTab },
+  { id: "pieces", name: "Pieces", icon: LayoutGrid, Tab: PiecesTab },
+  { id: "peers", name: "Peers", icon: Users, Tab: PeersTab },
+  { id: "trackers", name: "Trackers", icon: RadioTower, Tab: TrackersTab },
 ];
 
-// The panel's height and whether it's folded down to its bar, kept per
-// browser. Storage can be unavailable (private windows); then it's just not
-// remembered.
 const stored = (key: string, fallback: number) => {
   try {
     const v = Number(localStorage.getItem(key));
@@ -77,6 +85,7 @@ export function TorrentDetailsPanel({
 
   const navigate = useNavigate();
   const selectedTab = torrentSearch?.selected_tab_id ?? "general";
+  const { Tab } = tabs.find((tab) => tab.id === selectedTab) ?? tabs[0];
 
   const [height, setHeight] = useState(() =>
     stored("porla.details.height", 360),
@@ -204,41 +213,7 @@ export function TorrentDetailsPanel({
 
       {!collapsed && (
         <div className="flex-1 min-h-0 min-w-0 overflow-auto">
-          {selectedTab === "general" && (
-            <GeneralTab
-              info_hash={info_hash}
-              session_id={session_id}
-              torrent={torrent.data?.torrent}
-            />
-          )}
-
-          {selectedTab === "files" && (
-            <FilesTab info_hash={info_hash} session_id={session_id} />
-          )}
-
-          {selectedTab === "pieces" && (
-            <PiecesTab
-              info_hash={info_hash}
-              session_id={session_id}
-              torrent={torrent.data?.torrent}
-            />
-          )}
-
-          {selectedTab === "peers" && (
-            <PeersTab
-              info_hash={info_hash}
-              session_id={session_id}
-              torrent={torrent.data?.torrent}
-            />
-          )}
-
-          {selectedTab === "trackers" && (
-            <TrackersTab
-              info_hash={info_hash}
-              session_id={session_id}
-              torrent={torrent.data?.torrent}
-            />
-          )}
+          <Tab info_hash={info_hash} session_id={session_id} torrent={t} />
         </div>
       )}
     </div>

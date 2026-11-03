@@ -3,10 +3,10 @@ import { binaryBytes } from "@/lib/format";
 import { groupPieces, pieceSize } from "@/lib/torrent/pieces";
 import { toneBar, toneRing, torrentStatus } from "@/lib/torrent/status";
 import clsx from "clsx";
-import { LayoutGrid, TriangleAlert } from "lucide-react";
+import { LayoutGrid } from "lucide-react";
 import { useMemo } from "react";
 import { ListState } from "@/components/ui/list-state";
-import { Spinner } from "@/components/ui/spinner";
+import { TabNotice } from "./tab-notice";
 
 type PiecesTabProps = {
   info_hash: InfoHash;
@@ -49,16 +49,8 @@ export function PiecesTab({
     [pieces.data, seedMode],
   );
 
-  if (pieces.error) {
-    return (
-      <ListState icon={TriangleAlert} title="Couldn't load the pieces">
-        {pieces.error.message}
-      </ListState>
-    );
-  }
-
-  if (!t || !pieces.data) {
-    return <Spinner className="m-3" />;
+  if (pieces.error || !t || !pieces.data) {
+    return <TabNotice query={pieces} what="pieces" />;
   }
 
   if (!t.has_metadata) {
@@ -132,7 +124,7 @@ export function PiecesTab({
                     : "missing"
                   : `${g.have} of ${len} had`
               }${
-                seedMode && g.have > g.verified
+                unverified
                   ? len === 1
                     ? ", not verified yet"
                     : ", not all verified"
@@ -141,7 +133,6 @@ export function PiecesTab({
               className={clsx(
                 cell,
                 "relative bg-base-content/10",
-                // Lifted above its neighbours on hover; the tooltip has the rest.
                 "hover:z-10 hover:scale-[1.35] hover:ring-1 hover:ring-base-content/70 motion-safe:transition-transform motion-safe:duration-100",
               )}
             >
