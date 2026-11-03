@@ -1,8 +1,7 @@
-import { useInvoker } from "@/api";
+import { useInvoker, useRpcCache } from "@/api";
 import { useModal } from "@/components/modal/use-modal";
 import { ShowApiKeyModal } from "@/components/modals/show-api-key-modal";
 import { useAppForm } from "@/components/form/app-form";
-import { useQueryClient } from "@tanstack/react-query";
 import { createFileRoute } from "@tanstack/react-router";
 import z from "zod";
 import { SettingsCard } from "@/components/settings/settings-card";
@@ -30,12 +29,11 @@ const addSchema = z.object({
 function RouteComponent() {
   const { show } = useModal();
   const navigate = Route.useNavigate();
-  const queryClient = useQueryClient();
+  const cache = useRpcCache();
 
   const create = useInvoker("auth.keys.create", {
-    meta: { silent: true },
-    onSuccess: () =>
-      queryClient.invalidateQueries({ queryKey: ["auth.keys.list"] }),
+    meta: { errorToast: false },
+    onSuccess: () => cache.invalidate("auth.keys.list"),
   });
 
   const form = useAppForm({

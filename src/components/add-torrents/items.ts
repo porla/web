@@ -1,4 +1,4 @@
-import { HttpError, RpcError } from "@/api";
+import { HttpError, RpcCode, isRpcError } from "@/api";
 import { bytes } from "@/lib/format";
 
 // One torrent's options. Empty fields aren't sent, so presets (or porla's
@@ -86,7 +86,7 @@ export function addParams(o: AddOptions) {
 }
 
 export function addError(err: unknown) {
-  if (err instanceof RpcError && err.code === -6) {
+  if (isRpcError(err, RpcCode.MissingSavePath)) {
     return "Needs a save path: set one here or in a preset";
   }
   if (err instanceof HttpError && err.status === 413) {

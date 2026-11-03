@@ -1,4 +1,4 @@
-import { useRPC, type InfoHash, type Torrent } from "@/api";
+import { POLL_MS, useRPC, type InfoHash, type Torrent } from "@/api";
 import { date, duration } from "@/lib/format";
 import {
   trackerRows,
@@ -181,8 +181,8 @@ export function TrackersTab({
       session_id,
     },
     {
-      meta: { silent: true },
-      refetchInterval: 2000,
+      meta: { errorToast: false },
+      refetchInterval: POLL_MS.details,
     },
   );
 

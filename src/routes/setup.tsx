@@ -1,6 +1,5 @@
-import { useInvoker, useRPC } from "@/api";
+import { useInvoker, useRPC, useRpcCache } from "@/api";
 import { useAppForm } from "@/components/form/app-form";
-import { useQueryClient } from "@tanstack/react-query";
 import { createFileRoute, Navigate } from "@tanstack/react-router";
 import z from "zod";
 
@@ -22,11 +21,11 @@ const setupSchema = z
 function RouteComponent() {
   const navigate = Route.useNavigate();
 
-  const queryClient = useQueryClient();
+  const cache = useRpcCache();
 
   const status = useRPC("sys.status");
-  const authInit = useInvoker("auth.init", { meta: { silent: true } });
-  const authLogin = useInvoker("auth.login", { meta: { silent: true } });
+  const authInit = useInvoker("auth.init", { meta: { errorToast: false } });
+  const authLogin = useInvoker("auth.login", { meta: { errorToast: false } });
 
   const form = useAppForm({
     defaultValues: {
@@ -50,7 +49,7 @@ function RouteComponent() {
         return;
       }
 
-      queryClient.clear();
+      cache.clear();
 
       await navigate({ to: "/" });
     },

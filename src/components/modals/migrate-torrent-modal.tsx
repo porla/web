@@ -1,4 +1,4 @@
-import { useRPC, type InfoHash, useInvoker } from "@/api";
+import { useRPC, useInvoker, type InfoHash } from "@/api";
 import { ModalNotice } from "@/components/modal/modal-notice";
 import type { ModalProps } from "@/components/modal/use-modal";
 import { useAppForm } from "@/components/form/app-form";
@@ -18,7 +18,10 @@ export function MigrateTorrentModal({
   session_id,
   close,
 }: MigrateTorrentModalProps & ModalProps<boolean>) {
-  const migrate = useInvoker("torrents.migrate", { meta: { silent: true } });
+  const migrate = useInvoker("torrents.migrate", {
+    meta: { errorToast: false },
+  });
+
   const sessions = useRPC("sessions.list");
   const torrent = useRPC("torrents.get", {
     info_hash,

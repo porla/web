@@ -1,4 +1,4 @@
-import { type InfoHash, useInvoker, useRPC } from "@/api";
+import { useInvoker, useRPC, type InfoHash } from "@/api";
 import { ModalNotice } from "@/components/modal/modal-notice";
 import type { ModalProps } from "@/components/modal/use-modal";
 import { useAppForm } from "@/components/form/app-form";
@@ -20,7 +20,7 @@ export function MoveTorrentModal({
       info_hash,
       session_id,
     },
-    { meta: { silent: true } },
+    { meta: { errorToast: false } },
   );
 
   // Removed or migrated while the menu was open: there's nothing to move.
@@ -48,7 +48,7 @@ function MoveForm({
   save_path,
   close,
 }: MoveTorrentModalProps & { save_path: string } & ModalProps<boolean>) {
-  const move = useInvoker("torrents.move", { meta: { silent: true } });
+  const move = useInvoker("torrents.move", { meta: { errorToast: false } });
 
   const form = useAppForm({
     defaultValues: {

@@ -1,9 +1,8 @@
-import { useInvoker, useRPC } from "@/api";
+import { useInvoker, useRPC, useRpcCache } from "@/api";
 import { useModal } from "@/components/modal/use-modal";
 import { ConfirmModal } from "@/components/modals/confirm-modal";
 import { SettingsSection } from "@/components/settings/settings-section";
 import { SettingsTable } from "@/components/settings/settings-table";
-import { useQueryClient } from "@tanstack/react-query";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { KeyRound } from "lucide-react";
 import { DateTime } from "luxon";
@@ -16,14 +15,13 @@ const when = (seconds: number) =>
   DateTime.fromSeconds(seconds).toFormat("yyyy-MM-dd HH:mm");
 
 function RouteComponent() {
-  const queryClient = useQueryClient();
+  const cache = useRpcCache();
   const modal = useModal();
 
   const keys = useRPC("auth.keys.list");
   const remove = useInvoker("auth.keys.remove", {
-    meta: { silent: true },
-    onSettled: () =>
-      queryClient.invalidateQueries({ queryKey: ["auth.keys.list"] }),
+    meta: { errorToast: false },
+    onSettled: () => cache.invalidate("auth.keys.list"),
   });
 
   const now = DateTime.now().toUnixInteger();

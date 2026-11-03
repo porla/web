@@ -1,7 +1,6 @@
-import { useInvoker } from "@/api";
+import { useInvoker, useRpcCache } from "@/api";
 import type { ModalProps } from "@/components/modal/use-modal";
 import { useAppForm } from "@/components/form/app-form";
-import { useQueryClient } from "@tanstack/react-query";
 import z from "zod";
 
 type SetSessionSettingModalProps = {
@@ -34,12 +33,11 @@ export function SetSessionSettingModal({
   setting_value,
   close,
 }: SetSessionSettingModalProps & ModalProps<boolean>) {
-  const queryClient = useQueryClient();
+  const cache = useRpcCache();
 
   const setSetting = useInvoker("sessions.settings.set", {
-    meta: { silent: true },
-    onSuccess: () =>
-      queryClient.invalidateQueries({ queryKey: ["sessions.settings.get"] }),
+    meta: { errorToast: false },
+    onSuccess: () => cache.invalidate("sessions.settings.get"),
   });
 
   // From the prop, not the live value: clearing a number gives null, which

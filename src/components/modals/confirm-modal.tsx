@@ -18,7 +18,7 @@ export function ConfirmModal({
   action,
   close,
 }: ConfirmModalProps & ModalProps<boolean>) {
-  const run = useMutation({ mutationFn: action, meta: { silent: true } });
+  const run = useMutation({ mutationFn: action, meta: { errorToast: false } });
 
   const form = useAppForm({
     defaultValues: {},

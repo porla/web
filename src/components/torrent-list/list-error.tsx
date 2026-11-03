@@ -1,4 +1,4 @@
-import { RpcError } from "@/api";
+import { RpcCode, isRpcError } from "@/api";
 import { ListState } from "@/components/ui/list-state";
 import { TriangleAlert } from "lucide-react";
 
@@ -6,7 +6,7 @@ import { TriangleAlert } from "lucide-react";
 // its span as data.start/end); anything else is shown as it came.
 export function ListError({ error, query }: { error: Error; query?: string }) {
   const span =
-    error instanceof RpcError && error.code === -1000 && query
+    isRpcError(error, RpcCode.InvalidQuery) && query
       ? (error.data as { start?: number; end?: number } | null)
       : null;
 

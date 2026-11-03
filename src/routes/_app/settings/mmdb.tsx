@@ -1,9 +1,15 @@
-import { RpcError, useInvoker, useRPC } from "@/api";
+import {
+  RpcCode,
+  isRpcError,
+  useInvoker,
+  useKv,
+  useRPC,
+  useRpcCache,
+} from "@/api";
 import { useAppForm } from "@/components/form/app-form";
 import { SettingsSection } from "@/components/settings/settings-section";
 import { Spinner } from "@/components/ui/spinner";
 import { useSelector } from "@tanstack/react-form";
-import { useQueryClient } from "@tanstack/react-query";
 import { createFileRoute } from "@tanstack/react-router";
 
 export const Route = createFileRoute("/_app/settings/mmdb")({
@@ -14,15 +20,13 @@ const MMDB_PATH = "porla.mmdb.path";
 const PROBE = "1.1.1.1";
 
 function RouteComponent() {
-  const mmdbSettings = useRPC("kv.get", {
-    keys: [MMDB_PATH],
-  });
+  const mmdbPath = useKv(MMDB_PATH);
 
-  if (mmdbSettings.isLoading) {
+  if (mmdbPath.query.isLoading) {
     return <Spinner size="xl" />;
   }
 
-  const path = mmdbSettings.data?.values[MMDB_PATH];
+  const path = mmdbPath.value;
 
   return (
     <div className="space-y-10">
@@ -36,32 +40,24 @@ function RouteComponent() {
 }
 
 function PathForm({ savedPath }: { savedPath: string }) {
-  const queryClient = useQueryClient();
+  const cache = useRpcCache();
+  const kv = useKv(MMDB_PATH);
 
   const status = useRPC(
     "mmdb.lookup",
     { values: [PROBE] },
-    { meta: { silent: true } },
+    { meta: { errorToast: false } },
   );
 
-  const notLoaded =
-    status.error instanceof RpcError && status.error.code === -1;
-
-  const setKey = useInvoker("kv.set", { meta: { silent: true } });
+  const notLoaded = isRpcError(status.error, RpcCode.MmdbNotLoaded);
 
   const form = useAppForm({
     defaultValues: {
       path: savedPath,
     },
     onSubmit: async ({ value }) => {
-      await setKey.mutateAsync({ values: { [MMDB_PATH]: value.path } });
-
-      await Promise.all([
-        queryClient.invalidateQueries({
-          queryKey: ["kv.get", { keys: [MMDB_PATH] }],
-        }),
-        queryClient.invalidateQueries({ queryKey: ["mmdb.lookup"] }),
-      ]);
+      await kv.set.mutateAsync(value.path);
+      await cache.invalidate("mmdb.lookup");
     },
   });
 
@@ -69,9 +65,7 @@ function PathForm({ savedPath }: { savedPath: string }) {
 
   // Once the status is fetched again after the save.
   const saved =
-    setKey.isSuccess &&
-    setKey.variables?.values[MMDB_PATH] === path &&
-    !status.isFetching;
+    kv.set.isSuccess && kv.set.variables === path && !status.isFetching;
 
   return (
     <form.AppForm>
@@ -98,7 +92,7 @@ function PathForm({ savedPath }: { savedPath: string }) {
           )}
         />
 
-        <form.SaveError error={setKey.error} />
+        <form.SaveError error={kv.set.error} />
 
         {saved && path && notLoaded ? (
           <div role="alert" className="alert alert-warning alert-soft">
@@ -116,7 +110,7 @@ function PathForm({ savedPath }: { savedPath: string }) {
 }
 
 function LookupForm() {
-  const lookup = useInvoker("mmdb.lookup", { meta: { silent: true } });
+  const lookup = useInvoker("mmdb.lookup", { meta: { errorToast: false } });
 
   const form = useAppForm({
     defaultValues: {

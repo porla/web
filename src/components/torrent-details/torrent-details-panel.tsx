@@ -1,4 +1,11 @@
-import { RpcError, useRPC, type InfoHash, type Torrent } from "@/api";
+import {
+  POLL_MS,
+  RpcCode,
+  isRpcError,
+  useRPC,
+  type InfoHash,
+  type Torrent,
+} from "@/api";
 import { Link, useNavigate, useSearch } from "@tanstack/react-router";
 import {
   ChevronDown,
@@ -105,7 +112,7 @@ export function TorrentDetailsPanel({
   const torrent = useRPC(
     "torrents.get",
     { info_hash, session_id },
-    { refetchInterval: 2000, meta: { silent: true } },
+    { refetchInterval: POLL_MS.details, meta: { errorToast: false } },
   );
 
   // Removed or migrated elsewhere, or its session was removed or unloaded:
@@ -114,8 +121,12 @@ export function TorrentDetailsPanel({
   // the last time this torrent left (it may have come back since).
   const gone =
     !torrent.isFetching &&
-    torrent.error instanceof RpcError &&
-    [-1, -2, -3].includes(torrent.error.code)
+    isRpcError(
+      torrent.error,
+      RpcCode.SessionNotFound,
+      RpcCode.SessionNotLoaded,
+      RpcCode.TorrentNotFound,
+    )
       ? torrent.error.message
       : null;
 

@@ -1,4 +1,4 @@
-import { useRPC, type InfoHash, useInvoker } from "@/api";
+import { useRPC, useInvoker, type InfoHash } from "@/api";
 import type { ModalProps } from "@/components/modal/use-modal";
 import { useAppForm } from "@/components/form/app-form";
 import z from "zod";
@@ -18,7 +18,7 @@ export function RemoveTorrentModal({
   session_id,
   close,
 }: RemoveTorrentModalProps & ModalProps<boolean>) {
-  const remove = useInvoker("torrents.remove", { meta: { silent: true } });
+  const remove = useInvoker("torrents.remove", { meta: { errorToast: false } });
 
   const torrent = useRPC("torrents.get", {
     info_hash,

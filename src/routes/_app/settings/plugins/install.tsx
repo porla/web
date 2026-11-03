@@ -1,8 +1,7 @@
-import { useInvoker } from "@/api";
+import { useInvoker, useRpcCache } from "@/api";
 import { useAppForm } from "@/components/form/app-form";
 import { SettingsCard } from "@/components/settings/settings-card";
 import { SettingsSection } from "@/components/settings/settings-section";
-import { useQueryClient } from "@tanstack/react-query";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import z from "zod";
 
@@ -29,12 +28,11 @@ const installSchema = z.object({
 
 function RouteComponent() {
   const navigate = Route.useNavigate();
-  const queryClient = useQueryClient();
+  const cache = useRpcCache();
 
   const install = useInvoker("plugins.install", {
-    meta: { silent: true },
-    onSuccess: () =>
-      queryClient.invalidateQueries({ queryKey: ["plugins.list"] }),
+    meta: { errorToast: false },
+    onSuccess: () => cache.invalidate("plugins.list"),
   });
 
   const form = useAppForm({

@@ -1,4 +1,4 @@
-import { HttpError, useInvoker, useRPC } from "@/api";
+import { POLL_MS, HttpError, useInvoker, useRPC } from "@/api";
 import { Spinner } from "@/components/ui/spinner";
 import { useWebVersion } from "@/lib/web-version";
 import { useQuery } from "@tanstack/react-query";
@@ -15,7 +15,7 @@ function RouteComponent() {
   });
 
   const sessions = useRPC("sessions.list", null, {
-    refetchInterval: 2000,
+    refetchInterval: POLL_MS.details,
   });
 
   const versions = useRPC("sys.versions");

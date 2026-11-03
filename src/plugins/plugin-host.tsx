@@ -19,7 +19,7 @@ function frameKey(p: Plugin) {
 }
 
 function EnabledPluginHost({ children }: { children: ReactNode }) {
-  const plugins = useRPC("plugins.list", null, { meta: { silent: true } });
+  const plugins = useRPC("plugins.list", null, { meta: { errorToast: false } });
   const [menus, setMenus] = useState<Record<string, MenuItem[]>>({});
   const list = (plugins.data?.plugins ?? []).filter(
     (p) => p.status === "running",

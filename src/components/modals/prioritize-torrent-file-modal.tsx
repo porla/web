@@ -1,4 +1,4 @@
-import { type InfoHash, useInvoker } from "@/api";
+import { useInvoker, type InfoHash } from "@/api";
 import type { ModalProps } from "@/components/modal/use-modal";
 import { useAppForm } from "@/components/form/app-form";
 import z from "zod";
@@ -28,7 +28,7 @@ export function PrioritizeTorrentFileModal({
   close,
 }: PrioritizeTorrentFileModalProps & ModalProps<boolean>) {
   const prioritize = useInvoker("torrents.files.prioritize", {
-    meta: { silent: true },
+    meta: { errorToast: false },
   });
 
   const form = useAppForm({

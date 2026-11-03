@@ -13,7 +13,7 @@ export function usePeerCountries(ips: string[]) {
   const probe = useRPC(
     "mmdb.lookup",
     { values: ["127.0.0.1"] },
-    { meta: { silent: true } },
+    { meta: { errorToast: false } },
   );
 
   const mmdbEnabled = !!probe.data && "127.0.0.1" in probe.data.results;
@@ -26,7 +26,7 @@ export function usePeerCountries(ips: string[]) {
     { values },
     {
       enabled: mmdbEnabled && values.length > 0,
-      meta: { silent: true },
+      meta: { errorToast: false },
       placeholderData: keepPreviousData,
     },
   );

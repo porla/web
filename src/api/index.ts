@@ -1,10 +1,11 @@
-// The JSON-RPC client: typed methods (methods.ts), the hooks components use (query.ts),
+// The JSON-RPC client: typed methods (methods.ts), the hooks components use,
 // errors and the response types. Import from "@/api".
 
 export { rpcCall } from "./client";
 export type { RpcResponse } from "./client";
-export { AuthError, HttpError, RpcError } from "./errors";
+export { AuthError, HttpError, RpcCode, RpcError, isRpcError } from "./errors";
 export type { Method, Methods, Params, Result } from "./methods";
+export { POLL_MS } from "./polling";
 export { useInvoker, useRPC } from "./query";
 export type { ApiKey, ApiKeysList } from "./types/auth";
 export type {
@@ -23,6 +24,8 @@ export type {
 } from "./types/sessions";
 export type { MmdbEntry, SysStatus, SysVersions } from "./types/sys";
 export { torrentSortFields } from "./types/torrents";
+export { useKv } from "./use-kv";
+export { useRpcCache } from "./use-rpc-cache";
 export type {
   AnnounceEndpoint,
   AnnounceEntry,

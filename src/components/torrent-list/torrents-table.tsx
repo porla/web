@@ -1,8 +1,8 @@
 import {
+  infoHashKey,
   type SortDir,
   type Torrent,
   type TorrentSortField,
-  infoHashKey,
 } from "@/api";
 import { Spinner } from "@/components/ui/spinner";
 import type { Checked } from "@/hooks/use-checked";
@@ -31,7 +31,7 @@ export function TorrentsTable({
 }) {
   const navigate = route.useNavigate();
   const search = route.useSearch();
-  const { columns, shown: selectedCols, isLoading } = useShownColumns();
+  const { columns, shown: selectedCols, saved } = useShownColumns();
 
   const orderBy = search.order_by ?? "queue_position";
   const orderDir = search.order_by_dir ?? "asc";
@@ -84,7 +84,7 @@ export function TorrentsTable({
     clearSelection: () => void clearSelection(),
   });
 
-  if (isLoading) {
+  if (saved.query.isLoading) {
     return <Spinner className="m-3" />;
   }
 

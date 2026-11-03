@@ -1,10 +1,9 @@
-import { useInvoker, useRPC, type PluginsGet } from "@/api";
+import { useInvoker, useRPC, useRpcCache, type PluginsGet } from "@/api";
 import { useModal } from "@/components/modal/use-modal";
 import { ConfirmModal } from "@/components/modals/confirm-modal";
 import { PluginSettings } from "@/plugins/plugin-settings";
 import { useAppForm } from "@/components/form/app-form";
 import { pluginInfo } from "@/plugins/plugin-info";
-import { useQueryClient } from "@tanstack/react-query";
 import { createFileRoute } from "@tanstack/react-router";
 import z from "zod";
 import { idParam } from "@/lib/route-params";
@@ -29,7 +28,7 @@ const pluginSchema = z.object({
 function RouteComponent() {
   const { id } = Route.useParams();
 
-  const plugin = useRPC("plugins.get", { id }, { meta: { silent: true } });
+  const plugin = useRPC("plugins.get", { id }, { meta: { errorToast: false } });
 
   if (!plugin.data) {
     return (
@@ -46,26 +45,20 @@ function RouteComponent() {
 
 function PluginForm({ plugin }: { plugin: PluginsGet["plugin"] }) {
   const navigate = Route.useNavigate();
-  const queryClient = useQueryClient();
+  const cache = useRpcCache();
   const modal = useModal();
 
-  const refresh = () =>
-    Promise.all([
-      queryClient.invalidateQueries({
-        queryKey: ["plugins.get", { id: plugin.id }],
-      }),
-      queryClient.invalidateQueries({ queryKey: ["plugins.list"] }),
-    ]);
+  const refresh = () => cache.invalidate("plugins.get", "plugins.list");
 
   const reload = useInvoker("plugins.reload", {
-    meta: { silent: true },
+    meta: { errorToast: false },
     onSettled: refresh,
   });
 
-  const remove = useInvoker("plugins.remove", { meta: { silent: true } });
+  const remove = useInvoker("plugins.remove", { meta: { errorToast: false } });
 
   const update = useInvoker("plugins.update", {
-    meta: { silent: true },
+    meta: { errorToast: false },
     onSuccess: refresh,
   });
 
@@ -166,14 +159,8 @@ function PluginForm({ plugin }: { plugin: PluginsGet["plugin"] }) {
                 });
 
                 if (removed) {
-                  queryClient.removeQueries({
-                    queryKey: ["plugins.get", { id: plugin.id }],
-                  });
-
-                  await queryClient.invalidateQueries({
-                    queryKey: ["plugins.list"],
-                  });
-
+                  cache.remove("plugins.get", { id: plugin.id });
+                  await cache.invalidate("plugins.list");
                   await navigate({ to: "/settings/plugins" });
                 }
               }}

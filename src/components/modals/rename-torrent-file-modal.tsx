@@ -1,4 +1,4 @@
-import { type InfoHash, useInvoker } from "@/api";
+import { useInvoker, type InfoHash } from "@/api";
 import type { ModalProps } from "@/components/modal/use-modal";
 import { useAppForm } from "@/components/form/app-form";
 import z from "zod";
@@ -35,7 +35,7 @@ export function RenameTorrentFileModal({
   close,
 }: RenameTorrentFileModalProps & ModalProps<boolean>) {
   const rename = useInvoker("torrents.files.rename", {
-    meta: { silent: true },
+    meta: { errorToast: false },
   });
 
   const cut =

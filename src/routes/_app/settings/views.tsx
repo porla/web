@@ -1,4 +1,4 @@
-import { useInvoker } from "@/api";
+import { useKv } from "@/api";
 import {
   COLUMNS_KV_KEY,
   useShownColumns,
@@ -6,7 +6,6 @@ import {
 } from "@/components/torrent-list/torrent-list-columns";
 import { useAppForm } from "@/components/form/app-form";
 import { useSelector } from "@tanstack/react-form";
-import { useQueryClient } from "@tanstack/react-query";
 import { createFileRoute } from "@tanstack/react-router";
 import { Spinner } from "@/components/ui/spinner";
 
@@ -15,9 +14,9 @@ export const Route = createFileRoute("/_app/settings/views")({
 });
 
 function RouteComponent() {
-  const { shown, isLoading, data } = useShownColumns();
+  const { shown, saved } = useShownColumns();
 
-  if (isLoading || !data) {
+  if (!saved.query.data) {
     return <Spinner size="xl" />;
   }
 
@@ -25,16 +24,7 @@ function RouteComponent() {
 }
 
 function EditTorrentListForm({ initialCols }: { initialCols: string[] }) {
-  const queryClient = useQueryClient();
-
-  // The torrent list reads the same key.
-  const updateCols = useInvoker("kv.set", {
-    meta: { silent: true },
-    onSuccess: () =>
-      queryClient.invalidateQueries({
-        queryKey: ["kv.get", { keys: [COLUMNS_KV_KEY] }],
-      }),
-  });
+  const kv = useKv(COLUMNS_KV_KEY);
 
   const torrentsColumns = useTorrentListColumns();
   const knownCols = new Set(Object.keys(torrentsColumns));
@@ -51,19 +41,14 @@ function EditTorrentListForm({ initialCols }: { initialCols: string[] }) {
       cols: initialCols.filter((c) => knownCols.has(c)) as ColKey[],
     },
     onSubmit: async ({ value }) => {
-      await updateCols.mutateAsync({
-        values: {
-          [COLUMNS_KV_KEY]: value.cols,
-        },
-      });
+      await kv.set.mutateAsync(value.cols);
     },
   });
 
   const cols = useSelector(form.store, (state) => state.values.cols);
 
   const saved =
-    updateCols.isSuccess &&
-    updateCols.variables.values[COLUMNS_KV_KEY]?.toString() === cols.toString();
+    kv.set.isSuccess && String(kv.set.variables) === cols.toString();
 
   return (
     <form.AppForm>
@@ -137,7 +122,7 @@ function EditTorrentListForm({ initialCols }: { initialCols: string[] }) {
           }}
         </form.AppField>
 
-        <form.SaveError error={updateCols.error} />
+        <form.SaveError error={kv.set.error} />
         <form.Saved show={saved} />
         <form.SubmitButton label="Save" disabled={cols.length === 0} />
       </form.Form>

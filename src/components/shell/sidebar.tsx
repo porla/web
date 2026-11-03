@@ -1,6 +1,8 @@
 import {
+  POLL_MS,
   useInvoker,
   useRPC,
+  useRpcCache,
   type SortDir,
   type TorrentsCount,
   type TorrentSortField,
@@ -29,7 +31,6 @@ import clsx from "clsx";
 import { feature, getCurrentVersion } from "@/lib/features";
 import { useWebVersion } from "@/lib/web-version";
 import { prefixPath } from "@/lib/base-path";
-import { useQueryClient } from "@tanstack/react-query";
 import { toneText } from "@/lib/torrent/status";
 
 type Filter = {
@@ -145,18 +146,19 @@ export function Sidebar({ onNavigate }: { onNavigate?: () => void }) {
   // The list's search, or what the add page carries (its session).
   const search = useSearch({ strict: false });
   const onList = !!useMatch({ from: "/_app/_shell/", shouldThrow: false });
-  const queryClient = useQueryClient();
+  const cache = useRpcCache();
 
-  const sessions = useRPC("sessions.list", null, { refetchInterval: 5000 });
+  const sessions = useRPC("sessions.list", null, {
+    refetchInterval: POLL_MS.sessions,
+  });
+
   const list = sessions.data?.sessions;
   const current = list?.find((s) => s.id === search.session_id);
 
   const logout = useInvoker("auth.logout", {
-    // Leave the app first so nothing polls with the old session, then drop
-    // what it loaded.
     onSuccess: async () => {
       await navigate({ to: "/login" });
-      queryClient.clear();
+      cache.clear();
     },
   });
 
@@ -178,7 +180,7 @@ export function Sidebar({ onNavigate }: { onNavigate?: () => void }) {
   const count = useRPC(
     "torrents.count",
     { session_id },
-    { enabled: !!session_id, refetchInterval: 1000 },
+    { enabled: !!session_id, refetchInterval: POLL_MS.list },
   ).data;
 
   // A filter replaces the others, the search and the page; the session, the

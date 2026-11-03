@@ -1,10 +1,15 @@
-import { useInvoker, useRPC, type Preset, type TorrentFlag } from "@/api";
+import {
+  useInvoker,
+  useRPC,
+  useRpcCache,
+  type Preset,
+  type TorrentFlag,
+} from "@/api";
 import { useModal } from "@/components/modal/use-modal";
 import { ConfirmModal } from "@/components/modals/confirm-modal";
 import { useAppForm } from "@/components/form/app-form";
 import { peerLimit, rateLimit } from "@/lib/limits";
 import { presetFlags } from "@/lib/torrent/flags";
-import { useQueryClient } from "@tanstack/react-query";
 import { createFileRoute } from "@tanstack/react-router";
 import z from "zod";
 import { SettingsNotFound } from "@/components/settings/settings-not-found";
@@ -21,7 +26,7 @@ export const Route = createFileRoute("/_app/settings/presets/$id")({
 function RouteComponent() {
   const { id } = Route.useParams();
 
-  const preset = useRPC("presets.get", { id }, { meta: { silent: true } });
+  const preset = useRPC("presets.get", { id }, { meta: { errorToast: false } });
 
   if (!preset.data) {
     return (
@@ -83,7 +88,7 @@ const presetSchema = (taken: string[]) =>
     }));
 
 function PresetForm({ preset }: PresetFormProps) {
-  const queryClient = useQueryClient();
+  const cache = useRpcCache();
   const navigate = Route.useNavigate();
   const modal = useModal();
 
@@ -94,15 +99,11 @@ function PresetForm({ preset }: PresetFormProps) {
     .filter((p) => p.id !== preset.id)
     .map((p) => p.name);
 
-  const remove = useInvoker("presets.remove", { meta: { silent: true } });
+  const remove = useInvoker("presets.remove", { meta: { errorToast: false } });
 
   const update = useInvoker("presets.update", {
-    meta: { silent: true },
-    onSuccess: () =>
-      Promise.all([
-        queryClient.invalidateQueries({ queryKey: ["presets.list"] }),
-        queryClient.invalidateQueries({ queryKey: ["presets.get"] }),
-      ]),
+    meta: { errorToast: false },
+    onSuccess: () => cache.invalidate("presets.list", "presets.get"),
   });
 
   const form = useAppForm({
@@ -234,13 +235,8 @@ function PresetForm({ preset }: PresetFormProps) {
             });
 
             if (removed) {
-              queryClient.removeQueries({
-                queryKey: ["presets.get", { id: preset.id }],
-              });
-
-              await queryClient.invalidateQueries({
-                queryKey: ["presets.list"],
-              });
+              cache.remove("presets.get", { id: preset.id });
+              await cache.invalidate("presets.list");
               await navigate({ to: "/settings/presets" });
             }
           }}

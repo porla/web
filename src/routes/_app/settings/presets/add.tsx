@@ -1,8 +1,7 @@
-import { useInvoker, useRPC } from "@/api";
+import { useInvoker, useRPC, useRpcCache } from "@/api";
 import { useAppForm } from "@/components/form/app-form";
 import { SettingsCard } from "@/components/settings/settings-card";
 import { SettingsSection } from "@/components/settings/settings-section";
-import { useQueryClient } from "@tanstack/react-query";
 import { createFileRoute } from "@tanstack/react-router";
 import z from "zod";
 
@@ -21,15 +20,14 @@ const addSchema = (taken: string[]) =>
 
 function RouteComponent() {
   const navigate = Route.useNavigate();
-  const queryClient = useQueryClient();
+  const cache = useRpcCache();
 
   const presets = useRPC("presets.list");
   const taken = (presets.data?.presets ?? []).map((p) => p.name);
 
   const add = useInvoker("presets.add", {
-    meta: { silent: true },
-    onSuccess: () =>
-      queryClient.invalidateQueries({ queryKey: ["presets.list"] }),
+    meta: { errorToast: false },
+    onSuccess: () => cache.invalidate("presets.list"),
   });
 
   const form = useAppForm({

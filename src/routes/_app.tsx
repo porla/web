@@ -23,7 +23,9 @@ function RouteComponent() {
 }
 
 function VersionedComponent() {
-  const versions = useRPC("sys.versions", null, { meta: { silent: true } });
+  const versions = useRPC("sys.versions", null, {
+    meta: { errorToast: false },
+  });
 
   if (versions.isLoading) {
     return <Spinner size="xl" className="m-6" />;

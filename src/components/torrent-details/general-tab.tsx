@@ -1,4 +1,4 @@
-import { useRPC, type InfoHash, type Torrent } from "@/api";
+import { POLL_MS, useRPC, type InfoHash, type Torrent } from "@/api";
 import { PieceProgress } from "./piece-progress";
 import { binaryBytes, bytes, date, duration, rate, ratio } from "@/lib/format";
 import { Fragment, type ReactNode } from "react";
@@ -115,7 +115,7 @@ export function GeneralTab({
       session_id,
     },
     {
-      refetchInterval: 2000,
+      refetchInterval: POLL_MS.details,
     },
   );
 

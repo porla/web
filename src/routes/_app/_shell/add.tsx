@@ -22,7 +22,7 @@ export const Route = createFileRoute("/_app/_shell/add")({
 function RouteComponent() {
   const navigate = Route.useNavigate();
 
-  const add = useInvoker("torrents.add", { meta: { silent: true } });
+  const add = useInvoker("torrents.add", { meta: { errorToast: false } });
   const presets = useRPC("presets.list");
   const sessions = useRPC("sessions.list");
 

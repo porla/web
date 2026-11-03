@@ -1,4 +1,4 @@
-import { useRPC, type InfoHash, type Torrent } from "@/api";
+import { POLL_MS, useRPC, type InfoHash, type Torrent } from "@/api";
 import { binaryBytes } from "@/lib/format";
 import { groupPieces, pieceSize } from "@/lib/torrent/pieces";
 import { toneBar, toneRing, torrentStatus } from "@/lib/torrent/status";
@@ -32,7 +32,7 @@ export function PiecesTab({
   const pieces = useRPC(
     "torrents.pieces.get",
     { info_hash, session_id },
-    { refetchInterval: 2000, meta: { silent: true } },
+    { refetchInterval: POLL_MS.details, meta: { errorToast: false } },
   );
 
   const seedMode = !!t?.flags.includes("seed_mode");

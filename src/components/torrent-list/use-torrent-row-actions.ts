@@ -1,26 +1,20 @@
-import { useInvoker, type Torrent } from "@/api";
+import { useInvoker, useRpcCache, type Torrent } from "@/api";
 import { useModal } from "@/components/modal/use-modal";
 import { MigrateTorrentModal } from "@/components/modals/migrate-torrent-modal";
 import { MoveTorrentModal } from "@/components/modals/move-torrent-modal";
 import { RemoveTorrentModal } from "@/components/modals/remove-torrent-modal";
 import { SetTorrentPropertiesModal } from "@/components/modals/set-torrent-properties-modal";
 import { usePlugins } from "@/plugins/plugin-context";
-import { useQueryClient } from "@tanstack/react-query";
 
 export function useTorrentRowActions(
   sessionId: number | undefined,
   onLeft: (t: Torrent) => Promise<void>,
 ) {
-  const queryClient = useQueryClient();
+  const cache = useRpcCache();
   const modal = useModal();
   const { menuItems } = usePlugins();
 
-  const refresh = {
-    onSuccess: () =>
-      queryClient.invalidateQueries({
-        predicate: (q) => String(q.queryKey[0]).startsWith("torrents."),
-      }),
-  };
+  const refresh = { onSuccess: cache.invalidateTorrents };
 
   const pause = useInvoker("torrents.pause", refresh);
   const resume = useInvoker("torrents.resume", refresh);

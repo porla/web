@@ -1,17 +1,17 @@
 import {
+  useInvoker,
+  useRPC,
+  useRpcCache,
   type InfoHash,
   type Params,
   type Torrent,
   type TorrentFlag,
   type TorrentsPropertiesGet,
-  useInvoker,
-  useRPC,
 } from "@/api";
 import type { ModalProps } from "@/components/modal/use-modal";
 import { useAppForm } from "@/components/form/app-form";
 import { peerLimit, rateLimit } from "@/lib/limits";
 import { runtimeFlags } from "@/lib/torrent/flags";
-import { useQueryClient } from "@tanstack/react-query";
 import z from "zod";
 import { Accordion } from "@/components/ui/accordion";
 import { ModalNotice } from "@/components/modal/modal-notice";
@@ -55,13 +55,13 @@ export function SetTorrentPropertiesModal({
   const properties = useRPC(
     "torrents.properties.get",
     { info_hash, session_id },
-    { meta: { silent: true } },
+    { meta: { errorToast: false } },
   );
 
   const torrent = useRPC(
     "torrents.get",
     { info_hash, session_id },
-    { meta: { silent: true } },
+    { meta: { errorToast: false } },
   );
 
   const loading =
@@ -98,20 +98,16 @@ function PropertiesForm({
   limits: TorrentsPropertiesGet;
   userdata: Torrent["$userdata"];
 } & ModalProps<boolean>) {
-  const queryClient = useQueryClient();
+  const cache = useRpcCache();
 
   const set = useInvoker("torrents.properties.set", {
-    meta: { silent: true },
+    meta: { errorToast: false },
     onSuccess: () =>
-      Promise.all(
-        [
-          "torrents.properties.get",
-          "torrents.get",
-          "torrents.list",
-          "torrents.count",
-        ].map((method) =>
-          queryClient.invalidateQueries({ queryKey: [method] }),
-        ),
+      cache.invalidate(
+        "torrents.properties.get",
+        "torrents.get",
+        "torrents.list",
+        "torrents.count",
       ),
   });
 

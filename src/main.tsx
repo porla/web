@@ -21,9 +21,8 @@ const router = createRouter({ routeTree, basepath: window.porla.base_path });
 
 declare module "@tanstack/react-query" {
   interface Register {
-    // silent: the component shows this error itself, so don't toast it
-    queryMeta: { silent?: boolean };
-    mutationMeta: { silent?: boolean };
+    queryMeta: { errorToast?: boolean };
+    mutationMeta: { errorToast?: boolean };
   }
 }
 
@@ -36,7 +35,7 @@ declare module "@tanstack/react-router" {
 
 // Every query and mutation error ends up here: a lost session goes to the
 // login page, anything else is shown as a toast.
-function onError(error: Error, meta?: { silent?: boolean }) {
+function onError(error: Error, meta?: { errorToast?: boolean }) {
   if (error instanceof AuthError) {
     if (router.state.location.pathname !== "/login") {
       router.navigate({
@@ -47,7 +46,7 @@ function onError(error: Error, meta?: { silent?: boolean }) {
     return;
   }
 
-  if (!meta?.silent) {
+  if (meta?.errorToast !== false) {
     toast(error.message || "Request failed");
   }
 }

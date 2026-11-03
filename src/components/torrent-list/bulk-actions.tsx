@@ -1,4 +1,4 @@
-import { AuthError, useInvoker, type Torrent } from "@/api";
+import { AuthError, useInvoker, useRpcCache, type Torrent } from "@/api";
 import { useModal } from "@/components/modal/use-modal";
 import {
   BulkMigrateModal,
@@ -8,7 +8,6 @@ import {
 } from "@/components/modals/bulk-modals";
 import { Spinner } from "@/components/ui/spinner";
 import type { Checked } from "@/hooks/use-checked";
-import { useQueryClient } from "@tanstack/react-query";
 import { Check, ChevronDown, TriangleAlert, X } from "lucide-react";
 import { useEffect, useRef, useState, type MouseEvent } from "react";
 
@@ -40,20 +39,20 @@ export function BulkActions({
   onLeft: (torrents: Torrent[]) => void;
 }) {
   const modal = useModal();
-  const queryClient = useQueryClient();
-  const silent = { meta: { silent: true } };
+  const cache = useRpcCache();
+  const noToast = { meta: { errorToast: false } };
 
-  const pause = useInvoker("torrents.pause", silent);
-  const resume = useInvoker("torrents.resume", silent);
-  const recheck = useInvoker("torrents.recheck", silent);
-  const move = useInvoker("torrents.move", silent);
-  const migrate = useInvoker("torrents.migrate", silent);
-  const properties = useInvoker("torrents.properties.set", silent);
-  const remove = useInvoker("torrents.remove", silent);
-  const queueTop = useInvoker("torrents.queue.top", silent);
-  const queueUp = useInvoker("torrents.queue.up", silent);
-  const queueDown = useInvoker("torrents.queue.down", silent);
-  const queueBottom = useInvoker("torrents.queue.bottom", silent);
+  const pause = useInvoker("torrents.pause", noToast);
+  const resume = useInvoker("torrents.resume", noToast);
+  const recheck = useInvoker("torrents.recheck", noToast);
+  const move = useInvoker("torrents.move", noToast);
+  const migrate = useInvoker("torrents.migrate", noToast);
+  const properties = useInvoker("torrents.properties.set", noToast);
+  const remove = useInvoker("torrents.remove", noToast);
+  const queueTop = useInvoker("torrents.queue.top", noToast);
+  const queueUp = useInvoker("torrents.queue.up", noToast);
+  const queueDown = useInvoker("torrents.queue.down", noToast);
+  const queueBottom = useInvoker("torrents.queue.bottom", noToast);
 
   const [running, setRunning] = useState<{
     label: string;
@@ -114,9 +113,7 @@ export function BulkActions({
       Array.from({ length: sequential ? 1 : PARALLEL }, worker),
     );
 
-    await queryClient.invalidateQueries({
-      predicate: (q) => String(q.queryKey[0]).startsWith("torrents."),
-    });
+    await cache.invalidateTorrents();
 
     setRunning(null);
 

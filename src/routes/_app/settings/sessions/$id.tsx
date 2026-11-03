@@ -1,10 +1,9 @@
-import { type Session, useInvoker, useRPC } from "@/api";
+import { useInvoker, useRPC, useRpcCache, type Session } from "@/api";
 import { Accordion } from "@/components/ui/accordion";
 import { useModal } from "@/components/modal/use-modal";
 import { ConfirmModal } from "@/components/modals/confirm-modal";
 import { SetSessionSettingModal } from "@/components/modals/set-session-setting-modal";
 import { useAppForm } from "@/components/form/app-form";
-import { useQueryClient } from "@tanstack/react-query";
 import { createFileRoute } from "@tanstack/react-router";
 import { Lock, SlidersHorizontal } from "lucide-react";
 import z from "zod";
@@ -30,7 +29,11 @@ const STATIC_SETTINGS = new Set([
 function RouteComponent() {
   const { id } = Route.useParams();
 
-  const session = useRPC("sessions.get", { id }, { meta: { silent: true } });
+  const session = useRPC(
+    "sessions.get",
+    { id },
+    { meta: { errorToast: false } },
+  );
 
   if (!session.data) {
     return (
@@ -72,7 +75,7 @@ const sessionSchema = (taken: string[]) =>
 
 function SessionForm({ session }: { session: Session }) {
   const navigate = Route.useNavigate();
-  const queryClient = useQueryClient();
+  const cache = useRpcCache();
   const modal = useModal();
 
   const sessions = useRPC("sessions.list");
@@ -81,17 +84,11 @@ function SessionForm({ session }: { session: Session }) {
     .filter((s) => s.id !== session.id)
     .map((s) => s.name);
 
-  const remove = useInvoker("sessions.remove", { meta: { silent: true } });
+  const remove = useInvoker("sessions.remove", { meta: { errorToast: false } });
 
   const update = useInvoker("sessions.update", {
-    meta: { silent: true },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["sessions.list"] });
-      queryClient.invalidateQueries({
-        queryKey: ["sessions.get"],
-        refetchType: "all",
-      });
-    },
+    meta: { errorToast: false },
+    onSuccess: () => cache.invalidate("sessions.list", "sessions.get"),
   });
 
   const form = useAppForm({
@@ -169,14 +166,8 @@ function SessionForm({ session }: { session: Session }) {
               });
 
               if (removed) {
-                queryClient.removeQueries({
-                  queryKey: ["sessions.get", { id: session.id }],
-                });
-
-                await queryClient.invalidateQueries({
-                  queryKey: ["sessions.list"],
-                });
-
+                cache.remove("sessions.get", { id: session.id });
+                await cache.invalidate("sessions.list");
                 await navigate({ to: "/settings/sessions" });
               }
             }}

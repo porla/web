@@ -1,4 +1,4 @@
-import { useRPC, type InfoHash, type Peer, type Torrent } from "@/api";
+import { POLL_MS, useRPC, type InfoHash, type Peer, type Torrent } from "@/api";
 import { bytes, rate } from "@/lib/format";
 import {
   comparePeers,
@@ -226,8 +226,8 @@ export function PeersTab({ info_hash, session_id, torrent: t }: PeersTabProps) {
       session_id,
     },
     {
-      meta: { silent: true },
-      refetchInterval: 2000,
+      meta: { errorToast: false },
+      refetchInterval: POLL_MS.details,
     },
   );
 

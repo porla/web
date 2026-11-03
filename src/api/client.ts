@@ -1,5 +1,5 @@
 import { prefixPath } from "@/lib/base-path";
-import { AuthError, HttpError, RpcError } from "./errors";
+import { AuthError, HttpError, RpcCode, RpcError } from "./errors";
 import type { Method, Params, Result } from "./methods";
 
 async function post(method: string, params: unknown, signal?: AbortSignal) {
@@ -26,10 +26,10 @@ async function post(method: string, params: unknown, signal?: AbortSignal) {
   return res.json();
 }
 
-// check if a 1001 means logged out or not authed
+// check if Unauthorized means logged out or not authed
 async function isLoggedOut(signal?: AbortSignal) {
   const data = await post("sys.versions", {}, signal);
-  return data.error?.code === 1001;
+  return data.error?.code === RpcCode.Unauthorized;
 }
 
 export async function jsonrpc<M extends Method>(
@@ -43,7 +43,7 @@ export async function jsonrpc<M extends Method>(
     const { code, message } = data.error;
 
     if (
-      code === 1001 &&
+      code === RpcCode.Unauthorized &&
       (method === "sys.versions" || (await isLoggedOut(signal)))
     ) {
       throw new AuthError(message);
@@ -70,7 +70,7 @@ export async function rpcCall(
   } catch (e) {
     return {
       error: {
-        code: -32603,
+        code: RpcCode.InternalError,
         message: e instanceof Error ? e.message : String(e),
       },
     };

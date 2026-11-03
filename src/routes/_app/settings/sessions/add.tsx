@@ -1,7 +1,6 @@
-import { useInvoker, useRPC } from "@/api";
+import { useInvoker, useRPC, useRpcCache } from "@/api";
 import { Accordion } from "@/components/ui/accordion";
 import { useAppForm } from "@/components/form/app-form";
-import { useQueryClient } from "@tanstack/react-query";
 import { createFileRoute } from "@tanstack/react-router";
 import z from "zod";
 import { Field } from "@/components/form/field";
@@ -44,15 +43,14 @@ type Settings = z.infer<typeof settingsBase>;
 
 function RouteComponent() {
   const navigate = Route.useNavigate();
-  const queryClient = useQueryClient();
+  const cache = useRpcCache();
 
   const sessions = useRPC("sessions.list");
   const taken = (sessions.data?.sessions ?? []).map((s) => s.name);
 
   const add = useInvoker("sessions.add", {
-    meta: { silent: true },
-    onSuccess: () =>
-      queryClient.invalidateQueries({ queryKey: ["sessions.list"] }),
+    meta: { errorToast: false },
+    onSuccess: () => cache.invalidate("sessions.list"),
   });
 
   const form = useAppForm({

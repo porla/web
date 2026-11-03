@@ -1,4 +1,4 @@
-import { infoHashKey, RpcError, useRPC } from "@/api";
+import { POLL_MS, infoHashKey, RpcError, useRPC } from "@/api";
 import { ListError } from "@/components/torrent-list/list-error";
 import { SearchBox } from "@/components/torrent-list/search-box";
 import {
@@ -50,11 +50,11 @@ function RouteComponent() {
       page_size: pageSize,
     },
     {
-      meta: { silent: true },
+      meta: { errorToast: false },
       // An RpcError (a bad PQL query) would only repeat; anything else, like
       // porla restarting or the network dropping, polls on until it's back.
       refetchInterval: (q) =>
-        q.state.error instanceof RpcError ? false : 1000,
+        q.state.error instanceof RpcError ? false : POLL_MS.list,
       placeholderData: keepPreviousData,
     },
   );

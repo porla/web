@@ -1,6 +1,6 @@
 import {
   infoHashKey,
-  useRPC,
+  useKv,
   type SortDir,
   type Torrent,
   type TorrentSortField,
@@ -236,13 +236,13 @@ const isStringArray = (v: unknown): v is string[] =>
 
 export function useShownColumns() {
   const columns = useTorrentListColumns();
-  const saved = useRPC("kv.get", { keys: [COLUMNS_KV_KEY] });
-  const raw = saved.data?.values[COLUMNS_KV_KEY];
+  const saved = useKv(COLUMNS_KV_KEY);
+  const raw = saved.value;
 
   const shown =
     isStringArray(raw) && raw.length
       ? raw.filter((c): c is ColumnKey => c in columns)
       : (Object.keys(columns) as ColumnKey[]).filter((c) => columns[c].default);
 
-  return { columns, shown, isLoading: saved.isLoading, data: saved.data };
+  return { columns, shown, saved };
 }

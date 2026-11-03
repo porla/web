@@ -1,5 +1,7 @@
 import {
-  RpcError,
+  POLL_MS,
+  RpcCode,
+  isRpcError,
   useRPC,
   type FileFlag,
   type InfoHash,
@@ -111,8 +113,8 @@ export function FilesTab({ info_hash, session_id }: FilesTabProps) {
       // The list only changes when metadata arrives or a file is renamed (which
       // refetches it), so it's polled only while it fails, e.g. on a magnet
       // without metadata yet. That error is shown below, not as a toast.
-      refetchInterval: (query) => (query.state.error ? 2000 : false),
-      meta: { silent: true },
+      refetchInterval: (query) => (query.state.error ? POLL_MS.details : false),
+      meta: { errorToast: false },
     },
   );
 
@@ -123,7 +125,7 @@ export function FilesTab({ info_hash, session_id }: FilesTabProps) {
       session_id,
     },
     {
-      refetchInterval: 2000,
+      refetchInterval: POLL_MS.details,
     },
   );
 
@@ -134,11 +136,11 @@ export function FilesTab({ info_hash, session_id }: FilesTabProps) {
       session_id,
     },
     {
-      refetchInterval: 2000,
+      refetchInterval: POLL_MS.details,
     },
   );
 
-  if (files.error instanceof RpcError && files.error.code === -4) {
+  if (isRpcError(files.error, RpcCode.TorrentNotValid)) {
     return (
       <ListState icon={FolderTree} title="No file list yet">
         The torrent has no metadata yet. Its files show once that's downloaded.
