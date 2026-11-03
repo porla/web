@@ -7,40 +7,36 @@ import { presetFlags } from "@/lib/torrent/flags";
 import { useQueryClient } from "@tanstack/react-query";
 import { createFileRoute } from "@tanstack/react-router";
 import z from "zod";
+import { SettingsNotFound } from "@/components/settings/settings-not-found";
+import { idParam } from "@/lib/route-params";
+import { SettingsNotice } from "@/components/settings/settings-notice";
+import { SettingsCard } from "@/components/settings/settings-card";
 
 export const Route = createFileRoute("/_app/settings/presets/$id")({
   component: RouteComponent,
+  notFoundComponent: SettingsNotFound,
+  params: idParam,
 });
 
 function RouteComponent() {
   const { id } = Route.useParams();
 
-  const preset = useRPC(
-    "presets.get",
-    { id: parseInt(id, 10) },
-    { meta: { silent: true } },
-  );
+  const preset = useRPC("presets.get", { id }, { meta: { silent: true } });
 
-  if (preset.isLoading) {
-    return <>loading</>;
-  }
-
-  if (preset.error) {
-    return <>{preset.error.message}</>;
-  }
-
-  if (!preset.data?.preset) {
-    return <>no preset data?</>;
+  if (!preset.data) {
+    return (
+      <SettingsNotice
+        query={preset}
+        notFound="Preset not found"
+        back={{ to: "/settings/presets", label: "Back to presets" }}
+      />
+    );
   }
 
   return (
-    <div className="space-y-6">
-      <div className="card bg-base-200 shadow-sm w-full">
-        <div className="card-body">
-          <PresetForm preset={preset.data.preset} />
-        </div>
-      </div>
-    </div>
+    <SettingsCard>
+      <PresetForm preset={preset.data.preset} />
+    </SettingsCard>
   );
 }
 

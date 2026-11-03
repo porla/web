@@ -5,12 +5,16 @@ import { PluginSettings } from "@/plugins/plugin-settings";
 import { useAppForm } from "@/components/form/app-form";
 import { pluginInfo } from "@/plugins/plugin-info";
 import { useQueryClient } from "@tanstack/react-query";
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute } from "@tanstack/react-router";
 import z from "zod";
-import { Spinner } from "@/components/ui/spinner";
+import { idParam } from "@/lib/route-params";
+import { SettingsNotFound } from "@/components/settings/settings-not-found";
+import { SettingsNotice } from "@/components/settings/settings-notice";
 
 export const Route = createFileRoute("/_app/settings/plugins/$id")({
   component: RouteComponent,
+  notFoundComponent: SettingsNotFound,
+  params: idParam,
 });
 
 const pluginSchema = z.object({
@@ -25,24 +29,15 @@ const pluginSchema = z.object({
 function RouteComponent() {
   const { id } = Route.useParams();
 
-  const plugin = useRPC(
-    "plugins.get",
-    { id: parseInt(id, 10) },
-    { meta: { silent: true } },
-  );
+  const plugin = useRPC("plugins.get", { id }, { meta: { silent: true } });
 
-  if (plugin.isLoading) {
-    return <Spinner size="xl" />;
-  }
-
-  if (plugin.error || !plugin.data) {
+  if (!plugin.data) {
     return (
-      <div className="space-y-3">
-        <p>{plugin.error?.message ?? "Plugin not found"}</p>
-        <Link to="/settings/plugins" className="btn btn-sm">
-          Back to plugins
-        </Link>
-      </div>
+      <SettingsNotice
+        query={plugin}
+        notFound="Plugin not found"
+        back={{ to: "/settings/plugins", label: "Back to plugins" }}
+      />
     );
   }
 

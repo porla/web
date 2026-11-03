@@ -2,9 +2,11 @@ import { useInvoker, useRPC } from "@/api";
 import { Accordion } from "@/components/ui/accordion";
 import { useAppForm } from "@/components/form/app-form";
 import { useQueryClient } from "@tanstack/react-query";
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute } from "@tanstack/react-router";
 import z from "zod";
 import { Field } from "@/components/form/field";
+import { SettingsCard } from "@/components/settings/settings-card";
+import { SettingsSection } from "@/components/settings/settings-section";
 
 export const Route = createFileRoute("/_app/settings/sessions/add")({
   component: RouteComponent,
@@ -80,92 +82,83 @@ function RouteComponent() {
       ) {
         await navigate({
           to: "/settings/sessions/$id",
-          params: { id: result.id.toString() },
+          params: { id: result.id },
         });
       }
     },
   });
 
   return (
-    <div className="space-y-6">
-      <div className="flex justify-between items-center">
-        <h2 className="text-lg font-semibold">Add session</h2>
-        <Link className="btn btn-primary invisible" to="/settings/sessions/add">
-          Add session
-        </Link>
-      </div>
+    <SettingsSection title="Add session">
+      <SettingsCard>
+        <form.AppForm>
+          <form.Form>
+            <form.AppField
+              name="name"
+              children={(field) => <field.TextField label="Name" />}
+            />
 
-      <div className="card bg-base-200 shadow-sm w-full">
-        <div className="card-body">
-          <form.AppForm>
-            <form.Form>
-              <form.AppField
-                name="name"
-                children={(field) => <field.TextField label="Name" />}
-              />
+            <form.AppField
+              name="settings_base"
+              children={(field) => (
+                <Field label="Settings base">
+                  {(control) => (
+                    <select
+                      {...control}
+                      className="select"
+                      onChange={(e) => {
+                        field.handleChange(e.target.value as Settings);
+                      }}
+                      value={field.state.value}
+                    >
+                      <option value={"default"}>Default</option>
+                      <option value={"min_memory_usage"}>
+                        Min. memory usage
+                      </option>
+                      <option value={"high_performance_seed"}>
+                        High performance seed
+                      </option>
+                    </select>
+                  )}
+                </Field>
+              )}
+            />
 
+            <Accordion title="Advanced" className="bg-base-100">
               <form.AppField
-                name="settings_base"
+                name="timer_dht_stats"
                 children={(field) => (
-                  <Field label="Settings base">
-                    {(control) => (
-                      <select
-                        {...control}
-                        className="select"
-                        onChange={(e) => {
-                          field.handleChange(e.target.value as Settings);
-                        }}
-                        value={field.state.value}
-                      >
-                        <option value={"default"}>Default</option>
-                        <option value={"min_memory_usage"}>
-                          Min. memory usage
-                        </option>
-                        <option value={"high_performance_seed"}>
-                          High performance seed
-                        </option>
-                      </select>
-                    )}
-                  </Field>
+                  <field.NumberField label="DHT stats interval (ms)" />
                 )}
               />
 
-              <Accordion title="Advanced" className="bg-base-100">
-                <form.AppField
-                  name="timer_dht_stats"
-                  children={(field) => (
-                    <field.NumberField label="DHT stats interval (ms)" />
-                  )}
-                />
+              <form.AppField
+                name="timer_save_state"
+                children={(field) => (
+                  <field.NumberField label="Save state interval (ms)" />
+                )}
+              />
 
-                <form.AppField
-                  name="timer_save_state"
-                  children={(field) => (
-                    <field.NumberField label="Save state interval (ms)" />
-                  )}
-                />
+              <form.AppField
+                name="timer_session_stats"
+                children={(field) => (
+                  <field.NumberField label="Session stats interval (ms)" />
+                )}
+              />
 
-                <form.AppField
-                  name="timer_session_stats"
-                  children={(field) => (
-                    <field.NumberField label="Session stats interval (ms)" />
-                  )}
-                />
+              <form.AppField
+                name="timer_torrent_updates"
+                children={(field) => (
+                  <field.NumberField label="Torrent update interval (ms)" />
+                )}
+              />
+            </Accordion>
 
-                <form.AppField
-                  name="timer_torrent_updates"
-                  children={(field) => (
-                    <field.NumberField label="Torrent update interval (ms)" />
-                  )}
-                />
-              </Accordion>
-
-              <form.SaveError error={add.error} />
-              <form.SubmitButton label="Add session" />
-            </form.Form>
-          </form.AppForm>
-        </div>
-      </div>
-    </div>
+            <form.SaveError error={add.error} />
+            <form.SubmitButton label="Add session" />
+          </form.Form>
+        </form.AppForm>
+      </SettingsCard>
+    </SettingsSection>
   );
 }

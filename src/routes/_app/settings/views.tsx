@@ -4,6 +4,7 @@ import { useAppForm } from "@/components/form/app-form";
 import { useSelector } from "@tanstack/react-form";
 import { useQueryClient } from "@tanstack/react-query";
 import { createFileRoute } from "@tanstack/react-router";
+import { Spinner } from "@/components/ui/spinner";
 
 export const Route = createFileRoute("/_app/settings/views")({
   component: RouteComponent,
@@ -18,7 +19,7 @@ function RouteComponent() {
   });
 
   if (userCols.isLoading || !userCols.data) {
-    return <>loading</>;
+    return <Spinner size="xl" />;
   }
 
   const isStringArray = (v: unknown): v is string[] =>

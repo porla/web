@@ -1,7 +1,9 @@
 import { useInvoker, useRPC } from "@/api";
 import { useAppForm } from "@/components/form/app-form";
+import { SettingsCard } from "@/components/settings/settings-card";
+import { SettingsSection } from "@/components/settings/settings-section";
 import { useQueryClient } from "@tanstack/react-query";
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute } from "@tanstack/react-router";
 import z from "zod";
 
 export const Route = createFileRoute("/_app/settings/presets/add")({
@@ -49,36 +51,27 @@ function RouteComponent() {
       ) {
         await navigate({
           to: "/settings/presets/$id",
-          params: { id: result.id.toString() },
+          params: { id: result.id },
         });
       }
     },
   });
 
   return (
-    <div className="space-y-6">
-      <div className="flex justify-between items-center">
-        <h2 className="text-lg font-semibold">Add preset</h2>
-        <Link className="btn btn-primary invisible" to="/settings/presets/add">
-          Add preset
-        </Link>
-      </div>
+    <SettingsSection title="Add preset">
+      <SettingsCard>
+        <form.AppForm>
+          <form.Form>
+            <form.AppField
+              name="name"
+              children={(field) => <field.TextField label="Name" />}
+            />
 
-      <div className="card bg-base-200 shadow-sm w-full">
-        <div className="card-body">
-          <form.AppForm>
-            <form.Form>
-              <form.AppField
-                name="name"
-                children={(field) => <field.TextField label="Name" />}
-              />
-
-              <form.SaveError error={add.error} />
-              <form.SubmitButton label="Add preset" />
-            </form.Form>
-          </form.AppForm>
-        </div>
-      </div>
-    </div>
+            <form.SaveError error={add.error} />
+            <form.SubmitButton label="Add preset" />
+          </form.Form>
+        </form.AppForm>
+      </SettingsCard>
+    </SettingsSection>
   );
 }

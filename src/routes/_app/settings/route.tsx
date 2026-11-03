@@ -1,4 +1,5 @@
 import { useRPC } from "@/api";
+import { SettingsNotFound } from "@/components/settings/settings-not-found";
 import { feature } from "@/lib/features";
 import { createFileRoute, Link, Outlet } from "@tanstack/react-router";
 import { ChevronLeft } from "lucide-react";
@@ -6,6 +7,7 @@ import type { ComponentProps, ReactNode } from "react";
 
 export const Route = createFileRoute("/_app/settings")({
   component: RouteComponent,
+  notFoundComponent: SettingsNotFound,
 });
 
 function RouteComponent() {

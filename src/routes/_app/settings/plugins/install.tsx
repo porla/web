@@ -1,5 +1,7 @@
 import { useInvoker } from "@/api";
 import { useAppForm } from "@/components/form/app-form";
+import { SettingsCard } from "@/components/settings/settings-card";
+import { SettingsSection } from "@/components/settings/settings-section";
 import { useQueryClient } from "@tanstack/react-query";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import z from "zod";
@@ -56,55 +58,59 @@ function RouteComponent() {
 
       await navigate({
         to: "/settings/plugins/$id",
-        params: { id: id.toString() },
+        params: { id },
       });
     },
   });
 
   return (
-    <form.AppForm>
-      <form.Form>
-        <form.AppField
-          name="owner"
-          children={(field) => <field.TextField label="Owner" />}
-        />
+    <SettingsSection title="Install plugin">
+      <SettingsCard>
+        <form.AppForm>
+          <form.Form>
+            <form.AppField
+              name="owner"
+              children={(field) => <field.TextField label="Owner" />}
+            />
 
-        <form.AppField
-          name="repository"
-          children={(field) => <field.TextField label="Repository" />}
-        />
+            <form.AppField
+              name="repository"
+              children={(field) => <field.TextField label="Repository" />}
+            />
 
-        <form.AppField
-          name="version"
-          children={(field) => <field.TextField label="Version" />}
-        />
+            <form.AppField
+              name="version"
+              children={(field) => <field.TextField label="Version" />}
+            />
 
-        <form.AppField
-          name="config"
-          children={(field) => (
-            <div className="mb-3">
-              <textarea
-                className="w-lg h-96 font-mono textarea"
-                onBlur={field.handleBlur}
-                onChange={(e) => field.handleChange(e.target.value)}
-                aria-label="Plugin configuration"
-                placeholder="Plugin configuration"
-                value={field.state.value ?? ""}
-              ></textarea>
-            </div>
-          )}
-        />
+            <form.AppField
+              name="config"
+              children={(field) => (
+                <div className="mb-3">
+                  <textarea
+                    className="w-lg h-96 font-mono textarea"
+                    onBlur={field.handleBlur}
+                    onChange={(e) => field.handleChange(e.target.value)}
+                    aria-label="Plugin configuration"
+                    placeholder="Plugin configuration"
+                    value={field.state.value ?? ""}
+                  ></textarea>
+                </div>
+              )}
+            />
 
-        <form.SaveError error={install.error} />
-        <form.SubmitButton label="Install" />
-      </form.Form>
+            <form.SaveError error={install.error} />
+            <form.SubmitButton label="Install" />
+          </form.Form>
 
-      <div className="mt-5 text-sm">
-        Or,{" "}
-        <Link to="/settings/plugins/add" className="underline">
-          add manually instead
-        </Link>
-      </div>
-    </form.AppForm>
+          <div className="mt-5 text-sm">
+            Or,{" "}
+            <Link to="/settings/plugins/add" className="underline">
+              add manually instead
+            </Link>
+          </div>
+        </form.AppForm>
+      </SettingsCard>
+    </SettingsSection>
   );
 }

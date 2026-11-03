@@ -8,10 +8,16 @@ import { useQueryClient } from "@tanstack/react-query";
 import { createFileRoute } from "@tanstack/react-router";
 import { Lock, SlidersHorizontal } from "lucide-react";
 import z from "zod";
+import { SettingsNotFound } from "@/components/settings/settings-not-found";
+import { idParam } from "@/lib/route-params";
+import { SettingsNotice } from "@/components/settings/settings-notice";
+import { SettingsCard } from "@/components/settings/settings-card";
 import { Spinner } from "@/components/ui/spinner";
 
 export const Route = createFileRoute("/_app/settings/sessions/$id")({
   component: RouteComponent,
+  notFoundComponent: SettingsNotFound,
+  params: idParam,
 });
 
 // settings that cannot be changed
@@ -24,34 +30,26 @@ const STATIC_SETTINGS = new Set([
 function RouteComponent() {
   const { id } = Route.useParams();
 
-  const session = useRPC(
-    "sessions.get",
-    { id: parseInt(id, 10) },
-    { meta: { silent: true } },
-  );
-
-  if (session.isLoading) {
-    return <Spinner size="xl" />;
-  }
-
-  if (session.error) {
-    return <>{session.error.message}</>;
-  }
+  const session = useRPC("sessions.get", { id }, { meta: { silent: true } });
 
   if (!session.data) {
-    return <>no session data?</>;
+    return (
+      <SettingsNotice
+        query={session}
+        notFound="Session not found"
+        back={{ to: "/settings/sessions", label: "Back to sessions" }}
+      />
+    );
   }
 
   return (
     <div className="space-y-6">
-      <div className="card bg-base-200 shadow-sm w-full">
-        <div className="card-body">
-          <SessionForm
-            key={`data_${session.data.session.id}`}
-            session={session.data.session}
-          />
-        </div>
-      </div>
+      <SettingsCard>
+        <SessionForm
+          key={`data_${session.data.session.id}`}
+          session={session.data.session}
+        />
+      </SettingsCard>
 
       <SessionSettings
         key={`settings_${session.data.session.id}`}
@@ -200,7 +198,7 @@ function SessionSettings({ session }: { session: Session }) {
   });
 
   if (settings.isLoading || !settings.data) {
-    return <>loading</>;
+    return <Spinner />;
   }
 
   return (

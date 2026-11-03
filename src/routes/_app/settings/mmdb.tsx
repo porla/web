@@ -1,5 +1,6 @@
 import { RpcError, useInvoker, useRPC } from "@/api";
 import { useAppForm } from "@/components/form/app-form";
+import { SettingsSection } from "@/components/settings/settings-section";
 import { Spinner } from "@/components/ui/spinner";
 import { useSelector } from "@tanstack/react-form";
 import { useQueryClient } from "@tanstack/react-query";
@@ -18,18 +19,18 @@ function RouteComponent() {
   });
 
   if (mmdbSettings.isLoading) {
-    return <>loading</>;
+    return <Spinner size="xl" />;
   }
 
   const path = mmdbSettings.data?.values[MMDB_PATH];
 
   return (
-    <div>
+    <div className="space-y-10">
       <LookupForm />
-      <div className="mt-10">
-        <h1>Set MMDB database path</h1>
+
+      <SettingsSection title="Set MMDB database path">
         <PathForm savedPath={typeof path === "string" ? path : ""} />
-      </div>
+      </SettingsSection>
     </div>
   );
 }
@@ -127,8 +128,7 @@ function LookupForm() {
   });
 
   return (
-    <div>
-      <h1>Lookup MMDB key</h1>
+    <SettingsSection title="Look up an MMDB key">
       <form.AppForm>
         <form.Form>
           <form.AppField
@@ -146,6 +146,6 @@ function LookupForm() {
           <code>{JSON.stringify(lookup.data, null, 2)}</code>
         </pre>
       )}
-    </div>
+    </SettingsSection>
   );
 }
