@@ -9,15 +9,20 @@ import { CheckboxField } from "@/components/form/fields/checkbox-field";
 import { ColorField } from "@/components/form/fields/color-field";
 import { DateField } from "@/components/form/fields/date-field";
 import { NumberField } from "@/components/form/fields/number-field";
+import { PasswordField } from "@/components/form/fields/password-field";
 import { SelectField } from "@/components/form/fields/select-field";
 import { TextField } from "@/components/form/fields/text-field";
 import { TorrentFlagsField } from "@/components/form/fields/torrent-flags-field";
 import { ModalTitle } from "@/components/modal/modal-title";
+import clsx from "clsx";
+import { CircleAlert } from "lucide-react";
 
 function SubmitButton({
+  block,
   disabled,
   label,
 }: {
+  block?: boolean;
   disabled?: boolean;
   label: string;
 }) {
@@ -27,10 +32,24 @@ function SubmitButton({
       {([canSubmit, isSubmitting]) => (
         <button
           type="submit"
-          className="btn btn-primary"
+          className={clsx("btn btn-primary", block && "btn-block")}
           disabled={disabled || !canSubmit || isSubmitting}
         >
-          {label}
+          {/* Over the label, after a moment: the button keeps its width, and a
+              quick save doesn't flash a spinner. */}
+          <span className="grid place-items-center">
+            <span
+              className={clsx(
+                "col-start-1 row-start-1",
+                isSubmitting && "opacity-0 transition-opacity delay-300",
+              )}
+            >
+              {label}
+            </span>
+            {isSubmitting && (
+              <span className="loading loading-spinner loading-sm col-start-1 row-start-1 transition-opacity delay-300 starting:opacity-0" />
+            )}
+          </span>
         </button>
       )}
     </form.Subscribe>
@@ -62,7 +81,8 @@ function SaveError({ error }: { error: Error | null }) {
 
   return (
     <div role="alert" className="alert alert-error alert-soft">
-      {error.message || "Request failed"}
+      <CircleAlert className="size-5" aria-hidden />
+      <span>{error.message || "Request failed"}</span>
     </div>
   );
 }
@@ -137,6 +157,7 @@ export const { useAppForm, withForm } = createFormHook({
     ColorField,
     DateField,
     NumberField,
+    PasswordField,
     SelectField,
     TextField,
     TorrentFlagsField,

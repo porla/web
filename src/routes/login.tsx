@@ -1,6 +1,8 @@
-import { useInvoker, useRPC, useRpcCache } from "@/api";
+import { POLL_MS, useInvoker, useRPC, useRpcCache } from "@/api";
+import { AuthCard } from "@/components/auth/auth-card";
 import { useAppForm } from "@/components/form/app-form";
 import { createFileRoute, Navigate } from "@tanstack/react-router";
+import { ServerOff } from "lucide-react";
 import z from "zod";
 
 export const Route = createFileRoute("/login")({
@@ -27,7 +29,14 @@ function RouteComponent() {
   const { redirect } = Route.useSearch();
   const cache = useRpcCache();
 
-  const status = useRPC("sys.status");
+  // Unreachable shows right away, not after the retries, and clears once
+  // Porla answers again.
+  const status = useRPC("sys.status", undefined, {
+    meta: { errorToast: false },
+    retry: false,
+    refetchInterval: (q) => (q.state.error ? POLL_MS.details : false),
+  });
+
   const authLogin = useInvoker("auth.login", { meta: { errorToast: false } });
 
   const form = useAppForm({
@@ -35,11 +44,24 @@ function RouteComponent() {
       username: "",
       password: "",
     },
+    listeners: {
+      onChange: () => authLogin.reset(),
+    },
     validators: {
       onChange: loginSchema,
     },
     onSubmit: async ({ value }) => {
-      await authLogin.mutateAsync(value);
+      try {
+        await authLogin.mutateAsync(value);
+      } catch (error) {
+        const password = document.querySelector<HTMLInputElement>(
+          "input[name=password]",
+        );
+        password?.focus();
+        password?.select();
+
+        throw error;
+      }
 
       cache.clear();
 
@@ -53,8 +75,16 @@ function RouteComponent() {
   }
 
   return (
-    <div className="m-4">
-      <h1>Log in to Porla</h1>
+    <AuthCard
+      title="Log in to Porla"
+      description={redirect && "Log in to continue."}
+    >
+      {status.error && (
+        <div role="alert" className="alert alert-warning">
+          <ServerOff className="size-5" aria-hidden />
+          <span>Can't reach Porla. Check that it's running.</span>
+        </div>
+      )}
       <form.AppForm>
         <form.Form>
           <form.AppField
@@ -62,8 +92,10 @@ function RouteComponent() {
             children={(field) => (
               <field.TextField
                 label="Username"
+                autoCapitalize="none"
                 autoComplete="username"
                 autoFocus
+                spellCheck={false}
               />
             )}
           />
@@ -71,18 +103,19 @@ function RouteComponent() {
           <form.AppField
             name="password"
             children={(field) => (
-              <field.TextField
+              <field.PasswordField
                 label="Password"
-                type="password"
                 autoComplete="current-password"
               />
             )}
           />
 
-          <form.SaveError error={authLogin.error} />
-          <form.SubmitButton label="Log in" />
+          <div className="mt-4 flex flex-col gap-4">
+            <form.SaveError error={authLogin.error} />
+            <form.SubmitButton label="Log in" block />
+          </div>
         </form.Form>
       </form.AppForm>
-    </div>
+    </AuthCard>
   );
 }
