@@ -32,7 +32,7 @@ mark the generated `src/routeTree.gen.ts` read-only.
 | `bun run build`        | Type-check and build to `dist/`                                |
 | `bun run preview`      | Serve the built `dist/`                                        |
 | `bun run typecheck`    | Type-check only                                                |
-| `bun run lint`         | ESLint, no warnings allowed                                    |
+| `bun run lint`         | ESLint with type information, no warnings allowed              |
 | `bun run format`       | Format everything with Prettier                                |
 | `bun run format:check` | Check formatting (CI runs this, `lint` and `build` on each PR) |
 

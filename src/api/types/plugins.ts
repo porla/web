@@ -4,7 +4,7 @@ export type PluginManifest = {
   version: string | null;
   ui: {
     entry: string | null;
-    settings?: string | null; // porla with ui.settings
+    settings?: string | null; // Porla with ui.settings
     rpc: string[] | null;
   } | null;
 };

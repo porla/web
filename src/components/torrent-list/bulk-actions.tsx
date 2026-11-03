@@ -382,7 +382,7 @@ export function BulkActions({
                         typeof properties.mutateAsync
                       >[0] = { ...ref(t), ...changes.common };
 
-                      // porla replaces the tags: each torrent's own, plus and
+                      // Porla replaces the tags: each torrent's own, plus and
                       // minus what was asked, and only if that changes them.
                       if (changes.addTags.length || changes.removeTags.length) {
                         const now = t.$userdata?.tags ?? [];

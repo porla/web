@@ -38,7 +38,7 @@ declare module "@tanstack/react-router" {
 function onError(error: Error, meta?: { errorToast?: boolean }) {
   if (error instanceof AuthError) {
     if (router.state.location.pathname !== "/login") {
-      router.navigate({
+      void router.navigate({
         to: "/login",
         search: { redirect: router.state.location.href },
       });

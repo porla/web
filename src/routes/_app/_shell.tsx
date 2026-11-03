@@ -21,7 +21,7 @@ function RouteComponent() {
 
   const boundary = (key: string, children: ReactNode) => (
     <CatchBoundary
-      getResetKey={() => `${version ?? "unknown"}:${key}`}
+      getResetKey={() => `${version?.version ?? "unknown"}:${key}`}
       errorComponent={({ error, reset }) => (
         <BrokenPanel error={error} reset={reset} />
       )}

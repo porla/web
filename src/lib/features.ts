@@ -14,7 +14,7 @@ type FeatureSet = Readonly<Record<FeatureName, boolean>>;
 
 const FEATURE_NAMES = Object.keys(FEATURES) as FeatureName[];
 
-// porla reports 0.0.0 when it's built without GitVersion (e.g. the debug
+// Porla reports 0.0.0 when it's built without GitVersion (e.g. the debug
 // CMake preset); treat that as a development build with every feature on.
 const DEV_BUILD_VERSION = "0.0.0";
 

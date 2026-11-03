@@ -31,10 +31,10 @@ export function PrioritizeTorrentFileModal({
     meta: { errorToast: false },
   });
 
+  const defaultValues: { file_priority: number | null } = { file_priority };
+
   const form = useAppForm({
-    defaultValues: {
-      file_priority: file_priority as number | null,
-    },
+    defaultValues,
     validators: {
       onChange: prioritySchema,
     },

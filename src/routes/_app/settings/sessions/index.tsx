@@ -42,9 +42,10 @@ function RouteComponent() {
               <div
                 className="size-4 rounded"
                 style={{
-                  backgroundColor: s.metadata["color"]
-                    ? String(s.metadata["color"])
-                    : "#ccc",
+                  backgroundColor:
+                    typeof s.metadata.color === "string" && s.metadata.color
+                      ? s.metadata.color
+                      : "#ccc",
                 }}
               ></div>
             </td>

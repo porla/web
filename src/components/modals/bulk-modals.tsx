@@ -118,7 +118,7 @@ export function BulkMigrateModal({
     );
   }
 
-  // porla refuses the torrents' own session and sessions that aren't loaded.
+  // Porla refuses the torrents' own session and sessions that aren't loaded.
   const targets = sessions.data.sessions.filter(
     (s) => s.state !== null && s.id !== session_id,
   );

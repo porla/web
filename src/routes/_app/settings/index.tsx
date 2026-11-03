@@ -45,8 +45,8 @@ function RouteComponent() {
         <button
           className="btn btn-primary"
           onClick={() => {
-            coreRelease.refetch();
-            webRelease.refetch();
+            void coreRelease.refetch();
+            void webRelease.refetch();
           }}
         >
           Check for updates
@@ -150,9 +150,13 @@ async function latestRelease(repo: string): Promise<{ tag_name: string }> {
   const res = await fetch(
     `https://api.github.com/repos/${repo}/releases/latest`,
   );
-  const body = await res.json().catch(() => null);
 
-  if (!res.ok) {
+  const body = (await res.json().catch(() => null)) as {
+    tag_name: string;
+    message?: string;
+  } | null;
+
+  if (!res.ok || !body) {
     throw new HttpError(
       res.status,
       `Checking ${repo} for updates failed: ${body?.message ?? res.statusText}`,

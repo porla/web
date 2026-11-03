@@ -1,6 +1,6 @@
 import z from "zod";
 
-// porla reads limits into a C++ int; larger numbers wrap instead of failing.
+// Porla reads limits into a C++ int; larger numbers wrap instead of failing.
 const MAX = 2147483647;
 
 // The backend's rules for torrent limits (utils/limits.hpp), shared by the

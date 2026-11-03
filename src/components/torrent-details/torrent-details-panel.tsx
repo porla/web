@@ -133,7 +133,8 @@ export function TorrentDetailsPanel({
   useEffect(() => {
     if (gone) {
       toast(gone);
-      navigate({
+
+      void navigate({
         to: "/",
         search: (prev) => withoutSelection(prev),
       });

@@ -52,7 +52,7 @@ function RouteComponent() {
     {
       meta: { errorToast: false },
       // An RpcError (a bad PQL query) would only repeat; anything else, like
-      // porla restarting or the network dropping, polls on until it's back.
+      // Porla restarting or the network dropping, polls on until it's back.
       refetchInterval: (q) =>
         q.state.error instanceof RpcError ? false : POLL_MS.list,
       placeholderData: keepPreviousData,
@@ -84,7 +84,7 @@ function RouteComponent() {
     if (torrents.isPlaceholderData || total === 0) return;
     if ((search.page ?? 1) <= lastPage) return;
 
-    navigate({
+    void navigate({
       to: "/",
       replace: true,
       search: (prev) => ({

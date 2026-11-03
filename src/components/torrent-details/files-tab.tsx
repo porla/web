@@ -28,7 +28,7 @@ const priorityNames: Record<number, string> = {
 };
 
 // The flags anyone cares about (pad files aren't listed), in a fixed order:
-// porla sends them as a set.
+// Porla sends them as a set.
 const flagNames: FileFlag[] = ["executable", "hidden", "symlink"];
 const flags = (f: TorrentFile) => flagNames.filter((n) => f.flags.includes(n));
 

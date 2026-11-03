@@ -9,7 +9,8 @@ export function useWebVersion() {
     queryFn: async () => {
       try {
         const r = await fetch(prefixPath("/version.json"));
-        return String((await r.json()).SemVer ?? "0.0.0");
+        const body = (await r.json()) as { SemVer?: unknown };
+        return typeof body.SemVer === "string" ? body.SemVer : "0.0.0";
       } catch {
         return "0.0.0";
       }

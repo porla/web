@@ -209,11 +209,7 @@ function SessionSettings({ session }: { session: Session }) {
           </tr>
         </thead>
         <tbody>
-          {(
-            Object.keys(
-              settings.data.settings,
-            ) as (keyof typeof settings.data.settings)[]
-          ).map((k) => (
+          {Object.keys(settings.data.settings).map((k) => (
             <tr key={k}>
               <td>{k}</td>
               <td>{settings.data.settings[k].toString()}</td>

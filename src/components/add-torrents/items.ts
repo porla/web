@@ -1,7 +1,7 @@
 import { HttpError, RpcCode, isRpcError } from "@/api";
 import { bytes } from "@/lib/format";
 
-// One torrent's options. Empty fields aren't sent, so presets (or porla's
+// One torrent's options. Empty fields aren't sent, so presets (or Porla's
 // defaults) decide them.
 export type AddOptions = {
   preset_id: number | null;
@@ -28,7 +28,7 @@ export const emptyOptions: AddOptions = {
 };
 
 // A torrent in the add list: a chosen .torrent file or a magnet link, and
-// why porla didn't take it, if it didn't.
+// why Porla didn't take it, if it didn't.
 export type Item = {
   id: number;
   name: string;
@@ -58,7 +58,7 @@ export const magnetItem = (uri: string, options: AddOptions): Item => ({
   options,
 });
 
-// The file as standard base64, which is what porla decodes.
+// The file as standard base64, which is what Porla decodes.
 export async function readTorrent(file: File) {
   const data = new Uint8Array(await file.arrayBuffer());
   let binary = "";
@@ -90,7 +90,7 @@ export function addError(err: unknown) {
     return "Needs a save path: set one here or in a preset";
   }
   if (err instanceof HttpError && err.status === 413) {
-    return "Too large for porla (8 MiB request limit)";
+    return "Too large for Porla (8 MiB request limit)";
   }
   return err instanceof Error ? err.message : "Request failed";
 }

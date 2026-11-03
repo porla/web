@@ -23,7 +23,7 @@ const settingsBase = z.enum([
   "high_performance_seed",
 ]);
 
-// Names are unique in porla; a duplicate would come back as a bare SQLite
+// Names are unique in Porla; a duplicate would come back as a bare SQLite
 // error, so it's caught here.
 const schema = (taken: string[]) =>
   z.object({
@@ -38,8 +38,6 @@ const schema = (taken: string[]) =>
     timer_session_stats: timer,
     timer_torrent_updates: timer,
   });
-
-type Settings = z.infer<typeof settingsBase>;
 
 function RouteComponent() {
   const navigate = Route.useNavigate();
@@ -105,7 +103,7 @@ function RouteComponent() {
                       {...control}
                       className="select"
                       onChange={(e) => {
-                        field.handleChange(e.target.value as Settings);
+                        field.handleChange(e.target.value);
                       }}
                       value={field.state.value}
                     >

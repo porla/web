@@ -41,7 +41,7 @@ export const torrentFlags: Record<
   update_subscribe: {
     label: "Status updates",
     description:
-      "Include the torrent in post_torrent_updates (state_update_alert). porla always sets it.",
+      "Include the torrent in post_torrent_updates (state_update_alert). Porla always sets it.",
   },
   super_seeding: {
     label: "Super seeding",

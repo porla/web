@@ -10,7 +10,7 @@ import type {
 const UNSET = -2147483648;
 
 // libtorrent's error codes (error_code.hpp, error_code_enum) that mean more
-// than "the announce failed", with their messages: porla serializes the value
+// than "the announce failed", with their messages: Porla serializes the value
 // without its category, and the message rules out a clash with another one.
 const errors = {
   tracker_failure: [173, "tracker sent a failure message"],

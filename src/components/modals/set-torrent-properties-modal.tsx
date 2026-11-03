@@ -142,7 +142,7 @@ function PropertiesForm({
 
       const tags = splitTags(next.tags);
 
-      // porla keeps tags as a set, in no particular order.
+      // Porla keeps tags as a set, in no particular order.
       if (
         tags.toSorted().join() !== splitTags(initial.tags).toSorted().join()
       ) {

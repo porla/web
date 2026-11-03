@@ -41,7 +41,7 @@ export function SearchBox() {
       onSubmit={(e) => {
         e.preventDefault();
         e.stopPropagation();
-        form.handleSubmit();
+        void form.handleSubmit();
       }}
     >
       <form.Field
@@ -65,7 +65,7 @@ export function SearchBox() {
                   // also reset search form for any unsubmitted query
                   form.reset({ query: "" });
 
-                  navigate({
+                  void navigate({
                     to: "/",
                     search: {
                       ...search,

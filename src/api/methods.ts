@@ -31,7 +31,7 @@ import type {
 export type NoParams = Record<string, never>;
 
 // Params and result of every JSON-RPC method the UI calls, from the request
-// structs in porla's src/rpc/methods/*.cpp. Methods returning void reply null.
+// structs in Porla's src/rpc/methods/*.cpp. Methods returning void reply null.
 export type Methods = {
   "auth.init": {
     params: { username: string; password: string };

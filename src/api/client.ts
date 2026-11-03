@@ -2,7 +2,16 @@ import { prefixPath } from "@/lib/base-path";
 import { AuthError, HttpError, RpcCode, RpcError } from "./errors";
 import type { Method, Params, Result } from "./methods";
 
-async function post(method: string, params: unknown, signal?: AbortSignal) {
+export type RpcResponse = {
+  result?: unknown;
+  error?: { code: number; message: string; data?: unknown };
+};
+
+async function post(
+  method: string,
+  params: unknown,
+  signal?: AbortSignal,
+): Promise<RpcResponse> {
   const res = await fetch(prefixPath("/api/v1/jsonrpc"), {
     body: JSON.stringify({
       jsonrpc: "2.0",
@@ -23,7 +32,7 @@ async function post(method: string, params: unknown, signal?: AbortSignal) {
     );
   }
 
-  return res.json();
+  return (await res.json()) as RpcResponse;
 }
 
 // check if Unauthorized means logged out or not authed
@@ -54,11 +63,6 @@ export async function jsonrpc<M extends Method>(
 
   return data.result as Result<M>;
 }
-
-export type RpcResponse = {
-  result?: unknown;
-  error?: { code: number; message: string; data?: unknown };
-};
 
 export async function rpcCall(
   method: string,

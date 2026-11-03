@@ -1,4 +1,4 @@
-// The control frame: a plugin's hidden ui.entry page, loaded while porla runs.
+// The control frame: a plugin's hidden ui.entry page, loaded while Porla runs.
 // It adds menu items and opens modals.
 
 import type { Plugin } from "@/api";
@@ -41,7 +41,7 @@ export function useControlFrame(
         return;
       }
 
-      modal.show(PluginEntryModal, {
+      void modal.show(PluginEntryModal, {
         plugin,
         title: msg.title,
         src: entry,

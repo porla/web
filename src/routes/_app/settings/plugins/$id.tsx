@@ -97,7 +97,7 @@ function PluginForm({ plugin }: { plugin: PluginsGet["plugin"] }) {
             className="badge badge-error badge-soft"
             title={
               info.error ??
-              "The plugin or its configuration failed to load; porla's log says why"
+              "The plugin or its configuration failed to load; Porla's log says why"
             }
           >
             Not loaded

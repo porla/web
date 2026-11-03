@@ -2,7 +2,7 @@ import { RpcCode, isRpcError } from "@/api";
 import { ListState } from "@/components/ui/list-state";
 import { TriangleAlert } from "lucide-react";
 
-// A PQL error points at the part of the query porla couldn't read (it sends
+// A PQL error points at the part of the query Porla couldn't read (it sends
 // its span as data.start/end); anything else is shown as it came.
 export function ListError({ error, query }: { error: Error; query?: string }) {
   const span =

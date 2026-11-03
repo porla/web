@@ -39,7 +39,7 @@ type Filter = {
   tag?: string;
 };
 
-// The sidebar's filters, with the porla statuses each one covers.
+// The sidebar's filters, with the Porla statuses each one covers.
 const statuses: {
   label: string;
   icon: LucideIcon;
@@ -169,7 +169,7 @@ export function Sidebar({ onNavigate }: { onNavigate?: () => void }) {
 
     const fallback = list.find((s) => s.is_default) ?? list[0];
 
-    navigate({
+    void navigate({
       to: "/",
       replace: true,
       search: { ...search, session_id: fallback.id, page: undefined },
@@ -270,7 +270,10 @@ export function Sidebar({ onNavigate }: { onNavigate?: () => void }) {
                   <span
                     className="size-2.5 shrink-0 rounded-full"
                     style={{
-                      backgroundColor: String(s.metadata.color ?? "#9ca3af"),
+                      backgroundColor:
+                        typeof s.metadata.color === "string"
+                          ? s.metadata.color
+                          : "#9ca3af",
                     }}
                   />
                 }

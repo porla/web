@@ -96,7 +96,7 @@ function PathForm({ savedPath }: { savedPath: string }) {
 
         {saved && path && notLoaded ? (
           <div role="alert" className="alert alert-warning alert-soft">
-            Saved, but porla couldn't load a database from this path. Its log
+            Saved, but Porla couldn't load a database from this path. Its log
             says why.
           </div>
         ) : (
