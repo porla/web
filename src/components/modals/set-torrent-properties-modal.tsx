@@ -1,7 +1,6 @@
 import {
   useInvoker,
   useRPC,
-  useRpcCache,
   type InfoHash,
   type Params,
   type Torrent,
@@ -98,17 +97,8 @@ function PropertiesForm({
   limits: TorrentsPropertiesGet;
   userdata: Torrent["$userdata"];
 } & ModalProps<boolean>) {
-  const cache = useRpcCache();
-
   const set = useInvoker("torrents.properties.set", {
     meta: { errorToast: false },
-    onSuccess: () =>
-      cache.invalidate(
-        "torrents.properties.get",
-        "torrents.get",
-        "torrents.list",
-        "torrents.count",
-      ),
   });
 
   const initial = {

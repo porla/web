@@ -9,15 +9,11 @@ export function FileRowMenu({
   session_id,
   file: f,
   priority,
-  onRenamed,
-  onPrioritized,
 }: {
   info_hash: InfoHash;
   session_id: number;
   file: TorrentFile;
   priority: number | undefined;
-  onRenamed: () => void;
-  onPrioritized: () => void;
 }) {
   const modal = useModal();
 
@@ -32,8 +28,6 @@ export function FileRowMenu({
               file_index: f.index,
               file_path: f.path,
             });
-
-            onRenamed();
           }}
         >
           Rename
@@ -50,8 +44,6 @@ export function FileRowMenu({
                 file_index: f.index,
                 file_priority: priority,
               });
-
-              onPrioritized();
             }}
           >
             Set priority

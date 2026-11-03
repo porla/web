@@ -1,4 +1,4 @@
-import { AuthError, useInvoker, useRpcCache, type Torrent } from "@/api";
+import { AuthError, useInvoker, type Torrent } from "@/api";
 import { useModal } from "@/components/modal/use-modal";
 import {
   BulkMigrateModal,
@@ -39,7 +39,6 @@ export function BulkActions({
   onLeft: (torrents: Torrent[]) => void;
 }) {
   const modal = useModal();
-  const cache = useRpcCache();
   const noToast = { meta: { errorToast: false } };
 
   const pause = useInvoker("torrents.pause", noToast);
@@ -112,8 +111,6 @@ export function BulkActions({
     await Promise.all(
       Array.from({ length: sequential ? 1 : PARALLEL }, worker),
     );
-
-    await cache.invalidateTorrents();
 
     setRunning(null);
 

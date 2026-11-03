@@ -171,8 +171,6 @@ export function FilesTab({ info_hash, session_id }: FilesTabProps) {
           session_id={session_id}
           file={f}
           priority={priority}
-          onRenamed={() => files.refetch()}
-          onPrioritized={() => priorities.refetch()}
         />
       )}
     />

@@ -12,7 +12,13 @@ import {
   QueryClient,
   QueryClientProvider,
 } from "@tanstack/react-query";
-import { AuthError, HttpError, RpcError } from "@/api";
+import {
+  AuthError,
+  HttpError,
+  RpcError,
+  infoHashKey,
+  type InfoHash,
+} from "@/api";
 import { ModalProvider } from "@/components/modal/modal-provider";
 import { toast } from "@/lib/toast";
 
@@ -51,6 +57,31 @@ function onError(error: Error, meta?: { errorToast?: boolean }) {
   }
 }
 
+// Skips the queries of a torrent that left (removed, migrated): they'd fail,
+// and the details panel would close with "Torrent not found".
+function refreshTorrents(
+  client: QueryClient,
+  method: unknown,
+  params: unknown,
+): Promise<void> | undefined {
+  if (typeof method !== "string" || !method.startsWith("torrents.")) return;
+
+  const torrent = (p: unknown) => {
+    const hash = (p as { info_hash?: InfoHash } | null)?.info_hash;
+    return hash && infoHashKey(hash);
+  };
+
+  const left =
+    method === "torrents.remove" || method === "torrents.migrate"
+      ? torrent(params)
+      : undefined;
+
+  return client.invalidateQueries({
+    predicate: ({ queryKey: [m, p] }) =>
+      String(m).startsWith("torrents.") && (!left || torrent(p) !== left),
+  });
+}
+
 // Errors that would fail the same way again aren't retried.
 function retry(failureCount: number, error: Error) {
   if (error instanceof AuthError || error instanceof RpcError) return false;
@@ -64,13 +95,19 @@ const rootElement = document.getElementById("root")!;
 if (!rootElement.innerHTML) {
   const root = ReactDOM.createRoot(rootElement);
 
-  const queryClient = new QueryClient({
+  const queryClient: QueryClient = new QueryClient({
     queryCache: new QueryCache({
       onError: (error, query) => onError(error, query.meta),
     }),
     mutationCache: new MutationCache({
       onError: (error, _variables, _result, mutation) =>
         onError(error, mutation.meta),
+      onSuccess: (_data, variables, _result, mutation) =>
+        refreshTorrents(
+          queryClient,
+          mutation.options.mutationKey?.[0],
+          variables,
+        ),
     }),
     defaultOptions: {
       queries: {

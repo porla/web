@@ -12,11 +12,6 @@ export function useRpcCache() {
         ),
       ),
 
-    invalidateTorrents: () =>
-      queryClient.invalidateQueries({
-        predicate: (q) => String(q.queryKey[0]).startsWith("torrents."),
-      }),
-
     clear: () => queryClient.clear(),
 
     remove: <M extends Method>(method: M, params: Partial<Params<M>>) =>
