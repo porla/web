@@ -11,7 +11,7 @@ import { SettingsNotFound } from "@/components/settings/settings-not-found";
 import { idParam } from "@/lib/route-params";
 import { SettingsNotice } from "@/components/settings/settings-notice";
 import { SettingsCard } from "@/components/settings/settings-card";
-import { Spinner } from "@/components/ui/spinner";
+import { QueryNotice } from "@/components/ui/query-notice";
 
 export const Route = createFileRoute("/_app/settings/sessions/$id")({
   component: RouteComponent,
@@ -69,7 +69,7 @@ const sessionSchema = (taken: string[]) =>
       .trim()
       .min(1, "Session name is required")
       .refine((n) => !taken.includes(n), "Session name taken"),
-    metadata: z.any(),
+    metadata: z.record(z.string(), z.unknown()),
     is_default: z.boolean(),
   });
 
@@ -184,12 +184,14 @@ function SessionForm({ session }: { session: Session }) {
 function SessionSettings({ session }: { session: Session }) {
   const modal = useModal();
 
-  const settings = useRPC("sessions.settings.get", {
-    id: session.id,
-  });
+  const settings = useRPC(
+    "sessions.settings.get",
+    { id: session.id },
+    { meta: { errorToast: false } },
+  );
 
-  if (settings.isLoading || !settings.data) {
-    return <Spinner />;
+  if (!settings.data) {
+    return <QueryNotice query={settings} what="session settings" />;
   }
 
   return (

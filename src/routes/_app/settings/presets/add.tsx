@@ -41,17 +41,10 @@ function RouteComponent() {
     onSubmit: async ({ value }) => {
       const result = await add.mutateAsync({ name: value.name.trim() });
 
-      if (
-        !!result &&
-        typeof result === "object" &&
-        "id" in result &&
-        typeof result.id === "number"
-      ) {
-        await navigate({
-          to: "/settings/presets/$id",
-          params: { id: result.id },
-        });
-      }
+      await navigate({
+        to: "/settings/presets/$id",
+        params: { id: result.id },
+      });
     },
   });
 

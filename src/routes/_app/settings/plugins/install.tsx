@@ -84,16 +84,7 @@ function RouteComponent() {
             <form.AppField
               name="config"
               children={(field) => (
-                <div className="mb-3">
-                  <textarea
-                    className="w-lg h-96 font-mono textarea"
-                    onBlur={field.handleBlur}
-                    onChange={(e) => field.handleChange(e.target.value)}
-                    aria-label="Plugin configuration"
-                    placeholder="Plugin configuration"
-                    value={field.state.value ?? ""}
-                  ></textarea>
-                </div>
+                <field.TextareaField label="Plugin configuration (Lua)" />
               )}
             />
 

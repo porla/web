@@ -5,13 +5,13 @@ import {
   BulkMoveModal,
   BulkPropertiesModal,
   BulkRemoveModal,
+  type BulkProperties,
 } from "@/components/modals/bulk-modals";
 import { Spinner } from "@/components/ui/spinner";
 import type { Checked } from "@/hooks/use-checked";
 import { Check, ChevronDown, TriangleAlert, X } from "lucide-react";
 import { useEffect, useRef, useState, type MouseEvent } from "react";
-
-const plural = (n: number) => `${n} torrent${n === 1 ? "" : "s"}`;
+import { torrentCount } from "@/lib/format";
 
 const PARALLEL = 4;
 
@@ -25,6 +25,24 @@ type Outcome = {
 const closeOnAction = (e: MouseEvent<HTMLElement>) => {
   if ((e.target as Element).closest("button")) e.currentTarget.hidePopover();
 };
+
+function MenuItem({
+  label,
+  onClick,
+  className,
+}: {
+  label: string;
+  onClick: () => unknown;
+  className?: string;
+}) {
+  return (
+    <li>
+      <button className={className} onClick={onClick}>
+        {label}
+      </button>
+    </li>
+  );
+}
 
 // "3 selected", an Actions menu like a row's, and how the last action went.
 // Shown next to the search while torrents are checked.
@@ -118,7 +136,7 @@ export function BulkActions({
 
     setOutcome({
       text:
-        `${done} ${failed.length || skipped ? `${ok.length} of ${targets.length}` : plural(ok.length)}` +
+        `${done} ${failed.length || skipped ? `${ok.length} of ${targets.length}` : torrentCount(ok.length)}` +
         (failed.length ? ` · ${failed.length} failed` : "") +
         (skipped ? ` · ${skipped} not run` : ""),
       failed,
@@ -139,6 +157,65 @@ export function BulkActions({
         ? b.queue_position - a.queue_position
         : a.queue_position - b.queue_position,
     );
+
+  const updateProperties = async (t: Torrent, changes: BulkProperties) => {
+    const params: Parameters<typeof properties.mutateAsync>[0] = {
+      ...ref(t),
+      ...changes.common,
+    };
+
+    // Porla replaces the tags: each torrent's own, plus and minus what was
+    // asked, and only if that changes them.
+    if (changes.addTags.length || changes.removeTags.length) {
+      const now = t.$userdata?.tags ?? [];
+      const next = [
+        ...new Set([
+          ...now.filter((x) => !changes.removeTags.includes(x)),
+          ...changes.addTags,
+        ]),
+      ];
+
+      if (next.toSorted().join() !== now.toSorted().join()) {
+        params.tags = next;
+      }
+    }
+
+    // Nothing to change on this one.
+    if (Object.keys(params).length > 2) {
+      await properties.mutateAsync(params);
+    }
+  };
+
+  const queueMoves = [
+    {
+      label: "Top",
+      doing: "Moving to the top",
+      done: "Moved to the top:",
+      lastFirst: true,
+      call: queueTop,
+    },
+    {
+      label: "Up",
+      doing: "Moving up",
+      done: "Moved up:",
+      lastFirst: false,
+      call: queueUp,
+    },
+    {
+      label: "Down",
+      doing: "Moving down",
+      done: "Moved down:",
+      lastFirst: true,
+      call: queueDown,
+    },
+    {
+      label: "Bottom",
+      doing: "Moving to the bottom",
+      done: "Moved to the bottom:",
+      lastFirst: false,
+      call: queueBottom,
+    },
+  ];
 
   return (
     <div className="flex flex-wrap items-center gap-2">
@@ -202,78 +279,65 @@ export function BulkActions({
               style={{ positionAnchor: "--bulk-actions" }}
               onClick={closeOnAction}
             >
-              <li>
-                <button
-                  onClick={() =>
-                    run("Resuming", "Resumed", targets, (t) =>
-                      resume.mutateAsync(ref(t)),
-                    )
-                  }
-                >
-                  Resume
-                </button>
-              </li>
-              <li>
-                <button
-                  onClick={() =>
-                    run("Pausing", "Paused", targets, (t) =>
-                      pause.mutateAsync(ref(t)),
-                    )
-                  }
-                >
-                  Pause
-                </button>
-              </li>
-              <li>
-                <button
-                  onClick={() =>
-                    run("Rechecking", "Started a recheck of", targets, (t) =>
-                      recheck.mutateAsync(ref(t)),
-                    )
-                  }
-                >
-                  Recheck
-                </button>
-              </li>
-              <li>
-                <button
-                  onClick={async () => {
-                    const target = await modal.show(BulkMigrateModal, {
-                      torrents: targets,
-                      session_id,
-                    });
-                    if (target === undefined) return;
-                    await run(
-                      "Migrating",
-                      "Migrated",
-                      targets,
-                      (t) =>
-                        migrate.mutateAsync({
-                          ...ref(t),
-                          target_session_id: target,
-                        }),
-                      { leaves: true },
-                    );
-                  }}
-                >
-                  Migrate
-                </button>
-              </li>
-              <li>
-                <button
-                  onClick={async () => {
-                    const path = await modal.show(BulkMoveModal, {
-                      torrents: targets,
-                    });
-                    if (path === undefined) return;
-                    await run("Moving", "Moved", targets, (t) =>
-                      move.mutateAsync({ ...ref(t), path }),
-                    );
-                  }}
-                >
-                  Move
-                </button>
-              </li>
+              <MenuItem
+                label="Resume"
+                onClick={() =>
+                  run("Resuming", "Resumed", targets, (t) =>
+                    resume.mutateAsync(ref(t)),
+                  )
+                }
+              />
+              <MenuItem
+                label="Pause"
+                onClick={() =>
+                  run("Pausing", "Paused", targets, (t) =>
+                    pause.mutateAsync(ref(t)),
+                  )
+                }
+              />
+              <MenuItem
+                label="Recheck"
+                onClick={() =>
+                  run("Rechecking", "Started a recheck of", targets, (t) =>
+                    recheck.mutateAsync(ref(t)),
+                  )
+                }
+              />
+              <MenuItem
+                label="Migrate"
+                onClick={async () => {
+                  const target = await modal.show(BulkMigrateModal, {
+                    torrents: targets,
+                    session_id,
+                  });
+                  if (target === undefined) return;
+
+                  await run(
+                    "Migrating",
+                    "Migrated",
+                    targets,
+                    (t) =>
+                      migrate.mutateAsync({
+                        ...ref(t),
+                        target_session_id: target,
+                      }),
+                    { leaves: true },
+                  );
+                }}
+              />
+              <MenuItem
+                label="Move"
+                onClick={async () => {
+                  const path = await modal.show(BulkMoveModal, {
+                    torrents: targets,
+                  });
+                  if (path === undefined) return;
+
+                  await run("Moving", "Moved", targets, (t) =>
+                    move.mutateAsync({ ...ref(t), path }),
+                  );
+                }}
+              />
               {queued.length > 0 && (
                 <li>
                   <details>
@@ -283,129 +347,57 @@ export function BulkActions({
                         ` (${queued.length} queued)`}
                     </summary>
                     <ul>
-                      <li>
-                        <button
+                      {queueMoves.map((q) => (
+                        <MenuItem
+                          key={q.label}
+                          label={q.label}
                           onClick={() =>
                             run(
-                              "Moving to the top",
-                              "Moved to the top:",
-                              byPosition(true),
-                              (t) => queueTop.mutateAsync(ref(t)),
+                              q.doing,
+                              q.done,
+                              byPosition(q.lastFirst),
+                              (t) => q.call.mutateAsync(ref(t)),
                               { sequential: true },
                             )
                           }
-                        >
-                          Top
-                        </button>
-                      </li>
-                      <li>
-                        <button
-                          onClick={() =>
-                            run(
-                              "Moving up",
-                              "Moved up:",
-                              byPosition(false),
-                              (t) => queueUp.mutateAsync(ref(t)),
-                              { sequential: true },
-                            )
-                          }
-                        >
-                          Up
-                        </button>
-                      </li>
-                      <li>
-                        <button
-                          onClick={() =>
-                            run(
-                              "Moving down",
-                              "Moved down:",
-                              byPosition(true),
-                              (t) => queueDown.mutateAsync(ref(t)),
-                              { sequential: true },
-                            )
-                          }
-                        >
-                          Down
-                        </button>
-                      </li>
-                      <li>
-                        <button
-                          onClick={() =>
-                            run(
-                              "Moving to the bottom",
-                              "Moved to the bottom:",
-                              byPosition(false),
-                              (t) => queueBottom.mutateAsync(ref(t)),
-                              { sequential: true },
-                            )
-                          }
-                        >
-                          Bottom
-                        </button>
-                      </li>
+                        />
+                      ))}
                     </ul>
                   </details>
                 </li>
               )}
-              <li>
-                <button
-                  className="text-error"
-                  onClick={async () => {
-                    const options = await modal.show(BulkRemoveModal, {
-                      torrents: targets,
-                    });
-                    if (!options) return;
-                    await run(
-                      "Removing",
-                      "Removed",
-                      targets,
-                      (t) => remove.mutateAsync({ ...ref(t), ...options }),
-                      { leaves: true },
-                    );
-                  }}
-                >
-                  Remove
-                </button>
-              </li>
-              <li>
-                <button
-                  onClick={async () => {
-                    const changes = await modal.show(BulkPropertiesModal, {
-                      torrents: targets,
-                    });
-                    if (!changes) return;
-                    await run("Updating", "Updated", targets, async (t) => {
-                      const params: Parameters<
-                        typeof properties.mutateAsync
-                      >[0] = { ...ref(t), ...changes.common };
 
-                      // Porla replaces the tags: each torrent's own, plus and
-                      // minus what was asked, and only if that changes them.
-                      if (changes.addTags.length || changes.removeTags.length) {
-                        const now = t.$userdata?.tags ?? [];
-                        const next = [
-                          ...new Set([
-                            ...now.filter(
-                              (x) => !changes.removeTags.includes(x),
-                            ),
-                            ...changes.addTags,
-                          ]),
-                        ];
-                        if (next.toSorted().join() !== now.toSorted().join()) {
-                          params.tags = next;
-                        }
-                      }
+              <MenuItem
+                label="Remove"
+                className="text-error"
+                onClick={async () => {
+                  const options = await modal.show(BulkRemoveModal, {
+                    torrents: targets,
+                  });
+                  if (!options) return;
 
-                      // Nothing to change on this one.
-                      if (Object.keys(params).length > 2) {
-                        await properties.mutateAsync(params);
-                      }
-                    });
-                  }}
-                >
-                  Properties
-                </button>
-              </li>
+                  await run(
+                    "Removing",
+                    "Removed",
+                    targets,
+                    (t) => remove.mutateAsync({ ...ref(t), ...options }),
+                    { leaves: true },
+                  );
+                }}
+              />
+              <MenuItem
+                label="Properties"
+                onClick={async () => {
+                  const changes = await modal.show(BulkPropertiesModal, {
+                    torrents: targets,
+                  });
+                  if (!changes) return;
+
+                  await run("Updating", "Updated", targets, (t) =>
+                    updateProperties(t, changes),
+                  );
+                }}
+              />
             </ul>
           </>
         )

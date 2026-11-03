@@ -62,17 +62,7 @@ function RouteComponent() {
   // Checked for a bulk action: within this view of the list only.
   const checked = useChecked(
     torrents.data?.torrents ?? [],
-    JSON.stringify([
-      search.session_id,
-      search.order_by,
-      search.order_by_dir,
-      search.page,
-      search.page_size,
-      search.query,
-      search.status,
-      search.category,
-      search.tag,
-    ]),
+    JSON.stringify(withoutSelection(search)),
   );
 
   // Past the last page (its last torrent removed, a filtered list shrank):

@@ -1,11 +1,4 @@
-import {
-  POLL_MS,
-  RpcCode,
-  isRpcError,
-  useRPC,
-  type InfoHash,
-  type Torrent,
-} from "@/api";
+import { POLL_MS, RpcCode, isRpcError, useRPC, type InfoHash } from "@/api";
 import { Link, useNavigate, useSearch } from "@tanstack/react-router";
 import {
   ChevronDown,
@@ -37,6 +30,7 @@ import {
   withoutSelection,
   type DetailTab,
 } from "@/components/torrent-list/search";
+import type { DetailsTabProps } from "./details-tab-props";
 
 type TorrentDetailsPanelProps = {
   info_hash: InfoHash;
@@ -48,11 +42,7 @@ const tabs: {
   id: DetailTab;
   name: string;
   icon: LucideIcon;
-  Tab: ComponentType<{
-    info_hash: InfoHash;
-    session_id: number;
-    torrent: Torrent | undefined;
-  }>;
+  Tab: ComponentType<DetailsTabProps>;
 }[] = [
   { id: "general", name: "General", icon: Info, Tab: GeneralTab },
   { id: "files", name: "Files", icon: FolderTree, Tab: FilesTab },

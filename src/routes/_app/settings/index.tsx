@@ -18,6 +18,8 @@ function RouteComponent() {
     refetchInterval: POLL_MS.details,
   });
 
+  const list = sessions.data?.sessions;
+
   const versions = useRPC("sys.versions");
   const webVersion = useWebVersion();
 
@@ -57,83 +59,61 @@ function RouteComponent() {
           <div className="stat">
             <div className="stat-title">Porla version</div>
             <div className="stat-value font-mono">
-              {versions.isLoading && <Spinner size="xl" />}
-
-              {!versions.isLoading && versions.data && (
-                <span>{versions.data.porla.version}</span>
-              )}
+              {versions.data?.porla.version ??
+                (versions.isLoading && <Spinner size="xl" />)}
             </div>
             <div className="stat-desc">
-              {coreRelease.isFetching && <Spinner size="xs" />}
-
-              {!coreRelease.isFetching && coreRelease.data && versions.data && (
-                <VersionBadge
+              {coreRelease.isFetching ? (
+                <Spinner size="xs" />
+              ) : coreRelease.data && versions.data ? (
+                <UpdateStatus
                   current={versions.data.porla.version}
                   latest={coreRelease.data.tag_name}
                 />
+              ) : (
+                <>&nbsp;</>
               )}
-
-              {!coreRelease.isLoading && !coreRelease.data && <>&nbsp;</>}
             </div>
           </div>
           <div className="stat">
             <div className="stat-title">Web UI version</div>
             <div className="stat-value font-mono">{webVersion}</div>
             <div className="stat-actions">
-              {webRelease.isFetching && <Spinner size="xs" />}
-
-              {!webRelease.isFetching && webRelease.data && (
-                <WebUIVersionAction
+              {webRelease.isFetching ? (
+                <Spinner size="xs" />
+              ) : webRelease.data ? (
+                <UpdateStatus
                   current={webVersion ?? "0.0.0"}
                   latest={webRelease.data.tag_name}
+                  installable
                 />
+              ) : (
+                <>&nbsp;</>
               )}
-
-              {!webRelease.isLoading && !webRelease.data && <>&nbsp;</>}
             </div>
           </div>
           <div className="stat">
             <div className="stat-title">Torrents</div>
             <div className="stat-value font-mono">
-              {sessions.isLoading && <Spinner size="xl" />}
-
-              {!sessions.isLoading && sessions.data && (
-                <span>
-                  {sessions.data.sessions.reduce(
+              {list
+                ? list.reduce(
                     (sum, s) => sum + (s.state?.torrents_total ?? 0),
                     0,
-                  )}
-                </span>
-              )}
+                  )
+                : sessions.isLoading && <Spinner size="xl" />}
             </div>
             <div className="stat-desc">In all sessions</div>
           </div>
           <div className="stat">
             <div className="stat-title">Sessions</div>
             <div className="stat-value font-mono">
-              {sessions.isLoading && <Spinner size="xl" />}
-
-              {!sessions.isLoading && sessions.data && (
-                <span>{sessions.data.sessions.length}</span>
-              )}
+              {list ? list.length : sessions.isLoading && <Spinner size="xl" />}
             </div>
             <div className="stat-desc">
-              {sessions.isLoading && <>&nbsp;</>}
-              {!sessions.isLoading && sessions.data && (
-                <span>
-                  {
-                    sessions.data.sessions.filter(
-                      (s) => s.state && !s.state.is_paused,
-                    ).length
-                  }{" "}
-                  running,
-                  {
-                    sessions.data.sessions.filter(
-                      (s) => s.state && s.state.is_paused,
-                    ).length
-                  }{" "}
-                  paused
-                </span>
+              {list ? (
+                `${list.filter((s) => s.state && !s.state.is_paused).length} running, ${list.filter((s) => s.state?.is_paused).length} paused`
+              ) : (
+                <>&nbsp;</>
               )}
             </div>
           </div>
@@ -166,61 +146,49 @@ async function latestRelease(repo: string): Promise<{ tag_name: string }> {
   return body;
 }
 
-type VersionBadgeProps = {
+// The web UI can install its update; Porla's is only shown.
+function UpdateStatus({
+  current,
+  latest,
+  installable,
+}: {
   current: string;
   latest: string;
-};
+  installable?: boolean;
+}) {
+  const install = useInvoker("webui.install");
 
-function VersionBadge({ current, latest }: VersionBadgeProps) {
-  const parsed_current = parse(current);
-  const parsed_latest = parse(latest);
+  const now = parse(current);
+  const next = parse(latest);
 
-  if (parsed_current === null || parsed_latest === null) {
-    return <></>;
+  if (!now || !next) {
+    return null;
   }
 
-  if (gt(parsed_latest, parsed_current)) {
+  if (!gt(next, now)) {
+    return <span className="badge badge-xs badge-success">Up to date</span>;
+  }
+
+  if (!installable) {
     return (
       <span className="badge badge-xs badge-warning">
-        {parsed_latest.version} available
+        {next.version} available
       </span>
     );
   }
 
-  return <span className="badge badge-xs badge-success">Up to date</span>;
-}
-
-type WebUIVersionActionProps = {
-  current: string;
-  latest: string;
-};
-
-function WebUIVersionAction({ current, latest }: WebUIVersionActionProps) {
-  const install = useInvoker("webui.install");
-
-  const parsed_current = parse(current);
-  const parsed_latest = parse(latest);
-
-  if (parsed_current === null || parsed_latest === null) {
-    return <></>;
-  }
-
-  if (gt(parsed_latest, parsed_current)) {
-    return (
-      <button
-        className="btn btn-xs btn-info"
-        disabled={install.isPending}
-        onClick={() =>
-          install.mutate(
-            { version: latest },
-            { onSuccess: () => location.reload() },
-          )
-        }
-      >
-        Install {parsed_latest.version}
-      </button>
-    );
-  }
-
-  return <span className="badge badge-xs badge-success">Up to date</span>;
+  return (
+    <button
+      className="btn btn-xs btn-info"
+      disabled={install.isPending}
+      onClick={() =>
+        install.mutate(
+          { version: latest },
+          { onSuccess: () => location.reload() },
+        )
+      }
+    >
+      Install {next.version}
+    </button>
+  );
 }

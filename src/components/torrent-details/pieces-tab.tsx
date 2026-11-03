@@ -1,4 +1,4 @@
-import { POLL_MS, useRPC, type InfoHash, type Torrent } from "@/api";
+import { POLL_MS, useRPC } from "@/api";
 import { binaryBytes } from "@/lib/format";
 import { groupPieces, pieceSize } from "@/lib/torrent/pieces";
 import { toneBar, toneRing, torrentStatus } from "@/lib/torrent/status";
@@ -6,13 +6,8 @@ import clsx from "clsx";
 import { LayoutGrid } from "lucide-react";
 import { useMemo } from "react";
 import { ListState } from "@/components/ui/list-state";
-import { TabNotice } from "./tab-notice";
-
-type PiecesTabProps = {
-  info_hash: InfoHash;
-  session_id: number;
-  torrent: Torrent | undefined;
-};
+import { QueryNotice } from "@/components/ui/query-notice";
+import type { DetailsTabProps } from "./details-tab-props";
 
 // One cell per piece up to this many; past it each cell is a run of pieces.
 const MAX_CELLS = 2000;
@@ -28,7 +23,7 @@ export function PiecesTab({
   info_hash,
   session_id,
   torrent: t,
-}: PiecesTabProps) {
+}: DetailsTabProps) {
   const pieces = useRPC(
     "torrents.pieces.get",
     { info_hash, session_id },
@@ -50,7 +45,7 @@ export function PiecesTab({
   );
 
   if (pieces.error || !t || !pieces.data) {
-    return <TabNotice query={pieces} what="pieces" />;
+    return <QueryNotice query={pieces} what="pieces" />;
   }
 
   if (!t.has_metadata) {

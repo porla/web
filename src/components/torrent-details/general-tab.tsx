@@ -1,4 +1,4 @@
-import { POLL_MS, useRPC, type InfoHash, type Torrent } from "@/api";
+import { POLL_MS, useRPC, type Torrent } from "@/api";
 import { PieceProgress } from "./piece-progress";
 import { binaryBytes, bytes, date, duration, rate, ratio } from "@/lib/format";
 import { Fragment, type ReactNode } from "react";
@@ -8,13 +8,8 @@ import { Dash } from "@/components/ui/dash";
 import { notableFlags } from "@/lib/torrent/flags";
 import { Ratio } from "@/components/ui/ratio";
 import { pieceSize } from "@/lib/torrent/pieces";
-import { Spinner } from "@/components/ui/spinner";
-
-type GeneralTabProps = {
-  info_hash: InfoHash;
-  session_id: number;
-  torrent: Torrent | undefined;
-};
+import { QueryNotice } from "@/components/ui/query-notice";
+import type { DetailsTabProps } from "./details-tab-props";
 
 // libtorrent reports "no limit" as -1, 0 or 2^24 - 1 depending on the field.
 const limited = (n: number) => n > 0 && n < 16777215;
@@ -107,7 +102,7 @@ export function GeneralTab({
   info_hash,
   session_id,
   torrent: t,
-}: GeneralTabProps) {
+}: DetailsTabProps) {
   const pieces = useRPC(
     "torrents.pieces.get",
     {
@@ -116,6 +111,7 @@ export function GeneralTab({
     },
     {
       refetchInterval: POLL_MS.details,
+      meta: { errorToast: false },
     },
   );
 
@@ -127,7 +123,7 @@ export function GeneralTab({
   });
 
   if (!t || pieces.isLoading || !pieces.data) {
-    return <Spinner className="m-3" />;
+    return <QueryNotice query={pieces} what="torrent's details" />;
   }
 
   const st = torrentStatus(t);

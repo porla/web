@@ -6,19 +6,20 @@ import { SettingsTable } from "@/components/settings/settings-table";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { KeyRound } from "lucide-react";
 import { DateTime } from "luxon";
+import { date } from "@/lib/format";
 
 export const Route = createFileRoute("/_app/settings/api-keys/")({
   component: RouteComponent,
 });
 
-const when = (seconds: number) =>
-  DateTime.fromSeconds(seconds).toFormat("yyyy-MM-dd HH:mm");
-
 function RouteComponent() {
   const cache = useRpcCache();
   const modal = useModal();
 
-  const keys = useRPC("auth.keys.list");
+  const keys = useRPC("auth.keys.list", undefined, {
+    meta: { errorToast: false },
+  });
+
   const remove = useInvoker("auth.keys.remove", {
     meta: { errorToast: false },
     onSettled: () => cache.invalidate("auth.keys.list"),
@@ -58,13 +59,13 @@ function RouteComponent() {
                 <span className="font-semibold">{k.name}</span>
               </div>
             </td>
-            <td>{when(k.created_at)}</td>
+            <td>{date(k.created_at)}</td>
             <td>
               {k.expires_at === null ? (
                 <span className="opacity-60">Never</span>
               ) : (
                 <span className="flex items-center gap-2">
-                  {when(k.expires_at)}
+                  {date(k.expires_at)}
                   {k.expires_at <= now && (
                     <span className="badge badge-error badge-soft badge-sm">
                       Expired
@@ -77,7 +78,7 @@ function RouteComponent() {
               {k.last_used_at === null ? (
                 <span className="opacity-60">Never</span>
               ) : (
-                when(k.last_used_at)
+                date(k.last_used_at)
               )}
             </td>
             <td className="flex justify-end">

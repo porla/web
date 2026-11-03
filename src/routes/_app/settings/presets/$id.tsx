@@ -1,21 +1,16 @@
-import {
-  useInvoker,
-  useRPC,
-  useRpcCache,
-  type Preset,
-  type TorrentFlag,
-} from "@/api";
+import { useInvoker, useRPC, useRpcCache, type Preset } from "@/api";
 import { useModal } from "@/components/modal/use-modal";
 import { ConfirmModal } from "@/components/modals/confirm-modal";
 import { useAppForm } from "@/components/form/app-form";
 import { peerLimit, rateLimit } from "@/lib/limits";
-import { presetFlags } from "@/lib/torrent/flags";
+import { flagsSchema, presetFlags } from "@/lib/torrent/flags";
 import { createFileRoute } from "@tanstack/react-router";
 import z from "zod";
 import { SettingsNotFound } from "@/components/settings/settings-not-found";
 import { idParam } from "@/lib/route-params";
 import { SettingsNotice } from "@/components/settings/settings-notice";
 import { SettingsCard } from "@/components/settings/settings-card";
+import { splitTags } from "@/lib/torrent/tags";
 
 export const Route = createFileRoute("/_app/settings/presets/$id")({
   component: RouteComponent,
@@ -40,7 +35,7 @@ function RouteComponent() {
 
   return (
     <SettingsCard>
-      <PresetForm preset={preset.data.preset} />
+      <PresetForm key={preset.data.preset.id} preset={preset.data.preset} />
     </SettingsCard>
   );
 }
@@ -69,16 +64,8 @@ const presetSchema = (taken: string[]) =>
       upload_limit: rateLimit,
       max_connections: peerLimit,
       max_uploads: peerLimit,
-      tags: z.string().transform((t) =>
-        t
-          .split(",")
-          .map((s) => s.trim())
-          .filter(Boolean),
-      ),
-      flags: z.object({
-        flags: z.array(z.custom<TorrentFlag>()),
-        mask: z.array(z.custom<TorrentFlag>()),
-      }),
+      tags: z.string().transform(splitTags),
+      flags: flagsSchema,
     })
     // Only flags in the mask mean anything.
     .transform(({ flags, ...v }) => ({
@@ -177,14 +164,10 @@ function PresetForm({ preset }: PresetFormProps) {
             children={(field) => (
               <field.SelectField
                 label="Session"
-                items={
-                  sessions.data.sessions.map((s) => {
-                    return {
-                      value: s.id,
-                      label: s.name,
-                    };
-                  }) ?? []
-                }
+                items={sessions.data.sessions.map((s) => ({
+                  value: s.id,
+                  label: s.name,
+                }))}
               />
             )}
           />

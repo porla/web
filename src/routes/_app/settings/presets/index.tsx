@@ -9,7 +9,9 @@ export const Route = createFileRoute("/_app/settings/presets/")({
 });
 
 function RouteComponent() {
-  const presets = useRPC("presets.list");
+  const presets = useRPC("presets.list", undefined, {
+    meta: { errorToast: false },
+  });
 
   return (
     <SettingsSection

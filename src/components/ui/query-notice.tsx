@@ -2,7 +2,7 @@ import { ListState } from "@/components/ui/list-state";
 import { Spinner } from "@/components/ui/spinner";
 import { TriangleAlert } from "lucide-react";
 
-export function TabNotice({
+export function QueryNotice({
   query,
   what,
 }: {

@@ -23,7 +23,7 @@ let enabled: FeatureSet | null = null;
 let initializedFor: string | null | undefined;
 let versionError: Error | null = null;
 
-export const NO_FEATURES: FeatureSet = Object.freeze(
+const NO_FEATURES: FeatureSet = Object.freeze(
   Object.fromEntries(FEATURE_NAMES.map((name) => [name, false])),
 ) as FeatureSet;
 

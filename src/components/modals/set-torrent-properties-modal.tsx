@@ -9,11 +9,12 @@ import {
 } from "@/api";
 import type { ModalProps } from "@/components/modal/use-modal";
 import { useAppForm } from "@/components/form/app-form";
-import { peerLimit, rateLimit } from "@/lib/limits";
-import { runtimeFlags } from "@/lib/torrent/flags";
+import { LIMIT_KEYS, peerLimit, rateLimit } from "@/lib/limits";
+import { flagsSchema, runtimeFlags } from "@/lib/torrent/flags";
 import z from "zod";
 import { Accordion } from "@/components/ui/accordion";
 import { ModalNotice } from "@/components/modal/modal-notice";
+import { splitTags } from "@/lib/torrent/tags";
 
 type SetTorrentPropertiesModalProps = {
   info_hash: InfoHash;
@@ -23,28 +24,12 @@ type SetTorrentPropertiesModalProps = {
 const propertiesSchema = z.object({
   category: z.string().trim(),
   download_limit: rateLimit,
-  flags: z.object({
-    flags: z.array(z.custom<TorrentFlag>()),
-    mask: z.array(z.custom<TorrentFlag>()),
-  }),
+  flags: flagsSchema,
   max_connections: peerLimit,
   max_uploads: peerLimit,
   tags: z.string(),
   upload_limit: rateLimit,
 });
-
-const LIMITS = [
-  "download_limit",
-  "upload_limit",
-  "max_connections",
-  "max_uploads",
-] as const;
-
-const splitTags = (tags: string) =>
-  tags
-    .split(",")
-    .map((s) => s.trim())
-    .filter(Boolean);
 
 export function SetTorrentPropertiesModal({
   info_hash,
@@ -120,7 +105,7 @@ function PropertiesForm({
       const next = propertiesSchema.parse(value);
       const changes: Partial<Params<"torrents.properties.set">> = {};
 
-      for (const key of LIMITS) {
+      for (const key of LIMIT_KEYS) {
         if (next[key] !== initial[key]) {
           changes[key] = next[key];
         }

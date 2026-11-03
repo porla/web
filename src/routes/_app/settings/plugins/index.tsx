@@ -10,7 +10,9 @@ export const Route = createFileRoute("/_app/settings/plugins/")({
 });
 
 function RouteComponent() {
-  const plugins = useRPC("plugins.list");
+  const plugins = useRPC("plugins.list", undefined, {
+    meta: { errorToast: false },
+  });
 
   return (
     <SettingsSection

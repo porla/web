@@ -2,7 +2,7 @@ import { useInvoker, useRPC, type InfoHash } from "@/api";
 import { ModalNotice } from "@/components/modal/modal-notice";
 import type { ModalProps } from "@/components/modal/use-modal";
 import { useAppForm } from "@/components/form/app-form";
-import { moveSchema } from "./move-schema";
+import { moveSchema } from "./torrent-schemas";
 
 type MoveTorrentModalProps = {
   info_hash: InfoHash;

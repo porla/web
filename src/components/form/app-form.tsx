@@ -12,6 +12,7 @@ import { NumberField } from "@/components/form/fields/number-field";
 import { PasswordField } from "@/components/form/fields/password-field";
 import { SelectField } from "@/components/form/fields/select-field";
 import { TextField } from "@/components/form/fields/text-field";
+import { TextareaField } from "@/components/form/fields/textarea-field";
 import { TorrentFlagsField } from "@/components/form/fields/torrent-flags-field";
 import { ModalTitle } from "@/components/modal/modal-title";
 import clsx from "clsx";
@@ -159,6 +160,7 @@ export const { useAppForm, withForm } = createFormHook({
     NumberField,
     PasswordField,
     SelectField,
+    TextareaField,
     TextField,
     TorrentFlagsField,
   },

@@ -27,7 +27,7 @@ export function SortableTitle({
       className={clsx(
         "group/sort inline-flex max-w-full cursor-pointer items-center gap-1 hover:text-base-content",
         // Right-aligned titles keep their text flush with the numbers.
-        column.headerClassNames.includes("text-right") && "flex-row-reverse",
+        column.headerClassNames?.includes("text-right") && "flex-row-reverse",
         active && "text-base-content",
       )}
       title={`Sort by ${(column.name ?? column.title).toLowerCase()}`}

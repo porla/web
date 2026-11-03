@@ -1,6 +1,6 @@
 import { ListState } from "@/components/ui/list-state";
-import { Spinner } from "@/components/ui/spinner";
-import { TriangleAlert, type LucideIcon } from "lucide-react";
+import { QueryNotice } from "@/components/ui/query-notice";
+import type { LucideIcon } from "lucide-react";
 import type { ReactNode } from "react";
 
 export function SettingsTable<T>({
@@ -12,7 +12,7 @@ export function SettingsTable<T>({
   head,
   children,
 }: {
-  query: { isLoading: boolean; error: Error | null };
+  query: { error: Error | null };
   rows: T[] | undefined;
   what: string;
   emptyIcon: LucideIcon;
@@ -20,16 +20,8 @@ export function SettingsTable<T>({
   head: ReactNode;
   children: (row: T) => ReactNode;
 }) {
-  if (query.isLoading) {
-    return <Spinner size="lg" />;
-  }
-
-  if (query.error || !rows) {
-    return (
-      <ListState icon={TriangleAlert} title={`Couldn't load the ${what}`}>
-        {query.error?.message}
-      </ListState>
-    );
+  if (!rows) {
+    return <QueryNotice query={query} what={what} />;
   }
 
   if (rows.length === 0) {

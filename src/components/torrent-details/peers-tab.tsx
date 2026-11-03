@@ -1,4 +1,4 @@
-import { POLL_MS, useRPC, type InfoHash, type Peer, type Torrent } from "@/api";
+import { POLL_MS, useRPC, type Peer } from "@/api";
 import { bytes, rate } from "@/lib/format";
 import {
   comparePeers,
@@ -19,14 +19,9 @@ import { Dash } from "@/components/ui/dash";
 import { DetailsTable, type DetailsColumn } from "./details-table";
 import { ProgressCell } from "./progress-cell";
 import { StateCell } from "./state-cell";
-import { TabNotice } from "./tab-notice";
+import { QueryNotice } from "@/components/ui/query-notice";
 import { usePeerCountries, type Country } from "./use-peer-countries";
-
-type PeersTabProps = {
-  info_hash: InfoHash;
-  session_id: number;
-  torrent: Torrent | undefined;
-};
+import type { DetailsTabProps } from "./details-tab-props";
 
 type Row = { p: Peer; c: Country; s: PeerState };
 
@@ -218,7 +213,11 @@ const columns: DetailsColumn<Row>[] = [
   },
 ];
 
-export function PeersTab({ info_hash, session_id, torrent: t }: PeersTabProps) {
+export function PeersTab({
+  info_hash,
+  session_id,
+  torrent: t,
+}: DetailsTabProps) {
   const peers = useRPC(
     "torrents.peers.list",
     {
@@ -239,7 +238,7 @@ export function PeersTab({ info_hash, session_id, torrent: t }: PeersTabProps) {
     .sort((a, b) => comparePeers(a.p, b.p));
 
   if (peers.isLoading || peers.error) {
-    return <TabNotice query={peers} what="peers" />;
+    return <QueryNotice query={peers} what="peers" />;
   }
 
   if (list.length === 0) {

@@ -4,7 +4,6 @@ import {
   isRpcError,
   useRPC,
   type FileFlag,
-  type InfoHash,
   type TorrentFile,
 } from "@/api";
 import { FolderTree } from "lucide-react";
@@ -15,7 +14,8 @@ import { bytes } from "@/lib/format";
 import { DetailsTable, type DetailsColumn } from "./details-table";
 import { FileRowMenu } from "./file-row-menu";
 import { ProgressCell } from "./progress-cell";
-import { TabNotice } from "./tab-notice";
+import { QueryNotice } from "@/components/ui/query-notice";
+import type { DetailsTabProps } from "./details-tab-props";
 
 const fraction = (done: number, size: number) => (size > 0 ? done / size : 1);
 
@@ -97,12 +97,7 @@ const columns: DetailsColumn<Row>[] = [
   },
 ];
 
-type FilesTabProps = {
-  info_hash: InfoHash;
-  session_id: number;
-};
-
-export function FilesTab({ info_hash, session_id }: FilesTabProps) {
+export function FilesTab({ info_hash, session_id }: DetailsTabProps) {
   const files = useRPC(
     "torrents.files.list",
     {
@@ -149,7 +144,7 @@ export function FilesTab({ info_hash, session_id }: FilesTabProps) {
   }
 
   if (files.isLoading || files.error) {
-    return <TabNotice query={files} what="files" />;
+    return <QueryNotice query={files} what="files" />;
   }
 
   const rows: Row[] = (files.data?.files ?? [])

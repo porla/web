@@ -1,13 +1,14 @@
 import { useKv } from "@/api";
 import {
   COLUMNS_KV_KEY,
+  type ColumnKey,
   useShownColumns,
   useTorrentListColumns,
 } from "@/components/torrent-list/torrent-list-columns";
 import { useAppForm } from "@/components/form/app-form";
 import { useSelector } from "@tanstack/react-form";
 import { createFileRoute } from "@tanstack/react-router";
-import { Spinner } from "@/components/ui/spinner";
+import { QueryNotice } from "@/components/ui/query-notice";
 
 export const Route = createFileRoute("/_app/settings/views")({
   component: RouteComponent,
@@ -17,28 +18,24 @@ function RouteComponent() {
   const { shown, saved } = useShownColumns();
 
   if (!saved.query.data) {
-    return <Spinner size="xl" />;
+    return <QueryNotice query={saved.query} what="list columns" />;
   }
 
   return <EditTorrentListForm initialCols={shown} />;
 }
 
-function EditTorrentListForm({ initialCols }: { initialCols: string[] }) {
+function EditTorrentListForm({ initialCols }: { initialCols: ColumnKey[] }) {
   const kv = useKv(COLUMNS_KV_KEY);
 
   const torrentsColumns = useTorrentListColumns();
-  const knownCols = new Set(Object.keys(torrentsColumns));
+  const allCols = Object.keys(torrentsColumns) as ColumnKey[];
 
-  type ColKey = keyof typeof torrentsColumns;
-
-  const allCols = Object.keys(torrentsColumns) as ColKey[];
-
-  const nameOf = (c: ColKey) =>
+  const nameOf = (c: ColumnKey) =>
     torrentsColumns[c].name ?? torrentsColumns[c].title;
 
   const form = useAppForm({
     defaultValues: {
-      cols: initialCols.filter((c) => knownCols.has(c)) as ColKey[],
+      cols: initialCols,
     },
     onSubmit: async ({ value }) => {
       await kv.set.mutateAsync(value.cols);
