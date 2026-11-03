@@ -6,7 +6,7 @@ import { moveSchema } from "./move-schema";
 
 type MoveTorrentModalProps = {
   info_hash: InfoHash;
-  session_id: number;
+  session_id?: number;
 };
 
 export function MoveTorrentModal({

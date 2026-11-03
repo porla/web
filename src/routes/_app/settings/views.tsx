@@ -1,5 +1,9 @@
-import { useInvoker, useRPC } from "@/api";
-import { TorrentListColumns } from "@/components/torrent-list/torrent-list-columns";
+import { useInvoker } from "@/api";
+import {
+  COLUMNS_KV_KEY,
+  useShownColumns,
+  useTorrentListColumns,
+} from "@/components/torrent-list/torrent-list-columns";
 import { useAppForm } from "@/components/form/app-form";
 import { useSelector } from "@tanstack/react-form";
 import { useQueryClient } from "@tanstack/react-query";
@@ -11,32 +15,13 @@ export const Route = createFileRoute("/_app/settings/views")({
 });
 
 function RouteComponent() {
-  const torrentsColumns = TorrentListColumns();
-  const knownCols = new Set(Object.keys(torrentsColumns));
+  const { shown, isLoading, data } = useShownColumns();
 
-  const userCols = useRPC("kv.get", {
-    keys: ["webui.lists.torrents.cols"],
-  });
-
-  if (userCols.isLoading || !userCols.data) {
+  if (isLoading || !data) {
     return <Spinner size="xl" />;
   }
 
-  const isStringArray = (v: unknown): v is string[] =>
-    Array.isArray(v) && v.every((x) => typeof x === "string");
-
-  const raw = userCols.data.values["webui.lists.torrents.cols"];
-
-  const selectedCols: (keyof typeof torrentsColumns)[] =
-    isStringArray(raw) && raw.length
-      ? (raw.filter((c) =>
-          knownCols.has(c),
-        ) as (keyof typeof torrentsColumns)[])
-      : (
-          Object.keys(torrentsColumns) as (keyof typeof torrentsColumns)[]
-        ).filter((c) => torrentsColumns[c].default);
-
-  return <EditTorrentListForm initialCols={selectedCols} />;
+  return <EditTorrentListForm initialCols={shown} />;
 }
 
 function EditTorrentListForm({ initialCols }: { initialCols: string[] }) {
@@ -47,11 +32,11 @@ function EditTorrentListForm({ initialCols }: { initialCols: string[] }) {
     meta: { silent: true },
     onSuccess: () =>
       queryClient.invalidateQueries({
-        queryKey: ["kv.get", { keys: ["webui.lists.torrents.cols"] }],
+        queryKey: ["kv.get", { keys: [COLUMNS_KV_KEY] }],
       }),
   });
 
-  const torrentsColumns = TorrentListColumns();
+  const torrentsColumns = useTorrentListColumns();
   const knownCols = new Set(Object.keys(torrentsColumns));
 
   type ColKey = keyof typeof torrentsColumns;
@@ -68,7 +53,7 @@ function EditTorrentListForm({ initialCols }: { initialCols: string[] }) {
     onSubmit: async ({ value }) => {
       await updateCols.mutateAsync({
         values: {
-          "webui.lists.torrents.cols": value.cols,
+          [COLUMNS_KV_KEY]: value.cols,
         },
       });
     },
@@ -78,8 +63,7 @@ function EditTorrentListForm({ initialCols }: { initialCols: string[] }) {
 
   const saved =
     updateCols.isSuccess &&
-    updateCols.variables.values["webui.lists.torrents.cols"]?.toString() ===
-      cols.toString();
+    updateCols.variables.values[COLUMNS_KV_KEY]?.toString() === cols.toString();
 
   return (
     <form.AppForm>

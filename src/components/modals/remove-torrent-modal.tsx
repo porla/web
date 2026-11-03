@@ -6,7 +6,7 @@ import { ModalNotice } from "@/components/modal/modal-notice";
 
 type RemoveTorrentModalProps = {
   info_hash: InfoHash;
-  session_id: number;
+  session_id?: number;
 };
 
 const removeSchema = z.object({

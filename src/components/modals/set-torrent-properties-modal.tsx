@@ -18,7 +18,7 @@ import { ModalNotice } from "@/components/modal/modal-notice";
 
 type SetTorrentPropertiesModalProps = {
   info_hash: InfoHash;
-  session_id: number;
+  session_id?: number;
 };
 
 const propertiesSchema = z.object({

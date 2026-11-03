@@ -4,6 +4,7 @@ import {
   type SortDir,
   type TorrentsCount,
   type TorrentSortField,
+  type TorrentStatusFilter,
 } from "@/api";
 import { Link, useMatch, useNavigate, useSearch } from "@tanstack/react-router";
 import {
@@ -23,7 +24,7 @@ import {
   type LucideIcon,
 } from "lucide-react";
 import { useEffect, type ReactNode } from "react";
-import type { PageSize, TorrentFilterStatus } from "@/routes/_app/_shell/index";
+import type { PageSize } from "@/components/torrent-list/search";
 import clsx from "clsx";
 import { feature, getCurrentVersion } from "@/lib/features";
 import { useWebVersion } from "@/lib/web-version";
@@ -32,7 +33,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { toneText } from "@/lib/torrent/status";
 
 type Filter = {
-  status?: TorrentFilterStatus[];
+  status?: TorrentStatusFilter[];
   category?: string;
   tag?: string;
 };
@@ -42,7 +43,7 @@ const statuses: {
   label: string;
   icon: LucideIcon;
   color: string;
-  status: TorrentFilterStatus[];
+  status: TorrentStatusFilter[];
   count: (c: TorrentsCount) => number;
 }[] = [
   {

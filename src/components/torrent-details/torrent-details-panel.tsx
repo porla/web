@@ -20,6 +20,10 @@ import { useEffect, useRef, useState, type ReactNode } from "react";
 import { toast } from "@/lib/toast";
 import clsx from "clsx";
 import { DockBar } from "@/components/ui/dock-bar";
+import {
+  withoutSelection,
+  type DetailTab,
+} from "@/components/torrent-list/search";
 
 type TorrentDetailsPanelProps = {
   info_hash: InfoHash;
@@ -28,7 +32,7 @@ type TorrentDetailsPanelProps = {
 };
 
 const tabs: {
-  id: "general" | "files" | "pieces" | "peers" | "trackers";
+  id: DetailTab;
   name: string;
   icon: LucideIcon;
 }[] = [
@@ -111,24 +115,14 @@ export function TorrentDetailsPanel({
       toast(gone);
       navigate({
         to: "/",
-        search: (prev) => ({
-          ...prev,
-          selected_info_hash: undefined,
-          selected_session_id: undefined,
-          selected_tab_id: undefined,
-        }),
+        search: (prev) => withoutSelection(prev),
       });
     }
   }, [gone, navigate]);
 
   const t = torrent.data?.torrent;
 
-  const clear = {
-    ...torrentSearch,
-    selected_info_hash: undefined,
-    selected_session_id: undefined,
-    selected_tab_id: undefined,
-  };
+  const clear = withoutSelection(torrentSearch ?? {});
 
   return (
     <div

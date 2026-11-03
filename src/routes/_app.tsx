@@ -2,6 +2,7 @@ import { createFileRoute, Navigate, Outlet } from "@tanstack/react-router";
 import { useRPC } from "@/api";
 import { initializeFeatures } from "@/lib/features";
 import { PluginHost } from "@/plugins/plugin-host";
+import { Spinner } from "@/components/ui/spinner";
 
 export const Route = createFileRoute("/_app")({
   component: RouteComponent,
@@ -25,7 +26,7 @@ function VersionedComponent() {
   const versions = useRPC("sys.versions", null, { meta: { silent: true } });
 
   if (versions.isLoading) {
-    return <>loading versions</>;
+    return <Spinner size="xl" className="m-6" />;
   }
 
   const version = versions.data?.porla.version ?? null;

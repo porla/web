@@ -1,5 +1,6 @@
 import {
   infoHashKey,
+  useRPC,
   type SortDir,
   type Torrent,
   type TorrentSortField,
@@ -29,7 +30,7 @@ export type TorrentListColumn = {
   data: (t: Torrent) => ReactNode;
 };
 
-export const TorrentListColumns = () => {
+export const useTorrentListColumns = () => {
   const torrentSearch = useSearch({
     from: "/_app/_shell/",
     shouldThrow: false,
@@ -225,3 +226,23 @@ export const TorrentListColumns = () => {
 };
 
 export const NAME_MIN_WIDTH = 16;
+
+export type ColumnKey = keyof ReturnType<typeof useTorrentListColumns>;
+
+export const COLUMNS_KV_KEY = "webui.lists.torrents.cols";
+
+const isStringArray = (v: unknown): v is string[] =>
+  Array.isArray(v) && v.every((x) => typeof x === "string");
+
+export function useShownColumns() {
+  const columns = useTorrentListColumns();
+  const saved = useRPC("kv.get", { keys: [COLUMNS_KV_KEY] });
+  const raw = saved.data?.values[COLUMNS_KV_KEY];
+
+  const shown =
+    isStringArray(raw) && raw.length
+      ? raw.filter((c): c is ColumnKey => c in columns)
+      : (Object.keys(columns) as ColumnKey[]).filter((c) => columns[c].default);
+
+  return { columns, shown, isLoading: saved.isLoading, data: saved.data };
+}
