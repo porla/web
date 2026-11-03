@@ -1,4 +1,5 @@
 import { useInvoker, useRPC, useRpcCache } from "@/api";
+import { AuthCard } from "@/components/auth/auth-card";
 import { useAppForm } from "@/components/form/app-form";
 import { createFileRoute, Navigate } from "@tanstack/react-router";
 import z from "zod";
@@ -10,7 +11,7 @@ export const Route = createFileRoute("/setup")({
 const setupSchema = z
   .object({
     username: z.string().min(1, "Enter a username"),
-    password: z.string().min(1, "Enter a password"),
+    password: z.string().min(8, "Use at least 8 characters"),
     confirm: z.string(),
   })
   .refine((v) => v.password === v.confirm, {
@@ -32,6 +33,9 @@ function RouteComponent() {
       username: "",
       password: "",
       confirm: "",
+    },
+    listeners: {
+      onChange: () => authInit.reset(),
     },
     validators: {
       onChange: setupSchema,
@@ -65,11 +69,10 @@ function RouteComponent() {
   }
 
   return (
-    <div className="m-4">
-      <h1>Set up Porla</h1>
-      <p className="text-sm">
-        No existing user account was found, which means you need to create one.
-      </p>
+    <AuthCard
+      title="Welcome to Porla"
+      description="Create the account you'll use to log in."
+    >
       <form.AppForm>
         <form.Form>
           <form.AppField
@@ -77,8 +80,10 @@ function RouteComponent() {
             children={(field) => (
               <field.TextField
                 label="Username"
+                autoCapitalize="none"
                 autoComplete="username"
                 autoFocus
+                spellCheck={false}
               />
             )}
           />
@@ -86,10 +91,10 @@ function RouteComponent() {
           <form.AppField
             name="password"
             children={(field) => (
-              <field.TextField
+              <field.PasswordField
                 label="Password"
-                type="password"
                 autoComplete="new-password"
+                description="Either a passphrase or a password."
               />
             )}
           />
@@ -97,18 +102,19 @@ function RouteComponent() {
           <form.AppField
             name="confirm"
             children={(field) => (
-              <field.TextField
+              <field.PasswordField
                 label="Confirm password"
-                type="password"
                 autoComplete="new-password"
               />
             )}
           />
 
-          <form.SaveError error={authInit.error} />
-          <form.SubmitButton label="Create user" />
+          <div className="mt-4 flex flex-col gap-4">
+            <form.SaveError error={authInit.error} />
+            <form.SubmitButton label="Create account" block />
+          </div>
         </form.Form>
       </form.AppForm>
-    </div>
+    </AuthCard>
   );
 }

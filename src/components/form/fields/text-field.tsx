@@ -3,18 +3,22 @@ import { Field } from "@/components/form/field";
 import type { HTMLInputTypeAttribute } from "react";
 
 export function TextField({
+  autoCapitalize,
   autoComplete,
   autoFocus,
   description,
   label,
   placeholder,
+  spellCheck,
   type,
 }: {
+  autoCapitalize?: "none" | "sentences" | "words" | "characters";
   autoComplete?: string;
   autoFocus?: boolean;
   description?: string;
   label: string;
   placeholder?: string;
+  spellCheck?: boolean;
   type?: HTMLInputTypeAttribute;
 }) {
   const field = useFieldContext<string>();
@@ -24,9 +28,11 @@ export function TextField({
       {(control) => (
         <input
           {...control}
+          autoCapitalize={autoCapitalize}
           autoComplete={autoComplete}
           autoFocus={autoFocus}
           placeholder={placeholder}
+          spellCheck={spellCheck}
           type={type ?? "text"}
           className="input"
           value={field.state.value ?? ""}
