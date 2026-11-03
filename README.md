@@ -1,73 +1,79 @@
-# React + TypeScript + Vite
+# Porla Web UI
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+The web interface for [Porla](https://github.com/porla/porla), a BitTorrent client. A single-page app that talks to
+Porla's JSON-RPC API. Porla downloads a release zip of this UI and serves it, so the UI must work with older Porla
+versions too (see [Backend versions](#backend-versions)).
 
-Currently, two official plugins are available:
+Built with React 19, TypeScript, Vite, TanStack Router/Query/Form, Tailwind CSS v4 and daisyUI 5.
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+## Getting started
 
-## React Compiler
+You need [bun](https://bun.sh) and a running Porla instance to talk to.
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
-
-## Expanding the ESLint configuration
-
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
-
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
-
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+```sh
+bun install
+PORLA_HOST=http://localhost:1337 bun dev
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+Open http://localhost:5173. The dev server proxies `/api` (JSON-RPC) and `/x` (plugin files) to `PORLA_HOST`, which
+defaults to `http://localhost:1337`, so you log in with a user on that Porla instance.
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+### VS Code
 
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+Open the folder and install the recommended extensions when asked (ESLint, Prettier, Tailwind CSS IntelliSense,
+EditorConfig). The workspace settings format on save, fix lint issues on save, use the project's TypeScript version and
+mark the generated `src/routeTree.gen.ts` read-only.
+
+## Scripts
+
+| Command                | What it does                                                   |
+| ---------------------- | -------------------------------------------------------------- |
+| `bun dev`              | Dev server with hot reload                                     |
+| `bun run build`        | Type-check and build to `dist/`                                |
+| `bun run preview`      | Serve the built `dist/`                                        |
+| `bun run typecheck`    | Type-check only                                                |
+| `bun run lint`         | ESLint with type information, no warnings allowed              |
+| `bun run format`       | Format everything with Prettier                                |
+| `bun run format:check` | Check formatting (CI runs this, `lint` and `build` on each PR) |
+
+## How it fits together
+
+- **Routing**: file-based routes in `src/routes/`, read by the TanStack Router Vite plugin, which writes
+  `src/routeTree.gen.ts` (generated, don't edit; it is committed). Routes are code-split automatically.
+- **Data**: `useRPC(method, params)` (a TanStack Query query) and `useInvoker(method)` (a mutation), imported from
+  `@/api`. Every RPC method's params and result are typed in the `Methods` map in `src/api/methods.ts`.
+- **Errors**: a failed query or mutation shows a toast unless the code handles the error itself.
+- **Styling**: Tailwind utilities and daisyUI components; the theme follows the system's light or dark mode.
+- **Plugins**: plugins can add their own UI in sandboxed iframes; the host is in `src/plugins/`.
+
+### Project layout
+
 ```
+src/
+  api/           JSON-RPC client, typed methods, useRPC/useInvoker, response types (import from "@/api")
+  lib/           plain helpers: formatting, features, base path, toasts; lib/torrent/ for torrent data
+  hooks/         shared React hooks
+  components/
+    ui/          small building blocks (pager, list state, copy button, …)
+    form/        TanStack Form setup (useAppForm) and the field components
+    modal/       the modal host and useModal()
+    modals/      one file per modal
+    shell/       the sidebar
+    torrent-list/, torrent-details/, add-torrents/   the parts of those pages
+  plugins/       the plugin UI host and protocol
+  routes/        pages; _app is everything behind login, _app/_shell the pages with the sidebar
+```
+
+Files are named after what they export (`ConfirmModal` lives in `confirm-modal.tsx`), exports are named, and imports
+use `@/…` (or `./…` within the same folder).
+
+### Base path
+
+Porla can serve the UI under a sub-path (`--http-base-path`). `index.html` carries a `%BASE_PATH%` placeholder that
+Porla replaces when it serves the page; use `prefixPath()` from `src/lib/base-path.ts` for any URL you build by hand. Asset URLs
+in the build are relative, so they work under any base path.
+
+### Backend versions
+
+New UI features that need a newer Porla are gated with `feature("name")` from `src/lib/features.ts`, keyed by the version
+Porla reports. A Porla built without version info (a local debug build) reports `0.0.0` and gets every feature.

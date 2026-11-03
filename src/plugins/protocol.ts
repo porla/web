@@ -4,14 +4,14 @@
 // well-behaved plugin sends, not what arrives, so handlers still check fields.
 
 import { rpcCall, type InfoHash, type Plugin, type RpcResponse } from "@/api";
-import { prefixPath } from "@/base";
-import { getCurrentVersion } from "@/features";
+import { prefixPath } from "@/lib/base-path";
+import { getCurrentVersion } from "@/lib/features";
 import { useLayoutEffect, useRef, type SyntheticEvent } from "react";
 
 export const PROTOCOL = 1;
 
 // Plugin pages run with an opaque origin: no cookies, storage or same-origin
-// access to porla. Everything goes through the port.
+// access to Porla. Everything goes through the port.
 export const SANDBOX = "allow-scripts";
 
 export type Role = "control" | "modal" | "settings";
@@ -60,8 +60,7 @@ export type MenuContext = {
 // Host -> frame.
 export type HostMessage = {
   control:
-    | { type: "menu.invoke"; id: string; context: MenuContext }
-    | JsonRpcResult;
+    { type: "menu.invoke"; id: string; context: MenuContext } | JsonRpcResult;
   modal: JsonRpcResult;
   settings: JsonRpcResult;
 };
@@ -105,7 +104,7 @@ export function pluginPageUrl(plugin: Plugin, page: string | null | undefined) {
     return null;
   }
 
-  // porla serves ui/ with Cache-Control: no-cache, so no cache-busting needed.
+  // Porla serves ui/ with Cache-Control: no-cache, so no cache-busting needed.
   return prefixPath(`/x/${encodeURIComponent(plugin.slug)}/ui/${page}`);
 }
 
@@ -138,9 +137,11 @@ export function useFrameChannel<R extends Role>(
     const { port1, port2 } = new MessageChannel();
     const send = (msg: HostMessage[R]) => port1.postMessage(msg);
 
-    port1.onmessage = ({ data }) => {
+    port1.onmessage = ({
+      data,
+    }: MessageEvent<JsonRpcCall | FrameMessage[R]>) => {
       if (data?.type === "jsonrpc.call") {
-        call(plugin, data).then((result) =>
+        void call(plugin, data).then((result) =>
           port1.postMessage({
             type: "jsonrpc.result",
             id: data.id,

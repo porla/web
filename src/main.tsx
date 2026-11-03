@@ -12,18 +12,23 @@ import {
   QueryClient,
   QueryClientProvider,
 } from "@tanstack/react-query";
-import { AuthError, HttpError, RpcError } from "@/api";
-import { ModalProvider } from "./components/modal";
-import { toast } from "./toast";
+import {
+  AuthError,
+  HttpError,
+  RpcError,
+  infoHashKey,
+  type InfoHash,
+} from "@/api";
+import { ModalProvider } from "@/components/modal/modal-provider";
+import { toast } from "@/lib/toast";
 
 // Create a new router instance
 const router = createRouter({ routeTree, basepath: window.porla.base_path });
 
 declare module "@tanstack/react-query" {
   interface Register {
-    // silent: the component shows this error itself, so don't toast it
-    queryMeta: { silent?: boolean };
-    mutationMeta: { silent?: boolean };
+    queryMeta: { errorToast?: boolean };
+    mutationMeta: { errorToast?: boolean };
   }
 }
 
@@ -36,10 +41,10 @@ declare module "@tanstack/react-router" {
 
 // Every query and mutation error ends up here: a lost session goes to the
 // login page, anything else is shown as a toast.
-function onError(error: Error, meta?: { silent?: boolean }) {
+function onError(error: Error, meta?: { errorToast?: boolean }) {
   if (error instanceof AuthError) {
     if (router.state.location.pathname !== "/login") {
-      router.navigate({
+      void router.navigate({
         to: "/login",
         search: { redirect: router.state.location.href },
       });
@@ -47,9 +52,34 @@ function onError(error: Error, meta?: { silent?: boolean }) {
     return;
   }
 
-  if (!meta?.silent) {
+  if (meta?.errorToast !== false) {
     toast(error.message || "Request failed");
   }
+}
+
+// Skips the queries of a torrent that left (removed, migrated): they'd fail,
+// and the details panel would close with "Torrent not found".
+function refreshTorrents(
+  client: QueryClient,
+  method: unknown,
+  params: unknown,
+): Promise<void> | undefined {
+  if (typeof method !== "string" || !method.startsWith("torrents.")) return;
+
+  const torrent = (p: unknown) => {
+    const hash = (p as { info_hash?: InfoHash } | null)?.info_hash;
+    return hash && infoHashKey(hash);
+  };
+
+  const left =
+    method === "torrents.remove" || method === "torrents.migrate"
+      ? torrent(params)
+      : undefined;
+
+  return client.invalidateQueries({
+    predicate: ({ queryKey: [m, p] }) =>
+      String(m).startsWith("torrents.") && (!left || torrent(p) !== left),
+  });
 }
 
 // Errors that would fail the same way again aren't retried.
@@ -65,13 +95,19 @@ const rootElement = document.getElementById("root")!;
 if (!rootElement.innerHTML) {
   const root = ReactDOM.createRoot(rootElement);
 
-  const queryClient = new QueryClient({
+  const queryClient: QueryClient = new QueryClient({
     queryCache: new QueryCache({
       onError: (error, query) => onError(error, query.meta),
     }),
     mutationCache: new MutationCache({
       onError: (error, _variables, _result, mutation) =>
         onError(error, mutation.meta),
+      onSuccess: (_data, variables, _result, mutation) =>
+        refreshTorrents(
+          queryClient,
+          mutation.options.mutationKey?.[0],
+          variables,
+        ),
     }),
     defaultOptions: {
       queries: {

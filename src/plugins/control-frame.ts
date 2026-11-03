@@ -1,31 +1,12 @@
-// The control frame: a plugin's hidden ui.entry page, loaded while porla runs.
+// The control frame: a plugin's hidden ui.entry page, loaded while Porla runs.
 // It adds menu items and opens modals.
 
 import type { Plugin } from "@/api";
-import { useModal } from "@/components/modal";
-import { PluginEntryModal } from "@/components/modals/plugin-entry";
-import {
-  pluginPageUrl,
-  SANDBOX,
-  useFrameChannel,
-  type MenuContext,
-} from "./protocol";
-import { createContext, useContext, type SyntheticEvent } from "react";
-
-export type MenuItem = {
-  id: string;
-  label: string;
-  onClick: (context: MenuContext) => void;
-};
-
-// Every running plugin's menu items, from PluginHost.
-export const PluginContext = createContext<{ menuItems: MenuItem[] }>({
-  menuItems: [],
-});
-
-export function usePlugins() {
-  return useContext(PluginContext);
-}
+import { useModal } from "@/components/modal/use-modal";
+import { PluginEntryModal } from "./plugin-entry-modal";
+import { pluginPageUrl, SANDBOX, useFrameChannel } from "./protocol";
+import { type SyntheticEvent } from "react";
+import type { MenuItem } from "./plugin-context";
 
 // Props for the plugin's control iframe, or null when it has no UI.
 export function useControlFrame(
@@ -60,7 +41,7 @@ export function useControlFrame(
         return;
       }
 
-      modal.show(PluginEntryModal, {
+      void modal.show(PluginEntryModal, {
         plugin,
         title: msg.title,
         src: entry,

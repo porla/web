@@ -7,7 +7,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Porla</title>
 
-    <!-- porla fills in its HTTP base path below; main.tsx reads it on load -->
+    <!-- Porla fills in its HTTP base path below; main.tsx reads it on load -->
     <script>
       window.porla = {
         base_path: "%BASE_PATH%",
@@ -20,14 +20,13 @@
     <style>
       :root {
         color-scheme: light dark;
-      }
-      html[data-theme="light"] {
-        color-scheme: light;
         background-color: oklch(100% 0 0);
       }
-      html[data-theme="dark"] {
-        color-scheme: dark;
-        background-color: oklch(25.33% 0.016 252.42);
+
+      @media (prefers-color-scheme: dark) {
+        :root {
+          background-color: oklch(25.33% 0.016 252.42);
+        }
       }
     </style>
   </head>

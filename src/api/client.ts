@@ -1,0 +1,82 @@
+import { prefixPath } from "@/lib/base-path";
+import { AuthError, HttpError, RpcCode, RpcError } from "./errors";
+import type { Method, Params, Result } from "./methods";
+
+export type RpcResponse = {
+  result?: unknown;
+  error?: { code: number; message: string; data?: unknown };
+};
+
+async function post(
+  method: string,
+  params: unknown,
+  signal?: AbortSignal,
+): Promise<RpcResponse> {
+  const res = await fetch(prefixPath("/api/v1/jsonrpc"), {
+    body: JSON.stringify({
+      jsonrpc: "2.0",
+      method,
+      id: Date.now(),
+      params,
+    }),
+    credentials: "include",
+    method: "POST",
+    signal,
+  });
+
+  if (!res.ok) {
+    const text = (await res.text()).trim().slice(0, 200);
+    throw new HttpError(
+      res.status,
+      text || res.statusText || `HTTP ${res.status}`,
+    );
+  }
+
+  return (await res.json()) as RpcResponse;
+}
+
+// check if Unauthorized means logged out or not authed
+async function isLoggedOut(signal?: AbortSignal) {
+  const data = await post("sys.versions", {}, signal);
+  return data.error?.code === RpcCode.Unauthorized;
+}
+
+export async function jsonrpc<M extends Method>(
+  method: M,
+  params?: Params<M> | null,
+  signal?: AbortSignal,
+) {
+  const data = await post(method, params || {}, signal);
+
+  if (data.error) {
+    const { code, message } = data.error;
+
+    if (
+      code === RpcCode.Unauthorized &&
+      (method === "sys.versions" || (await isLoggedOut(signal)))
+    ) {
+      throw new AuthError(message);
+    }
+
+    throw new RpcError(code, message, data.error.data);
+  }
+
+  return data.result as Result<M>;
+}
+
+export async function rpcCall(
+  method: string,
+  params: unknown,
+): Promise<RpcResponse> {
+  try {
+    const data = await post(method, params ?? {});
+    return data.error ? { error: data.error } : { result: data.result };
+  } catch (e) {
+    return {
+      error: {
+        code: RpcCode.InternalError,
+        message: e instanceof Error ? e.message : String(e),
+      },
+    };
+  }
+}
