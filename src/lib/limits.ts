@@ -6,6 +6,13 @@ const MAX = 2147483647;
 // The backend's rules for torrent limits (utils/limits.hpp), shared by the
 // properties dialog and the add page. An empty field is null: unchanged, or
 // the preset's value when adding.
+export const LIMIT_KEYS = [
+  "download_limit",
+  "upload_limit",
+  "max_connections",
+  "max_uploads",
+] as const;
+
 export const rateLimit = z
   .number()
   .int("Enter a whole number")

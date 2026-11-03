@@ -9,6 +9,7 @@ import z from "zod";
 import { idParam } from "@/lib/route-params";
 import { SettingsNotFound } from "@/components/settings/settings-not-found";
 import { SettingsNotice } from "@/components/settings/settings-notice";
+import { absolutePath } from "@/lib/paths";
 
 export const Route = createFileRoute("/_app/settings/plugins/$id")({
   component: RouteComponent,
@@ -17,11 +18,7 @@ export const Route = createFileRoute("/_app/settings/plugins/$id")({
 });
 
 const pluginSchema = z.object({
-  path: z
-    .string()
-    .trim()
-    .min(1, { error: "Enter a path", abort: true })
-    .regex(/^(\/|[A-Za-z]:[\\/])/, "Use an absolute path"),
+  path: absolutePath(),
   config: z.string(),
 });
 
@@ -117,19 +114,10 @@ function PluginForm({ plugin }: { plugin: PluginsGet["plugin"] }) {
             children={(field) => <field.TextField label="Path" />}
           />
 
-          <form.Field
+          <form.AppField
             name="config"
             children={(field) => (
-              <div className="my-3">
-                <textarea
-                  className="w-lg max-w-full h-96 font-mono textarea"
-                  onBlur={field.handleBlur}
-                  onChange={(e) => field.handleChange(e.target.value)}
-                  aria-label="Plugin configuration (Lua)"
-                  placeholder="Plugin configuration (Lua)"
-                  value={field.state.value}
-                ></textarea>
-              </div>
+              <field.TextareaField label="Plugin configuration (Lua)" />
             )}
           />
 

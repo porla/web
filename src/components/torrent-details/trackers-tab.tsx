@@ -1,4 +1,4 @@
-import { POLL_MS, useRPC, type InfoHash, type Torrent } from "@/api";
+import { POLL_MS, useRPC } from "@/api";
 import { date, duration } from "@/lib/format";
 import {
   trackerRows,
@@ -15,13 +15,8 @@ import { Dash } from "@/components/ui/dash";
 import { peerSources } from "@/lib/torrent/flags";
 import { DetailsTable, type DetailsColumn } from "./details-table";
 import { StateCell } from "./state-cell";
-import { TabNotice } from "./tab-notice";
-
-type TrackersTabProps = {
-  info_hash: InfoHash;
-  session_id: number;
-  torrent: Torrent | undefined;
-};
+import { QueryNotice } from "@/components/ui/query-notice";
+import type { DetailsTabProps } from "./details-tab-props";
 
 const list = (xs: string[]) =>
   xs.length > 1
@@ -173,7 +168,7 @@ export function TrackersTab({
   info_hash,
   session_id,
   torrent: t,
-}: TrackersTabProps) {
+}: DetailsTabProps) {
   const trackers = useRPC(
     "torrents.trackers.list",
     {
@@ -195,7 +190,7 @@ export function TrackersTab({
   const all = trackers.data?.trackers ?? [];
 
   if (trackers.isLoading || trackers.error) {
-    return <TabNotice query={trackers} what="trackers" />;
+    return <QueryNotice query={trackers} what="trackers" />;
   }
 
   if (all.length === 0) {

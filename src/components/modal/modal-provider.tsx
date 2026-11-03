@@ -49,11 +49,9 @@ export function ModalProvider({ children }: { children: ReactNode }) {
     }) as Promise<never>;
   }, []);
 
-  const remove = useCallback((id: number, result: unknown) => {
-    setInstances((prev) => {
-      prev.find((i) => i.id === id)?.resolve(result);
-      return prev.filter((i) => i.id !== id);
-    });
+  const remove = useCallback((instance: Instance, result: unknown) => {
+    instance.resolve(result);
+    setInstances((prev) => prev.filter((i) => i !== instance));
   }, []);
 
   return (
@@ -71,7 +69,7 @@ function ModalHost({
   onClosed,
 }: {
   instance: Instance;
-  onClosed: (id: number, result: unknown) => void;
+  onClosed: (instance: Instance, result: unknown) => void;
 }) {
   const dialogRef = useRef<HTMLDialogElement>(null);
   const resultRef = useRef<unknown>(DISMISSED);
@@ -109,7 +107,7 @@ function ModalHost({
 
   const handleClose = () => {
     const r = resultRef.current === DISMISSED ? undefined : resultRef.current;
-    onClosed(instance.id, r);
+    onClosed(instance, r);
   };
 
   const { Component, props } = instance;

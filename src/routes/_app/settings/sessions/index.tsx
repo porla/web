@@ -9,7 +9,9 @@ export const Route = createFileRoute("/_app/settings/sessions/")({
 });
 
 function RouteComponent() {
-  const sessions = useRPC("sessions.list");
+  const sessions = useRPC("sessions.list", undefined, {
+    meta: { errorToast: false },
+  });
 
   return (
     <SettingsSection

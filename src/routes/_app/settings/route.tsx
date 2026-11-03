@@ -11,9 +11,10 @@ export const Route = createFileRoute("/_app/settings")({
 });
 
 function RouteComponent() {
-  const plugins = useRPC("plugins.list");
-  const presets = useRPC("presets.list");
-  const sessions = useRPC("sessions.list");
+  const silent = { meta: { errorToast: false } };
+  const plugins = useRPC("plugins.list", undefined, silent);
+  const presets = useRPC("presets.list", undefined, silent);
+  const sessions = useRPC("sessions.list", undefined, silent);
 
   return (
     <div className="w-6xl max-w-full mx-auto pt-9 px-6 pb-14">
@@ -66,7 +67,9 @@ function RouteComponent() {
 }
 
 function ApiKeysTab() {
-  const keys = useRPC("auth.keys.list");
+  const keys = useRPC("auth.keys.list", undefined, {
+    meta: { errorToast: false },
+  });
 
   return (
     <SettingsTab to="/settings/api-keys" count={keys.data?.keys.length}>

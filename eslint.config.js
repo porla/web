@@ -59,10 +59,6 @@ export default defineConfig([
               group: ["../*"],
               message: "Import from @/… instead of a parent folder.",
             },
-            {
-              group: ["*.ts", "*.tsx"],
-              message: "Leave the extension out of import paths.",
-            },
           ],
         },
       ],

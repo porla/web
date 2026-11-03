@@ -1,6 +1,7 @@
 import type { Session } from "@/api";
 import { withForm } from "@/components/form/app-form";
-import { peerLimit, rateLimit } from "@/lib/limits";
+import { LIMIT_KEYS, peerLimit, rateLimit } from "@/lib/limits";
+import { isAbsolutePath } from "@/lib/paths";
 import { useSelector } from "@tanstack/react-form";
 import clsx from "clsx";
 import { ChevronDown, FileIcon, Magnet, TriangleAlert, X } from "lucide-react";
@@ -16,7 +17,7 @@ export type Choices = {
 const savePath = z
   .string()
   .refine(
-    (p) => p.trim() === "" || /^(\/|[A-Za-z]:[\\/])/.test(p.trim()),
+    (p) => p.trim() === "" || isAbsolutePath(p.trim()),
     "Use an absolute path, like /downloads",
   );
 
@@ -33,13 +34,6 @@ const fields: Record<
   max_connections: { label: "Max connections", rule: peerLimit },
   max_uploads: { label: "Max uploads", rule: peerLimit },
 };
-
-const limits = [
-  "download_limit",
-  "upload_limit",
-  "max_connections",
-  "max_uploads",
-] as const;
 
 const optionKeys = Object.keys(emptyOptions) as (keyof AddOptions)[];
 
@@ -208,7 +202,7 @@ export const ItemCard = withForm({
             {option("tags")}
           </div>
           <div className="grid grid-cols-2 gap-x-3 lg:grid-cols-4">
-            {limits.map(option)}
+            {LIMIT_KEYS.map(option)}
           </div>
 
           {count > 1 && (

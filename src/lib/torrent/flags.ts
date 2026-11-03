@@ -1,4 +1,12 @@
 import type { TorrentFlag } from "@/api";
+import z from "zod";
+
+// The flags field of the properties, preset and bulk forms: the flags to set,
+// and which of them to change.
+export const flagsSchema = z.object({
+  flags: z.array(z.custom<TorrentFlag>()),
+  mask: z.array(z.custom<TorrentFlag>()),
+});
 
 export const torrentFlags: Record<
   TorrentFlag,

@@ -8,7 +8,7 @@ import {
 import { toneBar, torrentStatus } from "@/lib/torrent/status";
 import { Link, useSearch } from "@tanstack/react-router";
 import clsx from "clsx";
-import { filesize } from "filesize";
+import { bytes, rate } from "@/lib/format";
 import { Dash } from "@/components/ui/dash";
 import type { ReactNode } from "react";
 import { Ratio } from "@/components/ui/ratio";
@@ -19,8 +19,8 @@ export type TorrentListColumn = {
   width?: number;
   // rem below md, where only #, Name and Status are shown
   narrowWidth?: number;
-  headerClassNames: string;
-  columnClassNames: string;
+  headerClassNames?: string;
+  columnClassNames?: string;
   title: string;
   // For settings, where the title is an abbreviation.
   name?: string;
@@ -44,27 +44,26 @@ export const useTorrentListColumns = () => {
       columnClassNames: "text-right text-base-content/60",
       title: "#",
       name: "Queue position",
-      sort: "queue_position" as const,
-      sortFirst: "asc" as const,
-      data: (t: Torrent) => (
+      sort: "queue_position",
+      sortFirst: "asc",
+      data: (t) => (
         <>{t.queue_position < 0 ? <Dash /> : t.queue_position + 1}</>
       ),
     },
     name: {
       default: true,
-      headerClassNames: "",
       columnClassNames: "overflow-hidden text-ellipsis whitespace-nowrap",
       title: "Name",
-      sort: "name" as const,
-      sortFirst: "asc" as const,
-      data: (t: Torrent) => (
+      sort: "name",
+      sortFirst: "asc",
+      data: (t) => (
         <Link
           to="/"
           search={{
             ...torrentSearch,
             selected_info_hash: t.info_hash,
             selected_session_id: torrentSearch?.session_id,
-            selected_tab_id: torrentSearch?.selected_tab_id || "general",
+            selected_tab_id: torrentSearch?.selected_tab_id ?? "general",
           }}
           className="hover:underline"
         >
@@ -75,27 +74,20 @@ export const useTorrentListColumns = () => {
     size: {
       default: true,
       width: 8,
-      headerClassNames: "",
       columnClassNames: "text-base-content/60",
       title: "Size",
-      sort: "total" as const,
+      sort: "total",
       // A magnet has no size until its metadata arrives.
-      data: (t: Torrent) =>
-        t.state === "downloading_metadata" ? (
-          <Dash />
-        ) : (
-          <>{filesize(t.total)}</>
-        ),
+      data: (t) =>
+        t.state === "downloading_metadata" ? <Dash /> : bytes(t.total),
     },
     status: {
       default: true,
       width: 10,
       narrowWidth: 5,
-      headerClassNames: "",
-      columnClassNames: "",
       title: "Status",
-      sort: "progress" as const,
-      data: (t: Torrent) => {
+      sort: "progress",
+      data: (t) => {
         const { label, tone } = torrentStatus(t);
 
         // Without metadata there's nothing to show progress of.
@@ -137,13 +129,9 @@ export const useTorrentListColumns = () => {
       name: "Download rate",
       // download_rate counts protocol overhead too; there is no payload rate
       // to sort by yet
-      sort: "download_rate" as const,
-      data: (t: Torrent) =>
-        t.download_payload_rate > 0 ? (
-          `${filesize(t.download_payload_rate)}/s`
-        ) : (
-          <Dash />
-        ),
+      sort: "download_rate",
+      data: (t) =>
+        t.download_payload_rate > 0 ? rate(t.download_payload_rate) : <Dash />,
     },
     upload_payload_rate: {
       default: true,
@@ -152,13 +140,9 @@ export const useTorrentListColumns = () => {
       columnClassNames: "text-right",
       title: "UL",
       name: "Upload rate",
-      sort: "upload_rate" as const,
-      data: (t: Torrent) =>
-        t.upload_payload_rate > 0 ? (
-          `${filesize(t.upload_payload_rate)}/s`
-        ) : (
-          <Dash />
-        ),
+      sort: "upload_rate",
+      data: (t) =>
+        t.upload_payload_rate > 0 ? rate(t.upload_payload_rate) : <Dash />,
     },
     peers: {
       default: false,
@@ -166,8 +150,8 @@ export const useTorrentListColumns = () => {
       headerClassNames: "text-right",
       columnClassNames: "text-right",
       title: "Peers",
-      sort: "num_peers" as const,
-      data: (t: Torrent) => (
+      sort: "num_peers",
+      data: (t) => (
         <>
           {t.num_peers - t.num_seeds} ({t.list_peers - t.list_seeds})
         </>
@@ -179,8 +163,8 @@ export const useTorrentListColumns = () => {
       headerClassNames: "text-right",
       columnClassNames: "text-right",
       title: "Seeds",
-      sort: "num_seeds" as const,
-      data: (t: Torrent) => (
+      sort: "num_seeds",
+      data: (t) => (
         <>
           {t.num_seeds} ({t.list_seeds})
         </>
@@ -189,18 +173,16 @@ export const useTorrentListColumns = () => {
     tracker: {
       default: false,
       width: 16,
-      headerClassNames: "",
       columnClassNames: "overflow-hidden text-ellipsis whitespace-nowrap",
       title: "Tracker",
-      data: (t: Torrent) => <>{t.current_tracker}</>,
+      data: (t) => <>{t.current_tracker}</>,
     },
     category: {
       default: false,
       width: 8,
-      headerClassNames: "",
       columnClassNames: "overflow-hidden text-ellipsis whitespace-nowrap",
       title: "Category",
-      data: (t: Torrent) => <>{t.$userdata?.category}</>,
+      data: (t) => <>{t.$userdata?.category}</>,
     },
     ratio: {
       default: false,
@@ -208,8 +190,8 @@ export const useTorrentListColumns = () => {
       headerClassNames: "text-right",
       columnClassNames: "text-right",
       title: "Ratio",
-      sort: "ratio" as const,
-      data: (t: Torrent) => <Ratio value={t.ratio} />,
+      sort: "ratio",
+      data: (t) => <Ratio value={t.ratio} />,
     },
     ratio_real: {
       default: false,
@@ -218,9 +200,9 @@ export const useTorrentListColumns = () => {
       columnClassNames: "text-right",
       title: "Own ratio",
       description: "Counting only what this client downloaded",
-      data: (t: Torrent) => <Ratio value={t.ratio_real} />,
+      data: (t) => <Ratio value={t.ratio_real} />,
     },
-  };
+  } satisfies Record<string, TorrentListColumn>;
 
   return columns as Record<keyof typeof columns, TorrentListColumn>;
 };

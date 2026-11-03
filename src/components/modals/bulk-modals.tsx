@@ -3,17 +3,18 @@ import { ModalNotice } from "@/components/modal/modal-notice";
 import type { ModalProps } from "@/components/modal/use-modal";
 import { useAppForm } from "@/components/form/app-form";
 import z from "zod";
-import { moveSchema } from "./move-schema";
+import { migrateSchema, moveSchema } from "./torrent-schemas";
+import { migrateTargets } from "./migrate-targets";
 import { rateLimit, peerLimit } from "@/lib/limits";
-import { runtimeFlags } from "@/lib/torrent/flags";
+import { flagsSchema, runtimeFlags } from "@/lib/torrent/flags";
 import { Accordion } from "@/components/ui/accordion";
+import { torrentCount } from "@/lib/format";
+import { splitTags } from "@/lib/torrent/tags";
 
 // The dialogs for an action on several checked torrents. They only ask; the
 // list's bulk bar sends the requests and shows how it went.
 
 const SHOWN = 5;
-
-const plural = (n: number) => `${n} torrent${n === 1 ? "" : "s"}`;
 
 function Names({ torrents }: { torrents: Torrent[] }) {
   return (
@@ -44,7 +45,7 @@ export function BulkRemoveModal({
   return (
     <form.AppForm>
       <form.ModalForm
-        title={<>Remove {plural(torrents.length)}</>}
+        title={<>Remove {torrentCount(torrents.length)}</>}
         submitLabel={`Remove ${torrents.length}`}
       >
         <Names torrents={torrents} />
@@ -74,7 +75,7 @@ export function BulkMoveModal({
   return (
     <form.AppForm>
       <form.ModalForm
-        title={<>Move {plural(torrents.length)}</>}
+        title={<>Move {torrentCount(torrents.length)}</>}
         submitLabel={`Move ${torrents.length}`}
       >
         <Names torrents={torrents} />
@@ -88,10 +89,6 @@ export function BulkMoveModal({
   );
 }
 
-const migrateSchema = z.object({
-  session_id: z.number({ error: "Choose a target session" }),
-});
-
 export function BulkMigrateModal({
   torrents,
   session_id,
@@ -99,7 +96,9 @@ export function BulkMigrateModal({
 }: { torrents: Torrent[]; session_id: number } & ModalProps<
   number | undefined
 >) {
-  const sessions = useRPC("sessions.list");
+  const sessions = useRPC("sessions.list", undefined, {
+    meta: { errorToast: false },
+  });
 
   const form = useAppForm({
     defaultValues: { session_id: null as number | null },
@@ -110,7 +109,7 @@ export function BulkMigrateModal({
   if (!sessions.data) {
     return (
       <ModalNotice
-        title={<>Migrate {plural(torrents.length)}</>}
+        title={<>Migrate {torrentCount(torrents.length)}</>}
         loading={sessions.isLoading}
       >
         {sessions.error?.message ?? "No sessions"}
@@ -119,13 +118,11 @@ export function BulkMigrateModal({
   }
 
   // Porla refuses the torrents' own session and sessions that aren't loaded.
-  const targets = sessions.data.sessions.filter(
-    (s) => s.state !== null && s.id !== session_id,
-  );
+  const targets = migrateTargets(sessions.data.sessions, session_id);
 
   if (targets.length === 0) {
     return (
-      <ModalNotice title={<>Migrate {plural(torrents.length)}</>}>
+      <ModalNotice title={<>Migrate {torrentCount(torrents.length)}</>}>
         There is no other loaded session to migrate to.
       </ModalNotice>
     );
@@ -134,7 +131,7 @@ export function BulkMigrateModal({
   return (
     <form.AppForm>
       <form.ModalForm
-        title={<>Migrate {plural(torrents.length)}</>}
+        title={<>Migrate {torrentCount(torrents.length)}</>}
         submitLabel={`Migrate ${torrents.length}`}
       >
         <Names torrents={torrents} />
@@ -173,12 +170,6 @@ export type BulkProperties = {
   removeTags: string[];
 };
 
-const splitTags = (tags: string) =>
-  tags
-    .split(",")
-    .map((s) => s.trim())
-    .filter(Boolean);
-
 const LIMITS = [
   ["download_limit", "Download limit (bytes/s)"],
   ["upload_limit", "Upload limit (bytes/s)"],
@@ -195,10 +186,7 @@ const bulkPropertiesSchema = z
     category: z.string().trim(),
     addTags: z.string(),
     removeTags: z.string(),
-    flags: z.object({
-      flags: z.array(z.custom<TorrentFlag>()),
-      mask: z.array(z.custom<TorrentFlag>()),
-    }),
+    flags: flagsSchema,
   })
   // A tag both added and removed is a mistake either way: say so.
   .superRefine((v, ctx) => {
@@ -269,7 +257,7 @@ export function BulkPropertiesModal({
   return (
     <form.AppForm>
       <form.ModalForm
-        title={<>Properties of {plural(torrents.length)}</>}
+        title={<>Properties of {torrentCount(torrents.length)}</>}
         submitLabel={`Apply to ${torrents.length}`}
       >
         <Names torrents={torrents} />

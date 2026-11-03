@@ -20,10 +20,11 @@ export function RemoveTorrentModal({
 }: RemoveTorrentModalProps & ModalProps<boolean>) {
   const remove = useInvoker("torrents.remove", { meta: { errorToast: false } });
 
-  const torrent = useRPC("torrents.get", {
-    info_hash,
-    session_id,
-  });
+  const torrent = useRPC(
+    "torrents.get",
+    { info_hash, session_id },
+    { meta: { errorToast: false } },
+  );
 
   const form = useAppForm({
     defaultValues: {

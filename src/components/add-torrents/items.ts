@@ -1,5 +1,6 @@
 import { HttpError, RpcCode, isRpcError } from "@/api";
 import { bytes } from "@/lib/format";
+import { splitTags } from "@/lib/torrent/tags";
 
 // One torrent's options. Empty fields aren't sent, so presets (or Porla's
 // defaults) decide them.
@@ -69,14 +70,7 @@ export async function readTorrent(file: File) {
 }
 
 export function addParams(o: AddOptions) {
-  const tags = [
-    ...new Set(
-      o.tags
-        .split(",")
-        .map((t) => t.trim())
-        .filter(Boolean),
-    ),
-  ];
+  const tags = splitTags(o.tags);
   return {
     ...o,
     save_path: o.save_path.trim() || null,

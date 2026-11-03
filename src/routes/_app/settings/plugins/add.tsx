@@ -4,17 +4,14 @@ import { SettingsCard } from "@/components/settings/settings-card";
 import { SettingsSection } from "@/components/settings/settings-section";
 import { createFileRoute } from "@tanstack/react-router";
 import z from "zod";
+import { absolutePath } from "@/lib/paths";
 
 export const Route = createFileRoute("/_app/settings/plugins/add")({
   component: RouteComponent,
 });
 
 const addSchema = z.object({
-  path: z
-    .string()
-    .trim()
-    .min(1, { error: "Enter a path", abort: true })
-    .regex(/^(\/|[A-Za-z]:[\\/])/, "Use an absolute path"),
+  path: absolutePath(),
 });
 
 function RouteComponent() {
