@@ -11,3 +11,18 @@ export function pluginInfo(p: Plugin) {
     error: p.error ?? null,
   };
 }
+
+export function pluginRelease(p: Plugin) {
+  const { source, owner, repository, version } = p.metadata;
+
+  if (
+    source !== "github" ||
+    typeof owner !== "string" ||
+    typeof repository !== "string" ||
+    typeof version !== "string"
+  ) {
+    return null;
+  }
+
+  return { repo: `${owner}/${repository}`, version };
+}

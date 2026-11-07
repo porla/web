@@ -1,5 +1,6 @@
-import { POLL_MS, HttpError, useInvoker, useRPC } from "@/api";
+import { POLL_MS, useInvoker, useRPC } from "@/api";
 import { Spinner } from "@/components/ui/spinner";
+import { latestRelease } from "@/lib/github";
 import { useWebVersion } from "@/lib/web-version";
 import { useQuery } from "@tanstack/react-query";
 import { createFileRoute } from "@tanstack/react-router";
@@ -121,29 +122,6 @@ function RouteComponent() {
       </div>
     </div>
   );
-}
-
-// GitHub's latest release. A non-2xx reply (e.g. the 403 rate limit) throws an
-// HttpError, so the global error handler shows it (4xx without retrying)
-// instead of the badge silently not appearing.
-async function latestRelease(repo: string): Promise<{ tag_name: string }> {
-  const res = await fetch(
-    `https://api.github.com/repos/${repo}/releases/latest`,
-  );
-
-  const body = (await res.json().catch(() => null)) as {
-    tag_name: string;
-    message?: string;
-  } | null;
-
-  if (!res.ok || !body) {
-    throw new HttpError(
-      res.status,
-      `Checking ${repo} for updates failed: ${body?.message ?? res.statusText}`,
-    );
-  }
-
-  return body;
 }
 
 // The web UI can install its update; Porla's is only shown.
