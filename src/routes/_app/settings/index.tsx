@@ -1,5 +1,7 @@
 import { POLL_MS, useInvoker, useRPC } from "@/api";
+import { LogsSection } from "@/components/logs/logs-section";
 import { Spinner } from "@/components/ui/spinner";
+import { feature } from "@/lib/features";
 import { latestRelease } from "@/lib/github";
 import { useWebVersion } from "@/lib/web-version";
 import { useQuery } from "@tanstack/react-query";
@@ -120,6 +122,8 @@ function RouteComponent() {
           </div>
         </div>
       </div>
+
+      {feature("logs") && <LogsSection />}
     </div>
   );
 }
