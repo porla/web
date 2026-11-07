@@ -102,6 +102,10 @@ export type Methods = {
     params: { id: number; path: string; config?: string | null };
     result: null;
   };
+  "plugins.upgrade": {
+    params: { id: number; version: string };
+    result: null;
+  };
   "presets.add": {
     params: { name: string };
     result: { id: number };
