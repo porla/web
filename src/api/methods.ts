@@ -1,3 +1,4 @@
+import type { LogFilters, LogsList } from "@/api/types/logs";
 import type { ApiKeysList } from "./types/auth";
 import type { PluginsGet, PluginsList } from "./types/plugins";
 import type { PresetFields, PresetsGet, PresetsList } from "./types/presets";
@@ -64,6 +65,10 @@ export type Methods = {
   "kv.set": {
     params: { values: Record<string, unknown> };
     result: null;
+  };
+  "logs.list": {
+    params: { after?: number; limit?: number; filters?: LogFilters };
+    result: LogsList;
   };
   "mmdb.lookup": {
     params: { values: string[] };
